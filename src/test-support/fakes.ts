@@ -66,7 +66,20 @@ export class FakeTmdb {
     if (this.missing.has(key)) return json(404, { status_code: 34, status_message: 'not found' });
     if (this.failOnce.has(key)) { this.failOnce.delete(key); return json(500, {}); }
     const base = m[1] === 'movie' ? this.movie : this.tv;
-    return json(200, { ...base, id: Number(m[2]), ...(this.overrides.get(key) ?? {}) });
+    // The M0 recording didn't request videos or ratings, so add realistic ones.
+    const extras = m[1] === 'movie'
+      ? {
+          videos: { results: [
+            { key: 'teaser123', site: 'YouTube', type: 'Teaser', name: 'Teaser', official: true, iso_639_1: 'en', published_at: '2025-01-01T00:00:00Z' },
+            { key: 'trailer456', site: 'YouTube', type: 'Trailer', name: 'Official Trailer', official: true, iso_639_1: 'en', published_at: '2025-02-01T00:00:00Z' },
+          ] },
+          release_dates: { results: [{ iso_3166_1: 'US', release_dates: [{ certification: '' }, { certification: 'PG-13' }] }] },
+        }
+      : {
+          videos: { results: [{ key: 'tvtrailer789', site: 'YouTube', type: 'Trailer', name: 'Season 1 Trailer', official: true, iso_639_1: 'en' }] },
+          content_ratings: { results: [{ iso_3166_1: 'GB', rating: '15' }, { iso_3166_1: 'US', rating: 'TV-MA' }] },
+        };
+    return json(200, { ...base, ...extras, id: Number(m[2]), ...(this.overrides.get(key) ?? {}) });
   };
 }
 

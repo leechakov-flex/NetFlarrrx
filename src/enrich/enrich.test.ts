@@ -46,6 +46,23 @@ describe('TMDB enrichment', () => {
     expect(getJobState<{ ok: number }>(db, 'enrich')!.value.ok).toBe(withIds);
   });
 
+  it('stores the trailer and US rating for movies and series', async () => {
+    await enrichTitles(db, cfg, tmdb);
+    expect(get(db, `SELECT trailer_key, trailer_name, certification FROM titles WHERE tmdb_type = 'movie' LIMIT 1`))
+      .toEqual({ trailer_key: 'trailer456', trailer_name: 'Official Trailer', certification: 'PG-13' });
+    expect(get(db, `SELECT trailer_key, certification FROM titles WHERE tmdb_type = 'tv' LIMIT 1`))
+      .toEqual({ trailer_key: 'tvtrailer789', certification: 'TV-MA' });
+  });
+
+  it('migration 2 queues already-enriched titles for a refetch', async () => {
+    const { migrations } = await import('../db/migrations.js');
+    await enrichTitles(db, cfg, tmdb);
+    expect(get<{ n: number }>(db, `SELECT count(*) n FROM titles WHERE tmdb_status = 'pending'`)!.n).toBe(0);
+    const reset = migrations.find((m) => m.version === 2)!.sql.split('\n').find((l) => l.startsWith('UPDATE titles'))!;
+    db.exec(reset);
+    expect(get<{ n: number }>(db, `SELECT count(*) n FROM titles WHERE tmdb_status = 'pending'`)!.n).toBeGreaterThan(0);
+  });
+
   it('marks 404s missing, and a single 500 is absorbed by the client retry', async () => {
     const [a, b] = all<{ tmdb_type: string; tmdb_id: number }>(db, 'SELECT tmdb_type, tmdb_id FROM titles WHERE tmdb_id IS NOT NULL LIMIT 2');
     tmdbFake.missing.add(`${a!.tmdb_type}:${a!.tmdb_id}`);

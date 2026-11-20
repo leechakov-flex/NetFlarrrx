@@ -1,6 +1,6 @@
 # NetFlarrrx
 
-Browse what Netflix US added recently, by genre, type, rating and theme, and request titles to MonkeyServer through Seerr. A discovery layer only: Seerr stays the system of record, and Sonarr and Radarr do the fulfillment.
+Browse what Netflix added recently, by genre, type, rating and theme, and request titles to MonkeyServer through Seerr. A discovery layer only: Seerr stays the system of record, and Sonarr and Radarr do the fulfillment.
 
 Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (v0.2).
 
@@ -9,8 +9,9 @@ Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (
 | Milestone | State |
 | --- | --- |
 | M0: data spike | Done Nov 20, 2026. Go on Watchmode's free plan: 7,211 titles, 29 credits per sync, 99.9% with a TMDB ID. |
-| M1: ingest | Built. Daily sync with noise guards, TMDB enrichment, Seerr mirror, health endpoint. No browse UI yet. |
-| M2: browse UI | Next. |
+| M1: ingest | Deployed Nov 20. Daily sync with noise guards, TMDB enrichment, Seerr mirror, health endpoint. |
+| M2: browse UI | Built. Discover rows, Movies and Series with filters, Top rated, title detail with trailers, search. Styled to match Seerr. |
+| M3: requests | Next. The Request button is shown but disabled until then. |
 
 ## What runs
 
@@ -82,7 +83,9 @@ docker compose up -d netflarrrx
 docker logs -f netflarrrx          # first sync + enrichment takes a few minutes
 ```
 
-Then open <http://monkeyserver.local:8484>. Add an **HTTP** monitor in Uptime Kuma for `http://netflarrrx:8484/healthz` (it's on the same network). It returns 503 when a sync is held, failing, or more than 36 hours old.
+Then open <http://monkeyserver.local:8484>.
+
+After updating to M2, the app re-fetches every title from TMDB once (about 4 minutes, free) to pick up trailers and age ratings. Add an **HTTP** monitor in Uptime Kuma for `http://netflarrrx:8484/healthz` (it's on the same network). It returns 503 when a sync is held, failing, or more than 36 hours old.
 
 To update later: `docker compose pull netflarrrx && docker compose up -d netflarrrx`.
 
@@ -106,7 +109,9 @@ npm run typecheck
 npx tsx src/test-support/serve-fakes.ts   # fake Watchmode/TMDB/Seerr on ports 18001-18003
 ```
 
-Point the app at the fakes with `WATCHMODE_BASE=http://127.0.0.1:18001/v1 TMDB_BASE=http://127.0.0.1:18002/3 SEERR_URL=http://127.0.0.1:18003 DATA_DIR=./data`, any keys, and `npm run dev`.
+Point the app at the fakes with `WATCHMODE_BASE=http://127.0.0.1:18001/v1 TMDB_BASE=http://127.0.0.1:18002/3 SEERR_URL=http://127.0.0.1:18003 DATA_DIR=./data`, any keys, and `npm run dev` (API on :8484). Add `FAKE_VARIED=1` to the fakes for varied titles and ratings.
+
+For the web UI, run `npm run dev:web` alongside it: Vite serves the React app with hot reload and proxies `/api` to :8484. The UI lives in `web/` (React, TanStack Query, Tailwind 3 with Seerr's palette and Inter, Heroicons) and builds into `dist/web`, which the server serves.
 
 ## M0 spike
 

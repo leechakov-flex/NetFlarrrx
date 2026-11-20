@@ -3,6 +3,17 @@ import { HttpError, requestJson, type FetchFn } from './http.js';
 
 const Named = z.object({ id: z.number().int(), name: z.string() });
 
+const Video = z.object({
+  key: z.string(),
+  site: z.string(),
+  type: z.string(),
+  name: z.string().optional().default(''),
+  official: z.boolean().optional().default(false),
+  iso_639_1: z.string().nullable().optional(),
+  published_at: z.string().nullable().optional(),
+});
+export type TmdbVideo = z.infer<typeof Video>;
+
 const Details = z.object({
   id: z.number().int(),
   title: z.string().optional(),            // movie
@@ -23,6 +34,16 @@ const Details = z.object({
     keywords: z.array(Named).optional(),   // movie
     results: z.array(Named).optional(),    // tv
   }).optional(),
+  videos: z.object({ results: z.array(z.unknown()).optional().default([]) }).optional(),
+  release_dates: z.object({                // movie certification
+    results: z.array(z.object({
+      iso_3166_1: z.string(),
+      release_dates: z.array(z.object({ certification: z.string().optional().default('') })).optional().default([]),
+    })).optional().default([]),
+  }).optional(),
+  content_ratings: z.object({              // tv certification
+    results: z.array(z.object({ iso_3166_1: z.string(), rating: z.string().optional().default('') })).optional().default([]),
+  }).optional(),
 });
 
 export interface TmdbDetails {
@@ -37,25 +58,52 @@ export interface TmdbDetails {
   popularity: number | null;
   runtime: number | null;
   seasons: number | null;
+  certification: string | null;
+  trailer: { key: string; name: string } | null;
   genres: { id: number; name: string }[];
   keywords: { id: number; name: string }[];
+}
+
+/**
+ * Picks the trailer to show: YouTube only (the player embeds YouTube), then
+ * official English trailers first, then any trailer, then teasers; newest wins ties.
+ */
+export function pickTrailer(videos: TmdbVideo[]): { key: string; name: string } | null {
+  const score = (v: TmdbVideo) =>
+    (v.type === 'Trailer' ? 100 : v.type === 'Teaser' ? 10 : 0) +
+    (v.official ? 20 : 0) +
+    (v.iso_639_1 === 'en' || !v.iso_639_1 ? 5 : 0);
+  const usable = videos.filter((v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser'));
+  if (!usable.length) return null;
+  usable.sort((a, b) => score(b) - score(a) || (b.published_at ?? '').localeCompare(a.published_at ?? ''));
+  const best = usable[0]!;
+  return { key: best.key, name: best.name };
 }
 
 export class TmdbClient {
   constructor(private base: string, private token: string, private fetchFn: FetchFn = fetch) {}
 
-  /** Details plus keywords in one call. Returns null if TMDB has no such record. */
+  /** Details, keywords, videos and US rating in one call. Returns null if TMDB has no such record. */
   async details(type: 'movie' | 'tv', id: number): Promise<TmdbDetails | null> {
+    const appends = ['keywords', 'videos', type === 'movie' ? 'release_dates' : 'content_ratings'].join(',');
     let raw: unknown;
     try {
       raw = await requestJson<unknown>(this.fetchFn, 'tmdb',
-        `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=keywords&language=en-US`,
+        `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=${appends}&language=en-US`,
         { headers: { Authorization: `Bearer ${this.token}` } });
     } catch (err) {
       if (err instanceof HttpError && err.isNotFound) return null;
       throw err;
     }
     const d = Details.parse(raw);
+    const videos = (d.videos?.results ?? []).flatMap((v) => { const p = Video.safeParse(v); return p.success ? [p.data] : []; });
+    let certification: string | null = null;
+    if (type === 'movie') {
+      const us = d.release_dates?.results.find((r) => r.iso_3166_1 === 'US');
+      certification = us?.release_dates.map((r) => r.certification.trim()).find(Boolean) ?? null;
+    } else {
+      certification = d.content_ratings?.results.find((r) => r.iso_3166_1 === 'US')?.rating.trim() || null;
+    }
     return {
       tmdbTitle: d.title ?? d.name ?? null,
       originalLanguage: d.original_language ?? null,
@@ -68,6 +116,8 @@ export class TmdbClient {
       popularity: d.popularity ?? null,
       runtime: type === 'movie' ? (d.runtime ?? null) : null,
       seasons: type === 'tv' ? (d.number_of_seasons ?? null) : null,
+      certification,
+      trailer: pickTrailer(videos),
       genres: d.genres,
       keywords: d.keywords?.keywords ?? d.keywords?.results ?? [],
     };

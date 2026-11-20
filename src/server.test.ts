@@ -15,7 +15,7 @@ function make(passcode?: string) {
   app = createApp(testConfig(passcode ? { APP_PASSCODE: passcode } : {}), {
     watchmode: wm.fetch, tmdb: new FakeTmdb().fetch, seerr: new FakeSeerr().fetch,
   });
-  return createServer(app);
+  return createServer(app, { webDir: null });
 }
 
 afterEach(() => app?.close());
@@ -89,12 +89,42 @@ describe('admin endpoints', () => {
     expect(app.health().status).toBe('ok');
   });
 
-  it('the home page shows counts and the data credits', async () => {
+  it('without a web build, / shows a status fallback', async () => {
     const http = make();
     await app.pipeline('cli');
     const html = await (await http.request('/')).text();
-    expect(html).toContain('On Netflix US: 600');
-    expect(html).toContain('watchmode.com');
-    expect(html).toContain('not endorsed or certified by TMDB');
+    expect(html).toContain('On Netflix: 600');
+  });
+});
+
+describe('web UI serving', () => {
+  it('serves the app shell for client routes, hashed assets with long caching, and JSON 404s for /api', async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'web-'));
+    mkdirSync(join(dir, 'assets'));
+    writeFileSync(join(dir, 'index.html'), '<!doctype html><div id="root"></div>');
+    writeFileSync(join(dir, 'assets', 'index-abc.js'), 'console.log(1)');
+    writeFileSync(join(dir, 'secret.txt'), 'nope');
+    make();
+    const http = createServer(app, { webDir: dir });
+
+    for (const path of ['/', '/movies', '/title/42', '/search?q=x']) {
+      const r = await http.request(path);
+      expect(r.status, path).toBe(200);
+      expect(await r.text()).toContain('id="root"');
+      expect(r.headers.get('cache-control')).toBe('no-cache');
+    }
+    const js = await http.request('/assets/index-abc.js');
+    expect(js.status).toBe(200);
+    expect(js.headers.get('content-type')).toContain('javascript');
+    expect(js.headers.get('cache-control')).toContain('immutable');
+    expect((await http.request('/assets/missing.js')).status).toBe(404);
+    expect((await http.request('/assets/..%2Fsecret.txt')).status).toBe(404);
+    const api = await http.request('/api/nope');
+    expect(api.status).toBe(404);
+    expect(await api.json()).toEqual({ error: 'not found' });
+    expect((await http.request('/healthz')).headers.get('content-type')).toContain('json');
   });
 });

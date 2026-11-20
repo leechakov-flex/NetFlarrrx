@@ -62,10 +62,12 @@ function saveDetails(db: Db, titleId: number, d: TmdbDetails, at: string) {
   tx(db, () => {
     run(db, `UPDATE titles SET tmdb_status = 'ok', tmdb_fetched_at = ?, tmdb_error = NULL,
                tmdb_title = ?, original_language = ?, overview = ?, poster_path = ?, backdrop_path = ?, release_date = ?,
-               vote_average = ?, vote_count = ?, popularity = ?, runtime = ?, seasons = ?
+               vote_average = ?, vote_count = ?, popularity = ?, runtime = ?, seasons = ?,
+               certification = ?, trailer_key = ?, trailer_name = ?
              WHERE id = ?`,
     [at, d.tmdbTitle, d.originalLanguage, d.overview, d.posterPath, d.backdropPath, d.releaseDate,
-      d.voteAverage, d.voteCount, d.popularity, d.runtime, d.seasons, titleId]);
+      d.voteAverage, d.voteCount, d.popularity, d.runtime, d.seasons,
+      d.certification, d.trailer?.key ?? null, d.trailer?.name ?? null, titleId]);
 
     run(db, 'DELETE FROM title_genres WHERE title_id = ?', [titleId]);
     const g = db.prepare('INSERT INTO genres (id, name) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name');

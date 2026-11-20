@@ -151,4 +151,27 @@ SELECT t.*,
 FROM titles t;
 `,
   },
+  {
+    version: 2,
+    name: 'trailers_and_certification',
+    sql: `
+ALTER TABLE titles ADD COLUMN trailer_key TEXT;      -- YouTube video id
+ALTER TABLE titles ADD COLUMN trailer_name TEXT;
+ALTER TABLE titles ADD COLUMN certification TEXT;    -- US rating, e.g. PG-13, TV-MA
+
+-- Views select t.*, so rebuild it to pick up the new columns.
+DROP VIEW title_kinds;
+CREATE VIEW title_kinds AS
+SELECT t.*,
+  CASE t.watchmode_type
+    WHEN 'movie' THEN 'movie' WHEN 'tv_movie' THEN 'movie' WHEN 'short_film' THEN 'movie'
+    WHEN 'tv_series' THEN 'series' WHEN 'tv_miniseries' THEN 'series'
+    ELSE NULL
+  END AS kind
+FROM titles t;
+
+-- Re-fetch everything once so existing titles get trailers and ratings.
+UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
+`,
+  },
 ];

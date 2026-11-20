@@ -1,0 +1,45 @@
+@import '@fontsource-variable/inter';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ported from Seerr's src/styles/globals.css so the app reads as part of the same family. */
+@layer base {
+  html, body { @apply bg-gray-900; }
+  body { -webkit-tap-highlight-color: transparent; }
+}
+
+@layer components {
+  .text-overseerr { @apply bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text text-transparent; }
+
+  .slider-header { @apply relative mb-4 mt-6 flex items-center; }
+  .slider-title { @apply inline-flex items-center text-xl font-bold leading-7 text-gray-300 sm:truncate sm:text-2xl sm:leading-9; }
+  a.slider-title { @apply transition duration-300 hover:text-white; }
+  a.slider-title svg { @apply ml-2 h-6 w-6; }
+
+  ul.cards-vertical { @apply grid gap-4; grid-template-columns: repeat(auto-fill, minmax(9.375rem, 1fr)); }
+
+  .media-page { @apply relative -mx-4 bg-cover bg-center px-4; }
+  .media-page-bg-image { @apply absolute inset-0 h-full w-full; }
+  .media-header { @apply flex flex-col items-center pt-4 xl:flex-row xl:items-end; }
+  .media-poster { @apply w-32 overflow-hidden rounded shadow md:w-44 md:rounded-lg md:shadow-2xl xl:mr-4 xl:w-52; }
+  .media-status { @apply mb-2 flex flex-wrap justify-center gap-2 xl:justify-start; }
+  .media-title { @apply mt-4 flex flex-1 flex-col text-center text-white xl:mr-4 xl:mt-0 xl:text-left; }
+  .media-title > h1 { @apply text-2xl font-bold xl:text-4xl; }
+  .media-year { @apply text-2xl font-normal text-gray-400 xl:text-3xl; }
+  .media-attributes { @apply mt-1 flex flex-wrap items-center justify-center gap-x-1 text-xs text-gray-300 sm:text-sm xl:mt-0 xl:justify-start xl:text-base; }
+  .media-actions { @apply relative mt-4 flex w-full flex-shrink-0 flex-col gap-3 sm:w-auto sm:flex-row sm:justify-end xl:mt-0; }
+  .media-overview { @apply flex flex-col pb-4 pt-8 text-white lg:flex-row; }
+  .media-overview-left { @apply flex-1 lg:mr-8; }
+  .media-overview h2 { @apply text-xl font-bold text-gray-300 sm:text-2xl; }
+  .media-overview p { @apply pt-2 text-sm text-gray-400 sm:text-base; }
+  .media-overview-right { @apply mt-8 w-full lg:mt-0 lg:w-80; }
+  .media-facts { @apply rounded-lg border border-gray-700 bg-gray-900 text-sm font-bold text-gray-300 shadow; }
+  .media-fact { @apply flex justify-between border-b border-gray-700 px-4 py-2 last:border-b-0; }
+  .media-fact-value { @apply ml-2 text-right text-sm font-normal text-gray-400; }
+
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
+}
