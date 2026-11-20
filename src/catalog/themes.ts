@@ -31,8 +31,8 @@ export const ThemeRule = z.object({
   year: range.optional(),
   rating: range.optional(),         // TMDB vote average, 0-10
   votes: range.optional(),          // TMDB vote count
-  runtime: range.optional(),        // minutes, movies
-  seasons: range.optional(),        // season count, series
+  runtime: range.optional(),        // minutes; applies to movies only
+  seasons: range.optional(),        // season count; applies to series only
   sort: z.enum(['added', 'rating', 'popularity', 'release', 'title']).default('added'),
   home: z.boolean().default(true),  // show as a row on Discover
 }).strict();
@@ -47,9 +47,11 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
     rating: { min: 7.5 }, votes: { min: 1000 }, sort: 'rating',
   },
   {
+    // Tuned Nov 20 on the real catalog: 150+ votes keeps out brand-new titles rated
+    // on a handful of votes; a 60-minute floor drops trailer specials and ambient videos.
     slug: 'hidden-gems', title: 'Hidden gems',
-    rating: { min: 7.2 }, votes: { min: 50, max: 999 }, sort: 'rating',
-    exclude: { genres: ['Documentary', 'Talk', 'News', 'Reality'] },
+    rating: { min: 7.2 }, votes: { min: 150, max: 999 }, runtime: { min: 60 }, sort: 'rating',
+    exclude: { genres: ['Documentary', 'Talk', 'News', 'Reality', 'Kids', 'Family'] },
   },
   {
     slug: 'true-stories', title: 'Based on a true story',
@@ -58,7 +60,8 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
   },
   {
     slug: 'heists', title: 'Heists and cons',
-    signals: { keywords: ['heist', 'bank robbery', 'robbery', 'art heist', 'jewel heist', 'casino heist', 'heist movie', 'con artist', 'con man', 'swindle', 'scam', 'grifter', 'master thief', 'thief'] },
+    // "thief", "robbery" and "scam" pulled in Wicked, Conan and Saw X, so only heist and con keywords.
+    signals: { keywords: ['heist', 'bank robbery', 'art heist', 'jewel heist', 'casino heist', 'heist movie', 'con artist', 'con man', 'swindle', 'grifter', 'master thief'] },
     exclude: { genres: ['Documentary', 'Animation', 'Family'] },
   },
   {
@@ -71,7 +74,8 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
   {
     slug: 'short-movies', title: 'Short movies',
     kind: 'movie',
-    runtime: { min: 40, max: 89 },
+    // A floor on rating and votes drops the stream of low-vote TV movies.
+    runtime: { min: 40, max: 89 }, rating: { min: 6 }, votes: { min: 100 },
     exclude: { genres: ['Documentary'] },
   },
 ]);
@@ -136,7 +140,13 @@ export function themeWhere(t: ThemeRule): { sql: string; params: (string | numbe
   bound('tk.year', t.year);
   bound('tk.vote_average', t.rating);
   bound('tk.vote_count', t.votes);
-  bound('tk.runtime', t.runtime);
-  bound('tk.seasons', t.seasons);
+  // Runtime is a movie property and season count a series one, so each limit
+  // only constrains its own kind (a mixed theme keeps its series).
+  const scoped = (kind: 'movie' | 'series', col: string, r?: { min?: number; max?: number }) => {
+    if (r?.min !== undefined) { where.push(`(tk.kind <> '${kind}' OR ${col} >= ?)`); params.push(r.min); }
+    if (r?.max !== undefined) { where.push(`(tk.kind <> '${kind}' OR ${col} <= ?)`); params.push(r.max); }
+  };
+  scoped('movie', 'tk.runtime', t.runtime);
+  scoped('series', 'tk.seasons', t.seasons);
   return { sql: where.length ? where.join(' AND ') : '1 = 1', params };
 }

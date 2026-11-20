@@ -64,6 +64,7 @@ describe('default themes', () => {
     reset();
     kw(movies[0]!, 10051); kw(movies[1]!, 9748);
     kw(movies[2]!, 10051); genre(movies[2]!, 16);  // animated heist excluded
+    run(app.db, `INSERT OR IGNORE INTO keywords (id, name) VALUES (2, 'thief')`); kw(movies[3]!, 2);   // too broad
     expect(await slugsFor('heists')).toEqual([movies[0]!, movies[1]!]);
   });
 
@@ -80,17 +81,20 @@ describe('default themes', () => {
   it('short movies: 40 to 89 minutes, movies only', async () => {
     reset();
     set(movies[0]!, 'runtime = 85'); set(movies[1]!, 'runtime = 89'); set(movies[2]!, 'runtime = 90'); set(movies[3]!, 'runtime = 22');
+    set(movies[4]!, 'runtime = 42, vote_average = 1.75, vote_count = 8');    // low-vote TV movie
     expect(await slugsFor('short-movies')).toEqual([movies[0]!, movies[1]!]);
   });
 
   it('hidden gems and acclaimed split by vote count, sorted by rating', async () => {
     reset();
     set(movies[0]!, 'vote_average = 7.8, vote_count = 400');
-    set(movies[1]!, 'vote_average = 8.4, vote_count = 120');
-    set(movies[2]!, 'vote_average = 8.1, vote_count = 25');       // too few votes to trust
+    set(movies[1]!, 'vote_average = 8.4, vote_count = 200');
+    set(movies[2]!, 'vote_average = 8.1, vote_count = 120');      // too few votes to trust
+    set(movies[4]!, 'vote_average = 8.8, vote_count = 381, runtime = 27');   // a trailer special
+    set(series[0]!, 'vote_average = 7.5, vote_count = 300');      // series have no runtime: still in
     set(movies[3]!, 'vote_average = 8.0, vote_count = 5000');      // famous, so acclaimed instead
     const gems = await j<BrowseResponse>('/api/titles?theme=hidden-gems');
-    expect(gems.body.items.map((i) => i.id)).toEqual([movies[1]!, movies[0]!]);
+    expect(gems.body.items.map((i) => i.id)).toEqual([movies[1]!, movies[0]!, series[0]!]);
     expect(gems.body.theme).toEqual({ slug: 'hidden-gems', title: 'Hidden gems', sort: 'rating' });
     expect(await slugsFor('acclaimed')).toEqual([movies[3]!]);
   });
