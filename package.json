@@ -1,14 +1,33 @@
 {
   "name": "netflarrrx",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "Browse what's new on Netflix US and request titles through Seerr.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p tsconfig.test.json",
+    "start": "node --disable-warning=ExperimentalWarning dist/main.js",
+    "dev": "tsx --disable-warning=ExperimentalWarning src/main.ts",
+    "cli": "tsx --disable-warning=ExperimentalWarning src/cli.ts",
+    "test": "vitest run && npm run -s test:spike",
+    "test:unit": "vitest run",
     "spike": "node scripts/spike.mjs",
     "test:spike": "node --test test/spike.test.mjs"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.11",
+    "croner": "^11.0.1",
+    "hono": "^4.13.19",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
   }
 }
