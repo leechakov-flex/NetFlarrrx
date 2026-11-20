@@ -88,6 +88,12 @@ export interface MetaResponse {
   newThisWeek: number;
   languageRule: 'en' | 'all';
   passcodeRequired: boolean;       // requests need APP_PASSCODE
+  ops?: {
+    lastBackupAt: string | null;   // null with backups on = none yet; undefined section = backups off
+    backupError: string | null;
+    crosscheck: { at: string; ok: boolean; coveragePct: number | null } | null;
+    alerts: boolean;               // ALERT_URL set
+  };
 }
 
 /** One season as Seerr sees it. null = nothing yet, so it can be requested. */

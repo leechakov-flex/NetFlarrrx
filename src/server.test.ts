@@ -1,4 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createApp, type App } from './app.js';
 import { createServer } from './server.js';
 import { testConfig } from './config.js';
@@ -99,9 +102,6 @@ describe('admin endpoints', () => {
 
 describe('web UI serving', () => {
   it('serves the app shell for client routes, hashed assets with long caching, and JSON 404s for /api', async () => {
-    const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
-    const { tmpdir } = await import('node:os');
-    const { join } = await import('node:path');
     const dir = mkdtempSync(join(tmpdir(), 'web-'));
     mkdirSync(join(dir, 'assets'));
     writeFileSync(join(dir, 'index.html'), '<!doctype html><div id="root"></div>');
@@ -126,5 +126,26 @@ describe('web UI serving', () => {
     expect(api.status).toBe(404);
     expect(await api.json()).toEqual({ error: 'not found' });
     expect((await http.request('/healthz')).headers.get('content-type')).toContain('json');
+  });
+});
+
+describe('install files', () => {
+  it('serves the manifest, service worker and icons, revalidated each time', async () => {
+    const web = mkdtempSync(join(tmpdir(), 'nfx-web-'));
+    mkdirSync(join(web, 'icons'));
+    writeFileSync(join(web, 'index.html'), '<!doctype html><div id="root"></div>');
+    writeFileSync(join(web, 'manifest.webmanifest'), '{"name":"NetFlarrrx"}');
+    writeFileSync(join(web, 'sw.js'), 'self.addEventListener("fetch", () => {})');
+    writeFileSync(join(web, 'icons', 'icon-192.png'), 'png');
+    app = createApp(testConfig());           // closed by afterEach
+    const s = createServer(app, { webDir: web });
+    const m = await s.request('/manifest.webmanifest');
+    expect(m.headers.get('content-type')).toBe('application/manifest+json');
+    const sw = await s.request('/sw.js');
+    expect(sw.headers.get('cache-control')).toBe('no-cache');
+    expect(sw.headers.get('content-type')).toContain('javascript');
+    expect((await s.request('/icons/icon-192.png')).headers.get('content-type')).toBe('image/png');
+    expect(await (await s.request('/icons/../index.html')).text()).toContain('id="root"');   // falls through to the shell
+    expect((await s.request('/icons/missing.png')).headers.get('content-type')).toContain('text/html');
   });
 });

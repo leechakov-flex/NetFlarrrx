@@ -54,12 +54,27 @@ export class FakeTmdb {
   missing = new Set<string>();                         // "movie:123" -> 404
   overrides = new Map<string, Record<string, unknown>>();
   failOnce = new Set<string>();                        // 500 once, then ok
+  /** TMDB's own Netflix list for /discover, by type; 20 per page like the real API. */
+  discover: Record<'movie' | 'tv', { id: number; title: string; popularity?: number }[]> = { movie: [], tv: [] };
+  discoverFailPage: number | null = null;
   private movie = fixture<Record<string, unknown>>('tmdb/movie-detail.json');
   private tv = fixture<Record<string, unknown>>('tmdb/tv-detail.json');
 
   fetch: FetchFn = async (input) => {
     this.calls += 1;
     const url = new URL(String(input));
+    const disc = url.pathname.match(/\/discover\/(movie|tv)$/);
+    if (disc) {
+      const page = Number(url.searchParams.get('page') ?? 1);
+      if (page === this.discoverFailPage) return json(500, {});
+      const list = this.discover[disc[1] as 'movie' | 'tv'];
+      return json(200, {
+        page, total_pages: Math.max(1, Math.ceil(list.length / 20)), total_results: list.length,
+        results: list.slice((page - 1) * 20, page * 20).map((r) => disc[1] === 'movie'
+          ? { id: r.id, title: r.title, release_date: '2020-01-01', popularity: r.popularity ?? 1 }
+          : { id: r.id, name: r.title, first_air_date: '2020-01-01', popularity: r.popularity ?? 1 }),
+      });
+    }
     const m = url.pathname.match(/\/(movie|tv)\/(\d+)$/);
     if (!m) return json(404, {});
     const key = `${m[1]}:${m[2]}`;

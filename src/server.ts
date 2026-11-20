@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 const MIME: Record<string, string> = {
   '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.woff': 'font/woff',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.map': 'application/json', '.webmanifest': 'application/manifest+json',
+  '.html': 'text/html; charset=utf-8',
 };
 
 function findWebDir(): string | null {
@@ -87,6 +88,24 @@ export function createServer(app: App, opts: ServerOptions = {}) {
           'Cache-Control': 'public, max-age=31536000, immutable',      // hashed file names
         });
       } catch { return c.notFound(); }
+    });
+    // Top-level public files (manifest, service worker, icons, offline page). Revalidated
+    // each time so a new service worker or icon is picked up promptly.
+    const PUBLIC = new Set(['/manifest.webmanifest', '/sw.js', '/icon.svg', '/offline.html']);
+    const PUBLIC_DIRS = ['/icons/'];
+    http.get('*', async (c, next) => {
+      const path = new URL(c.req.url).pathname;
+      if (!PUBLIC.has(path) && !PUBLIC_DIRS.some((d) => path.startsWith(d) && /^[\w./-]+$/.test(path) && !path.includes('..'))) return next();
+      const file = join(webDir, normalize(path).replace(/^([/\\])+/, ''));
+      if (!file.startsWith(webDir)) return next();
+      try {
+        const body = await readFile(file);
+        return c.body(body, 200, {
+          'Content-Type': MIME[extname(file)] ?? 'application/octet-stream',
+          'Cache-Control': 'no-cache',
+          ...(path === '/sw.js' ? { 'Service-Worker-Allowed': '/' } : {}),
+        });
+      } catch { return next(); }
     });
     // History-mode routing: every other GET gets the app shell.
     http.get('*', (c) => c.html(indexHtml, 200, { 'Cache-Control': 'no-cache' }));

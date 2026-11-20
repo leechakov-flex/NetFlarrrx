@@ -80,8 +80,40 @@ export function pickTrailer(videos: TmdbVideo[]): { key: string; name: string } 
   return { key: best.key, name: best.name };
 }
 
+export interface DiscoverItem { id: number; title: string; year: number | null; popularity: number | null }
+
+const DiscoverPage = z.object({
+  page: z.number().int(),
+  total_pages: z.number().int(),
+  total_results: z.number().int(),
+  results: z.array(z.object({
+    id: z.number().int(),
+    title: z.string().optional(), name: z.string().optional(),
+    release_date: z.string().optional(), first_air_date: z.string().optional(),
+    popularity: z.number().optional(),
+  }).passthrough()),
+});
+
 export class TmdbClient {
   constructor(private base: string, private token: string, private fetchFn: FetchFn = fetch) {}
+
+  /** One page of titles TMDB lists on a streaming service (flat-rate) in a region. */
+  async discover(type: 'movie' | 'tv', providerId: number, region: string, page: number) {
+    const q = new URLSearchParams({
+      with_watch_providers: String(providerId), watch_region: region, with_watch_monetization_types: 'flatrate',
+      sort_by: 'popularity.desc', include_adult: 'false', page: String(page),
+    });
+    const d = DiscoverPage.parse(await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/discover/${type}?${q}`,
+      { headers: { Authorization: `Bearer ${this.token}` } }));
+    return {
+      totalPages: d.total_pages,
+      totalResults: d.total_results,
+      results: d.results.map((r): DiscoverItem => {
+        const date = r.release_date || r.first_air_date || '';
+        return { id: r.id, title: r.title ?? r.name ?? `#${r.id}`, year: date ? Number(date.slice(0, 4)) || null : null, popularity: r.popularity ?? null };
+      }),
+    };
+  }
 
   /** Details, keywords, videos and US rating in one call. Returns null if TMDB has no such record. */
   async details(type: 'movie' | 'tv', id: number): Promise<TmdbDetails | null> {

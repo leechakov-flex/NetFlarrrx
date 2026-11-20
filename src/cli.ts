@@ -13,7 +13,11 @@ const USAGE = `Usage: cli <command>
   enrich            fetch TMDB details for titles that need them
   seerr-mirror      refresh the Seerr status mirror
   themes [slug]     thematic rows: counts, which keywords do the work, sample titles
-  keywords <text>   TMDB keywords containing <text>, with how many shown titles have each`;
+  keywords <text>   TMDB keywords containing <text>, with how many shown titles have each
+  backup            take a verified database backup now
+  crosscheck        compare our Netflix list with TMDB's (free, ~1 minute)
+  alert-test        send a test alert to ALERT_URL
+  alerts            show what would alert right now`;
 
 async function main() {
   const [cmd, arg] = process.argv.slice(2);
@@ -61,6 +65,26 @@ async function main() {
         console.table(keywordSearch(app.db, cfg, arg));
         break;
       }
+      case 'backup': console.log(JSON.stringify(await app.backup(), null, 2)); break;
+      case 'crosscheck': {
+        const x = await app.crosscheck();
+        if (!x.ok) throw new Error(`cross-check failed: ${x.error}`);
+        console.log(`TMDB lists ${x.tmdbTotal} titles on Netflix; we list ${x.oursTotal}; ${x.both} in both.`);
+        console.log(`We have ${x.coveragePct}% of TMDB's list; TMDB has ${x.agreementPct}% of ours. (Alert below ${cfg.CROSSCHECK_MIN_PCT}%.)`);
+        console.table(x.byType);
+        console.log('\nMost popular titles TMDB has that we don\'t (check a few on JustWatch or Netflix):');
+        console.table(x.onlyTmdb?.slice(0, 15));
+        console.log('\nMost popular titles we have that TMDB doesn\'t:');
+        console.table(x.onlyOurs?.slice(0, 15));
+        break;
+      }
+      case 'alert-test': {
+        if (!app.notifier.enabled) throw new Error('ALERT_URL is not set in netflarrrx.env');
+        await app.notifier.send('Test alert', 'If you can read this, NetFlarrrx alerts work.', 'test');
+        console.log('Sent.');
+        break;
+      }
+      case 'alerts': console.log(JSON.stringify({ alertUrlSet: app.notifier.enabled, problems: app.problems() }, null, 2)); break;
       default: console.error(`Unknown command: ${cmd}\n${USAGE}`); process.exitCode = 2;
     }
   } finally {

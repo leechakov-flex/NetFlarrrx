@@ -35,7 +35,18 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     c.header('Cache-Control', 'no-store');
   });
 
-  api.get('/meta', (c) => c.json(meta(db, cfg, app.health().status)));
+  api.get('/meta', (c) => {
+    const h = app.health();
+    return c.json({
+      ...meta(db, cfg, h.status),
+      ops: {
+        lastBackupAt: h.backup?.last_ok_at ?? null,
+        backupError: h.backup?.last_error ?? null,
+        crosscheck: h.crosscheck ? { at: h.crosscheck.at, ok: h.crosscheck.ok, coveragePct: h.crosscheck.coverage_pct } : null,
+        alerts: app.notifier.enabled,
+      },
+    });
+  });
   api.get('/home', (c) => c.json(home(db, cfg)));
 
   api.get('/titles', (c) => {

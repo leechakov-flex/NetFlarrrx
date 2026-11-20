@@ -21,6 +21,16 @@ function serve(port: number, fetchFn: FetchFn) {
 
 const varied = process.env.FAKE_VARIED === '1';
 const tmdb = new FakeTmdb();
+// TMDB's own Netflix list for the cross-check: most of Watchmode's titles, plus a few extras.
+{
+  const all = new FakeWatchmode().catalog.filter((t) => t.tmdb_id && t.tmdb_type);
+  const keep = all.filter((_, i) => i % 12 !== 0);
+  tmdb.discover = {
+    movie: [...keep.filter((t) => t.tmdb_type === 'movie').map((t) => ({ id: t.tmdb_id!, title: t.title })),
+      ...Array.from({ length: 40 }, (_, i) => ({ id: 990000 + i, title: `TMDB-only film ${i + 1}`, popularity: 50 - i }))],
+    tv: keep.filter((t) => t.tmdb_type === 'tv').map((t) => ({ id: t.tmdb_id!, title: t.title })),
+  };
+}
 const tmdbFetch: FetchFn = varied
   ? async (input, init) => {
       const res = await tmdb.fetch(input, init);

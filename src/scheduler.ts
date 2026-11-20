@@ -11,6 +11,16 @@ export function startScheduler(app: App) {
     new Cron(cfg.SEERR_MIRROR_CRON, { timezone: cfg.TZ, protect: true, name: 'seerr-mirror' }, async () => {
       await app.mirror().catch(() => undefined);
     }),
+    new Cron(cfg.BACKUP_CRON, { timezone: cfg.TZ, protect: true, name: 'backup' }, async () => {
+      await app.backup().catch(() => undefined);
+    }),
+    new Cron(cfg.CROSSCHECK_CRON, { timezone: cfg.TZ, protect: true, name: 'tmdb-crosscheck' }, async () => {
+      await app.crosscheck().catch(() => undefined);
+    }),
+    // Catches what no job reports, like a sync that never ran.
+    new Cron(cfg.ALERT_CHECK_CRON, { timezone: cfg.TZ, protect: true, name: 'alert-check' }, async () => {
+      await app.checkAlerts().catch(() => undefined);
+    }),
   ];
   for (const j of jobs) log.info('scheduler: job registered', { job: j.name, next: j.nextRun()?.toISOString() ?? null });
   return { stop: () => jobs.forEach((j) => j.stop()) };

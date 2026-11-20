@@ -41,10 +41,29 @@ export function More() {
           <div className="media-fact"><span>Titles shown</span><span className="media-fact-value">{m.eligible.toLocaleString()}</span></div>
           <div className="media-fact"><span>New this week</span><span className="media-fact-value">{m.newThisWeek.toLocaleString()}</span></div>
           <div className="media-fact"><span>Languages</span><span className="media-fact-value">{m.languageRule === 'en' ? 'English-original only' : 'All languages'}</span></div>
+          {m.ops && (
+            <>
+              <div className="media-fact">
+                <span>Last backup</span>
+                <span className="media-fact-value">
+                  {m.ops.backupError ? <Badge type="warning">Failed</Badge> : relativeTime(m.ops.lastBackupAt) ?? 'Not yet'}
+                </span>
+              </div>
+              <div className="media-fact">
+                <span>Matches TMDB’s list</span>
+                <span className="media-fact-value">
+                  {!m.ops.crosscheck ? 'Not checked yet' : !m.ops.crosscheck.ok ? <Badge type="warning">Check failed</Badge>
+                    : `${m.ops.crosscheck.coveragePct}% · ${relativeTime(m.ops.crosscheck.at)}`}
+                </span>
+              </div>
+              <div className="media-fact"><span>Alerts</span><span className="media-fact-value">{m.ops.alerts ? 'On (ntfy)' : 'Off'}</span></div>
+            </>
+          )}
         </div>
       )}
       <p className="mt-6 max-w-xl text-sm text-gray-400">
         NetFlarrrx checks Netflix’s catalog once a day at 6:23 a.m. A title’s date added is the first day it appeared after tracking began.
+        Every Sunday it compares the list with TMDB’s, which comes from JustWatch.
       </p>
       <Credits />
     </>

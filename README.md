@@ -12,7 +12,8 @@ Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (
 | M1: ingest | Deployed Nov 20. Daily sync with noise guards, TMDB enrichment, Seerr mirror, health endpoint. |
 | M2: browse UI | Built. Discover rows, Movies and Series with filters, Top rated, title detail with trailers, search. Styled to match Seerr. |
 | M3: requests | Deployed. Request movies in one tap, pick seasons for series, passcode-protected, "Hide what I have" filter. |
-| M4: thematic rows | Built. Six rule-based rows on Discover (acclaimed, hidden gems, true stories, heists, limited series, short movies), editable in `themes.json`. |
+| M4: thematic rows | Deployed. Six rule-based rows on Discover (acclaimed, hidden gems, true stories, heists, limited series, short movies), editable in `themes.json`. |
+| M5: polish | Built. Nightly verified backups, ntfy alerts, weekly TMDB cross-check, add to home screen. A second streaming service is deferred. |
 
 ## What runs
 
@@ -119,6 +120,18 @@ To change them, put a `themes.json` in `~/server/config/netflarrrx/` and restart
 
 Fields: `slug`, `title`, `kind` (movie or series), `signals` {keywords, genres, types}, `exclude` {keywords, genres}, `year`, `rating`, `votes`, `runtime`, `seasons` (each `{min, max}`), `sort` (added, rating, popularity, release, title), `home` (false keeps it off Discover but under More → Collections).
 
+## Backups, alerts and the TMDB cross-check
+
+- **Backups, nightly at 3:41.** A consistent copy of the database (`VACUUM INTO`), checked with SQLite's integrity check before it replaces anything, into `/data/backups` (newest 14 kept). Also taken on the first start after an update. To keep copies on the external drive, add a second volume, e.g. `- /mnt/external/netflarrrx-backups:/backups`, and set `BACKUP_DIR=/backups`. To restore: stop the container, copy a backup over `~/server/config/netflarrrx/netflarrrx.sqlite`, start it.
+- **Alerts.** Set `ALERT_URL` to an ntfy topic (install the ntfy app and subscribe to the same topic; pick a long random name, since anyone who knows it can read it) or a Discord webhook. NetFlarrrx sends one message when something goes wrong, a reminder after a day, and one when it's fixed: sync held, failing or overdue; backup failed or older than 2 days; cross-check failed or low. `docker exec netflarrrx node dist/cli.js alert-test` checks the setup.
+- **TMDB cross-check, Sundays at 5:17.** Lists every title TMDB (JustWatch data) has on Netflix US and compares it with ours. It alerts below 60% or after a drop of 10 points. `docker exec netflarrrx node dist/cli.js crosscheck` runs it now and shows the most popular titles each side is missing, for a spot check on JustWatch.
+
+The More tab shows the last backup, the cross-check match and whether alerts are on.
+
+## Add to home screen
+
+On iPhone: open the app in Safari, Share → Add to Home Screen. It opens full screen with its own icon. Over plain `http://` the service worker (offline shell) can't run; that switches on by itself once the app is served over HTTPS (Tailscale, later).
+
 ## Day-to-day commands
 
 ```bash
@@ -126,9 +139,12 @@ docker exec netflarrrx node dist/cli.js status          # counts, health, last 1
 docker exec netflarrrx node dist/cli.js sync            # sync now (29 credits)
 docker exec netflarrrx node dist/cli.js confirm <id>    # apply a held run
 docker exec netflarrrx node dist/cli.js enrich          # retry TMDB for titles that need it
+docker exec netflarrrx node dist/cli.js backup          # take a backup now
+docker exec netflarrrx node dist/cli.js crosscheck      # compare with TMDB's Netflix list
+docker exec netflarrrx node dist/cli.js alerts          # what would alert right now
 ```
 
-Back up `~/server/config/netflarrrx/` — the date-added history can't be rebuilt. Your existing rsync of `~/server/config/` already covers it.
+The date-added history can't be rebuilt, so keep the nightly backups somewhere other than the main disk too (see above). Your rsync of `~/server/config/` to the Mac also covers it.
 
 ## Development
 

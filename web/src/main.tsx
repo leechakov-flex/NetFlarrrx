@@ -16,6 +16,12 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60_000, retry: 1, refetchOnWindowFocus: false } },
 });
 
+// Service workers only run on HTTPS (or localhost). On plain http://monkeyserver.local
+// the app still installs to the home screen; offline support arrives with HTTPS.
+if ('serviceWorker' in navigator && window.isSecureContext && import.meta.env.PROD) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => undefined); });
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

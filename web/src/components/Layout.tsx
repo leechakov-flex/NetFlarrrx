@@ -150,6 +150,14 @@ export function Layout({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const [online, setOnline] = useState(() => navigator.onLine);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener('online', on);
+    window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
+  }, []);
 
   return (
     <div className="flex min-h-screen min-w-0 bg-gray-900">
@@ -169,7 +177,14 @@ export function Layout({ children }: { children: ReactNode }) {
           <SearchInput />
         </div>
         <main className="relative top-16 z-0 focus:outline-none">
-          <div className="mx-auto max-w-[96rem] px-4 pb-10">{children}</div>
+          <div className="mx-auto max-w-[96rem] px-4 pb-10">
+            {!online && (
+              <div role="status" className="mt-2 rounded-md border border-yellow-500/60 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-100">
+                <span className="font-semibold">Can’t reach MonkeyServer.</span> You’re offline; titles load again once you’re back on your home network.
+              </div>
+            )}
+            {children}
+          </div>
         </main>
       </div>
       <MobileMenu />

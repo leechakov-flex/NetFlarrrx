@@ -9,8 +9,11 @@ import { enrichTitles, type EnrichResult } from './enrich/tmdb.js';
 import { mirrorSeerrMedia, type MirrorResult } from './seerr/mirror.js';
 import { catalogStats } from './catalog/rules.js';
 import { log } from './log.js';
+import { backupDir, lastBackup, runBackup, type BackupState } from './ops/backup.js';
+import { lastCrossCheck, runCrossCheck, type CrossCheckState } from './ops/crosscheck.js';
+import { Notifier, reconcileAlerts, type Problem } from './ops/alerts.js';
 
-export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn }
+export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn }
 
 export interface App {
   cfg: Config;
@@ -23,6 +26,12 @@ export interface App {
   pipeline(trigger: Trigger): Promise<{ sync: SyncRunRow; enrich: EnrichResult; mirror: MirrorResult } | { busy: true }>;
   enrich(): Promise<EnrichResult>;
   mirror(): Promise<MirrorResult>;
+  backup(): Promise<BackupState>;
+  crosscheck(): Promise<CrossCheckState>;
+  /** Work out what needs attention and alert on changes (ntfy or Discord). */
+  checkAlerts(now?: Date): Promise<{ open: string[]; sent: string[] }>;
+  problems(now?: Date): Problem[];
+  notifier: Notifier;
   health(now?: Date): Health;
   close(): void;
 }
@@ -36,6 +45,8 @@ export interface Health {
   seerr_mirror: unknown;
   stats: ReturnType<typeof catalogStats>;
   pipeline_running: boolean;
+  backup: { last_ok_at: string | null; last_error: string | null } | null;
+  crosscheck: { at: string; ok: boolean; coverage_pct: number | null; agreement_pct: number | null } | null;
 }
 
 const HEALTHY_SYNC_AGE_MS = 36 * 3600_000;
@@ -47,7 +58,9 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   const tmdb = new TmdbClient(cfg.TMDB_BASE, cfg.TMDB_READ_TOKEN, fetchers.tmdb);
   const seerr = new SeerrClient(cfg.SEERR_URL, cfg.SEERR_API_KEY, fetchers.seerr, cfg.SEERR_USER_ID);
   const startedAt = new Date();
+  const notifier = new Notifier(cfg, fetchers.alerts);
   let running = false;
+  const safely = (what: string, p: Promise<unknown>) => p.catch((err) => log.error(`${what} failed`, { error: String(err) }));
 
   const app: App = {
     cfg, db, startedAt, watchmode, tmdb, seerr,
@@ -59,6 +72,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         const sync = await runCatalogSync({ db, cfg, watchmode }, trigger);
         const enrich = await enrichTitles(db, cfg, tmdb);   // also catches up on titles a failed run left pending
         const mirror = await mirrorSeerrMedia(db, seerr);
+        await safely('alerts', app.checkAlerts());
         return { sync, enrich, mirror };
       } catch (err) {
         log.error('pipeline: unexpected error', { error: (err as Error).stack ?? String(err) });
@@ -71,6 +85,52 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     enrich: () => enrichTitles(db, cfg, tmdb),
     mirror: () => mirrorSeerrMedia(db, seerr),
 
+    async backup() {
+      const r = runBackup(db, cfg);
+      await safely('alerts', app.checkAlerts());
+      return r;
+    },
+
+    async crosscheck() {
+      const r = await runCrossCheck(db, cfg, tmdb);
+      await safely('alerts', app.checkAlerts());
+      return r;
+    },
+
+    notifier,
+    problems(now = new Date()) {
+      const out: Problem[] = [];
+      const h = app.health(now);
+      const help = 'Details: docker exec netflarrrx node dist/cli.js status';
+      if (h.status === 'held') out.push({ key: 'sync:held', title: 'Sync held', message: `${h.reason}\n${help}` });
+      if (h.status === 'failing') out.push({ key: 'sync:failing', title: 'Sync failing', message: `${h.reason}\n${help}` });
+      if (h.status === 'stale') out.push({ key: 'sync:stale', title: 'Sync overdue', message: `${h.reason}\n${help}` });
+
+      if (backupDir(cfg)) {
+        const b = lastBackup(db);
+        const lastOk = b?.lastOkAt ? Date.parse(b.lastOkAt) : null;
+        if (b && !b.ok) out.push({ key: 'backup:failed', title: 'Backup failed', message: `${b.error}\nThe last good backup is ${b.lastOkAt ? `from ${b.lastOkAt.slice(0, 10)}` : 'missing'}.` });
+        else if (lastOk === null ? now.getTime() - startedAt.getTime() > 48 * 3600_000 : now.getTime() - lastOk > 48 * 3600_000) {
+          out.push({ key: 'backup:stale', title: 'No backup in 2 days', message: 'The nightly backup has not run. Check the container is up and the backup folder is writable.' });
+        }
+      }
+
+      const x = lastCrossCheck(db);
+      if (x && !x.ok) out.push({ key: 'crosscheck:failed', title: 'TMDB cross-check failed', message: x.error ?? 'unknown error' });
+      if (x?.ok && x.coveragePct !== undefined) {
+        if (x.coveragePct < cfg.CROSSCHECK_MIN_PCT) {
+          out.push({ key: 'crosscheck:low', title: 'Netflix list looks incomplete',
+            message: `Only ${x.coveragePct}% of the ${x.tmdbTotal} titles TMDB lists on Netflix are in NetFlarrrx (alert below ${cfg.CROSSCHECK_MIN_PCT}%). Watchmode's list may be stale.\nDetails: docker exec netflarrrx node dist/cli.js crosscheck` });
+        } else if (x.previousCoveragePct != null && x.previousCoveragePct - x.coveragePct > cfg.CROSSCHECK_MAX_DROP) {
+          out.push({ key: 'crosscheck:drop', title: 'Netflix list changed sharply',
+            message: `Match with TMDB fell from ${x.previousCoveragePct}% to ${x.coveragePct}% since last week.\nDetails: docker exec netflarrrx node dist/cli.js crosscheck` });
+        }
+      }
+      return out;
+    },
+
+    checkAlerts: (now = new Date()) => reconcileAlerts(db, notifier, app.problems(now), now),
+
     health(now = new Date()) {
       const lastApplied = get<{ started_at: string }>(db,
         'SELECT started_at FROM sync_runs WHERE provider_id = ? AND region = ? AND applied = 1 ORDER BY id DESC LIMIT 1',
@@ -82,6 +142,8 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         seerr_mirror: getJobState(db, 'seerr_mirror')?.value ?? null,
         stats: catalogStats(db, cfg),
         pipeline_running: running,
+        backup: backupDir(cfg) ? (() => { const b = lastBackup(db); return { last_ok_at: b?.lastOkAt ?? null, last_error: b && !b.ok ? b.error ?? null : null }; })() : null,
+        crosscheck: (() => { const x = lastCrossCheck(db); return x ? { at: x.at, ok: x.ok, coverage_pct: x.coveragePct ?? null, agreement_pct: x.agreementPct ?? null } : null; })(),
       };
       if (last?.status === 'held') {
         return { ...base, ok: false, status: 'held', reason: `sync run ${last.id} held: ${last.note}. Confirm it or wait for the next run.` };
@@ -115,4 +177,9 @@ export async function startupTasks(app: App) {
   } else if (get<{ n: number }>(app.db, `SELECT count(*) n FROM titles WHERE tmdb_status = 'pending'`)!.n > 0) {
     await app.enrich();
   }
+  // M5 jobs on first start after an update, instead of waiting for their schedule.
+  const b = lastBackup(app.db);
+  if (backupDir(app.cfg) && (!b?.lastOkAt || Date.now() - Date.parse(b.lastOkAt) > 24 * 3600_000)) await app.backup();
+  if (!lastCrossCheck(app.db)) await app.crosscheck();
+  await app.checkAlerts().catch(() => undefined);
 }

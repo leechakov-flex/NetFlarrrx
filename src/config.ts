@@ -47,6 +47,24 @@ const schema = z.object({
   MAX_SWING_PCT: num(10),
   ENRICH_STALE_DAYS: num(30),
 
+  // Backups (M5): a verified SQLite snapshot every night. BACKUP_DIR defaults to <DATA_DIR>/backups;
+  // point it at a second disk (mounted into the container) so a dead drive doesn't take both.
+  BACKUP_DIR: optStr(),
+  BACKUP_KEEP: num(14),
+  BACKUP_CRON: z.preprocess(clean, z.string().default('41 3 * * *')),
+
+  // Alerts (M5): an ntfy topic URL (https://ntfy.sh/<topic> or self-hosted) or a Discord webhook URL.
+  ALERT_URL: z.preprocess(clean, z.url().optional()),
+  ALERT_TOKEN: optStr(),            // ntfy access token, for protected topics
+  APP_URL: z.preprocess(clean, z.url().optional()),   // link in alerts, e.g. http://monkeyserver.local:8484
+  ALERT_CHECK_CRON: z.preprocess(clean, z.string().default('7 * * * *')),
+
+  // TMDB cross-check (M5): weekly compare with TMDB's own Netflix list (JustWatch data).
+  CROSSCHECK_CRON: z.preprocess(clean, z.string().default('17 5 * * 0')),
+  CROSSCHECK_MIN_PCT: num(60),      // alert if fewer than this % of TMDB's Netflix titles are in ours
+  CROSSCHECK_MAX_DROP: num(10),     // or if that share falls this many points since the last run
+  TMDB_NETFLIX_PROVIDER_ID: num(8),
+
   WATCHMODE_MIN_INTERVAL_MS: num(600),
   TMDB_CONCURRENCY: num(8),
   LOG_LEVEL: z.preprocess(clean, z.enum(['debug', 'info', 'warn', 'error']).default('info')),
