@@ -10,6 +10,8 @@ const parseFilters = (p: URLSearchParams): Filters & { sort: SortKey } => ({
   genres: p.get('genres')?.split(',').map(Number).filter((n) => n > 0) || undefined,
   added: ([7, 30, 90] as const).find((n) => String(n) === p.get('added')) ?? undefined,
   minRating: Number(p.get('minRating')) || undefined,
+  maxRating: p.get('maxRating') !== null && Number(p.get('maxRating')) < 10 ? Number(p.get('maxRating')) : undefined,
+  hideHave: p.get('hide') === 'have' || undefined,
   minVotes: Number(p.get('minVotes')) || undefined,
   sort: (p.get('sort') as SortKey) || 'added',
 });
@@ -32,6 +34,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
     if (merged.added) p.set('added', String(merged.added));
     if (merged.genres?.length) p.set('genres', merged.genres.join(','));
     if (merged.minRating) p.set('minRating', String(merged.minRating));
+    if (merged.maxRating !== undefined && merged.maxRating < 10) p.set('maxRating', String(merged.maxRating));
+    if (merged.hideHave) p.set('hide', 'have');
     if (merged.minVotes) p.set('minVotes', String(merged.minVotes));
     setParams(p, { replace: true });
   };
@@ -56,7 +60,11 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   const chips: { label: string; clear: () => void }[] = [];
   if (f.added) chips.push({ label: `Added: last ${f.added} days`, clear: () => update({ added: undefined }) });
   for (const g of f.genres ?? []) chips.push({ label: genreName(g), clear: () => update({ genres: f.genres!.filter((x) => x !== g) }) });
-  if (f.minRating) chips.push({ label: `Rating ${f.minRating}+`, clear: () => update({ minRating: undefined }) });
+  if (f.minRating || f.maxRating !== undefined) {
+    const lo = f.minRating ?? 0, hi = f.maxRating ?? 10;
+    chips.push({ label: hi >= 10 ? `Rating ${lo}+` : lo ? `Rating ${lo}–${hi}` : `Rating ${hi} or less`, clear: () => update({ minRating: undefined, maxRating: undefined }) });
+  }
+  if (f.hideHave) chips.push({ label: 'Hiding what I have', clear: () => update({ hideHave: undefined }) });
   if (f.minVotes) chips.push({ label: `${f.minVotes.toLocaleString()}+ votes`, clear: () => update({ minVotes: undefined }) });
 
   return (
@@ -99,8 +107,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         onClose={() => setFiltersOpen(false)}
         kind={kind}
         q={q}
-        value={{ genres: f.genres, added: f.added, minRating: f.minRating, minVotes: f.minVotes }}
-        onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, minVotes: next.minVotes })}
+        value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave }}
+        onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave })}
       />
     </>
   );

@@ -23,6 +23,8 @@ const schema = z.object({
   SEERR_API_KEY: str(),
   SEERR_URL: z.preprocess(clean, z.url().default('http://seerr:5055')),
   APP_PASSCODE: optStr(),
+  // Request as this Seerr user (X-API-User). Unset = the API key's owner (the admin), so requests auto-approve.
+  SEERR_USER_ID: z.preprocess(clean, z.coerce.number().int().positive().optional()),
 
   WATCHMODE_BASE: z.preprocess(clean, z.url().default('https://api.watchmode.com/v1')),
   TMDB_BASE: z.preprocess(clean, z.url().default('https://api.themoviedb.org/3')),

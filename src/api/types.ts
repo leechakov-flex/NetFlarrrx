@@ -40,10 +40,12 @@ export interface BrowseQuery {
   genres?: number[];
   added?: AddedWithin;
   minRating?: number;              // 0-10
+  maxRating?: number;              // 0-10
   minVotes?: number;
   sort?: SortKey;
   page?: number;                   // 1-based
   q?: string;                      // title search
+  hideHave?: boolean;              // drop titles already available, partial, processing or requested in Seerr
 }
 
 export interface BrowseResponse {
@@ -81,4 +83,18 @@ export interface MetaResponse {
   eligible: number;
   newThisWeek: number;
   languageRule: 'en' | 'all';
+  passcodeRequired: boolean;       // requests need APP_PASSCODE
 }
+
+/** One season as Seerr sees it. null = nothing yet, so it can be requested. */
+export type SeasonState = 'available' | 'partial' | 'processing' | 'requested' | null;
+
+export interface SeasonInfo { seasonNumber: number; name: string; episodeCount: number; state: SeasonState }
+
+export interface SeasonsResponse { partialRequestsEnabled: boolean; seasons: SeasonInfo[] }
+
+export interface RequestBody { seasons?: number[] }
+
+export interface RequestResult { ok: true; state: 'requested'; seasons: number[] | null; message: string }
+
+export interface ApiError { error: string; code?: string }

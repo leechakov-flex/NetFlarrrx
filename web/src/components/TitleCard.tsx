@@ -6,9 +6,9 @@ import { addedLabel, tmdbImage } from '../lib/format';
 import { StatusBadgeMini } from './ui';
 
 /**
- * Seerr's TitleCard: 2:3 poster, rounded-xl, ring gray-700, a MOVIE/SERIES pill,
- * the status mini-badge, and Seerr's title gradient. NetFlarrrx always shows the
- * year and title, plus the date the title was added to Netflix.
+ * Seerr's TitleCard: 2:3 poster, rounded-xl, ring gray-700, a MOVIE/SERIES pill
+ * and the status mini-badge. As in the Figma card, the year, title and date added
+ * stay hidden until hover or keyboard focus, so the poster carries the row.
  */
 export function TitleCard({ card, fill = false }: { card: Card; fill?: boolean }) {
   const [broken, setBroken] = useState(false);
@@ -18,7 +18,7 @@ export function TitleCard({ card, fill = false }: { card: Card; fill?: boolean }
     <Link
       to={`/title/${card.id}`}
       className={`${fill ? 'w-full' : 'w-36 sm:w-36 md:w-44'} group block flex-shrink-0 outline-none`}
-      aria-label={`${card.title}${card.year ? ` (${card.year})` : ''}`}
+      aria-label={[`${card.title}${card.year ? ` (${card.year})` : ''}`, card.backOnNetflix ? 'back on Netflix' : added].filter(Boolean).join(', ')}
     >
       <div
         className="relative transform-gpu overflow-hidden rounded-xl bg-gray-800 shadow ring-1 ring-gray-700 transition duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:ring-gray-500 group-focus-visible:ring-2 group-focus-visible:ring-indigo-400"
@@ -41,10 +41,14 @@ export function TitleCard({ card, fill = false }: { card: Card; fill?: boolean }
             <StatusBadgeMini state={card.seerr} />
           </div>
           <div
-            className="absolute inset-x-0 bottom-0 top-1/3"
-            style={{ background: 'linear-gradient(180deg, rgba(45, 55, 72, 0) 0%, rgba(45, 55, 72, 0.92) 100%)' }}
-          />
-          <div className="absolute inset-x-0 bottom-0 px-2 pb-2 text-white">
+            aria-hidden
+            className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+          >
+            <div
+              className="absolute inset-x-0 bottom-0 top-1/3"
+              style={{ background: 'linear-gradient(180deg, rgba(45, 55, 72, 0) 0%, rgba(45, 55, 72, 0.92) 100%)' }}
+            />
+            <div className="absolute inset-x-0 bottom-0 px-2 pb-2 text-white">
             {card.year && <div className="text-sm font-medium">{card.year}</div>}
             <h2
               className="whitespace-normal text-lg font-bold leading-tight md:text-xl"
@@ -55,6 +59,7 @@ export function TitleCard({ card, fill = false }: { card: Card; fill?: boolean }
             {(added || card.backOnNetflix) && (
               <div className="mt-1 text-xs font-medium text-gray-200">{card.backOnNetflix ? `Back · ${added?.replace('Added ', '')}` : added}</div>
             )}
+            </div>
           </div>
         </div>
       </div>

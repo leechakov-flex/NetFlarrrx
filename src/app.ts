@@ -45,7 +45,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   const db = openDb(cfg.DATA_DIR);
   const watchmode = new WatchmodeClient(cfg.WATCHMODE_BASE, cfg.WATCHMODE_API_KEY, fetchers.watchmode, cfg.WATCHMODE_MIN_INTERVAL_MS);
   const tmdb = new TmdbClient(cfg.TMDB_BASE, cfg.TMDB_READ_TOKEN, fetchers.tmdb);
-  const seerr = new SeerrClient(cfg.SEERR_URL, cfg.SEERR_API_KEY, fetchers.seerr);
+  const seerr = new SeerrClient(cfg.SEERR_URL, cfg.SEERR_API_KEY, fetchers.seerr, cfg.SEERR_USER_ID);
   const startedAt = new Date();
   let running = false;
 

@@ -84,16 +84,31 @@ export class FakeTmdb {
 }
 
 /** Seerr /api/v1/media over a fixed list, paged like the real server. */
+/**
+ * Seerr: a mutable media list, series details, public settings, and request
+ * creation that behaves like Seerr (records the request, marks media pending).
+ */
 export class FakeSeerr {
-  media: unknown[];
+  media: Record<string, unknown>[];
   fail = false;
+  settings = { partialRequestsEnabled: true, enableSpecialEpisodes: false };
+  /** Seasons per TMDB series ID; unknown series get seasons 0-3. */
+  seasonCounts = new Map<number, number>();
+  requests: { mediaType: string; mediaId: number; seasons?: number[]; is4k: boolean; headers: Record<string, string> }[] = [];
+  /** Force the next POST /request to answer with this status (403, 409, 500...). */
+  nextRequestStatus: number | null = null;
   constructor(media?: unknown[]) {
-    this.media = media ?? fixture<{ results: unknown[] }>('seerr/media.page1.json').results;
+    this.media = (media ?? fixture<{ results: unknown[] }>('seerr/media.page1.json').results) as Record<string, unknown>[];
   }
-  fetch: FetchFn = async (input) => {
+  private find(type: string, tmdbId: number) {
+    return this.media.find((m) => m.mediaType === type && m.tmdbId === tmdbId) as
+      { status: number; seasons?: { seasonNumber: number; status: number }[] } | undefined;
+  }
+  fetch: FetchFn = async (input, init) => {
     const url = new URL(String(input));
     if (this.fail) return json(500, {});
     if (url.pathname === '/api/v1/status') return json(200, { version: '3.3.0' });
+    if (url.pathname === '/api/v1/settings/public') return json(200, { ...this.settings, applicationTitle: 'Seerr' });
     if (url.pathname === '/api/v1/media') {
       const take = Number(url.searchParams.get('take'));
       const skip = Number(url.searchParams.get('skip'));
@@ -101,6 +116,39 @@ export class FakeSeerr {
         pageInfo: { pages: Math.ceil(this.media.length / take), pageSize: take, results: this.media.length, page: Math.floor(skip / take) + 1 },
         results: this.media.slice(skip, skip + take),
       });
+    }
+    const tv = url.pathname.match(/^\/api\/v1\/tv\/(\d+)$/);
+    if (tv) {
+      const id = Number(tv[1]);
+      const n = this.seasonCounts.get(id) ?? 3;
+      const m = this.find('tv', id);
+      const reqs = this.requests.filter((r) => r.mediaType === 'tv' && r.mediaId === id)
+        .map((r) => ({ status: 2, is4k: r.is4k, seasons: (r.seasons ?? []).map((sn) => ({ seasonNumber: sn, status: 2 })) }));
+      return json(200, {
+        id,
+        name: `Series ${id}`,
+        seasons: Array.from({ length: n + 1 }, (_, i) => ({ seasonNumber: i, episodeCount: 8 + i, name: i === 0 ? 'Specials' : `Season ${i}`, airDate: null })),
+        mediaInfo: m ? { status: m.status, seasons: m.seasons ?? [], requests: reqs } : null,
+      });
+    }
+    if (url.pathname === '/api/v1/request' && init?.method === 'POST') {
+      if (this.nextRequestStatus) {
+        const st = this.nextRequestStatus;
+        this.nextRequestStatus = null;
+        return json(st, { message: st === 403 ? 'Quota exceeded' : st === 409 ? 'Request for this media already exists.' : 'boom' });
+      }
+      const body = JSON.parse(String(init.body)) as { mediaType: string; mediaId: number; seasons?: number[]; is4k: boolean };
+      const headers = Object.fromEntries(Object.entries((init.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));
+      this.requests.push({ ...body, headers });
+      const existing = this.find(body.mediaType, body.mediaId);
+      if (existing) {
+        if (existing.status < 2 || existing.status > 5) existing.status = 2;
+        existing.seasons = [...(existing.seasons ?? []), ...(body.seasons ?? []).map((sn) => ({ seasonNumber: sn, status: 2 }))];
+      } else {
+        this.media.push({ id: 9000 + this.media.length, mediaType: body.mediaType, tmdbId: body.mediaId, status: 2,
+          seasons: (body.seasons ?? []).map((sn) => ({ seasonNumber: sn, status: 2 })) });
+      }
+      return json(201, { id: this.requests.length, status: 2 });
     }
     return json(404, {});
   };

@@ -48,7 +48,9 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
   if (q.kind) { where.push('tk.kind = ?'); params.push(q.kind); }
   if (q.added) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - q.added * DAY).toISOString()); }
   if (q.minRating) { where.push('tk.vote_average >= ?'); params.push(q.minRating); }
+  if (q.maxRating !== undefined && q.maxRating < 10) { where.push('tk.vote_average <= ?'); params.push(q.maxRating); }
   if (q.minVotes) { where.push('tk.vote_count >= ?'); params.push(q.minVotes); }
+  if (q.hideHave) where.push('(sm.status IS NULL OR sm.status NOT IN (2, 3, 4, 5))');
   if (q.genres?.length) {
     where.push(`EXISTS (SELECT 1 FROM title_genres tg WHERE tg.title_id = tk.id AND tg.genre_id IN (${q.genres.map(() => '?').join(',')}))`);
     params.push(...q.genres);
@@ -154,11 +156,12 @@ export function titleDetail(db: Db, cfg: Config, id: number): TitleDetail | null
 }
 
 export function meta(db: Db, cfg: Config, health: string, now = new Date()): MetaResponse {
+  const passcodeRequired = Boolean(cfg.APP_PASSCODE);
   const lastSync = get<{ t: string }>(db, `SELECT max(started_at) t FROM sync_runs WHERE provider_id = ? AND region = ? AND applied = 1`,
     [cfg.NETFLIX_SOURCE_ID, cfg.REGION])?.t ?? null;
   const f = filters(cfg, {}, now);
   const eligible = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${f.sql}`, f.params)!.n;
   const w = filters(cfg, { added: 7 }, now);
   const newThisWeek = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${w.sql}`, w.params)!.n;
-  return { trackingSince: trackingSince(db, cfg), lastSyncAt: lastSync, health, eligible, newThisWeek, languageRule: cfg.LANGUAGE_RULE };
+  return { trackingSince: trackingSince(db, cfg), lastSyncAt: lastSync, health, eligible, newThisWeek, languageRule: cfg.LANGUAGE_RULE, passcodeRequired };
 }

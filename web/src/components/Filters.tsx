@@ -17,9 +17,17 @@ const ADDED: { value: BrowseQuery['added']; label: string }[] = [
 ];
 const VOTES = [0, 50, 200, 1000];
 
-export type Filters = Pick<BrowseQuery, 'genres' | 'added' | 'minRating' | 'minVotes'>;
+export type Filters = Pick<BrowseQuery, 'genres' | 'added' | 'minRating' | 'maxRating' | 'minVotes' | 'hideHave'>;
+const ratingSet = (f: Filters) => !!f.minRating || (f.maxRating !== undefined && f.maxRating < 10);
 export const activeFilterCount = (f: Filters) =>
-  (f.genres?.length ? 1 : 0) + (f.added ? 1 : 0) + (f.minRating ? 1 : 0) + (f.minVotes ? 1 : 0);
+  (f.genres?.length ? 1 : 0) + (f.added ? 1 : 0) + (ratingSet(f) ? 1 : 0) + (f.minVotes ? 1 : 0) + (f.hideHave ? 1 : 0);
+
+export function ratingLabel(min = 0, max = 10) {
+  if (!min && max >= 10) return 'Any rating';
+  if (max >= 10) return `${min} and up`;
+  if (!min) return `${max} and below`;
+  return `between ${min} and ${max}`;
+}
 
 /** Seerr's Discover header: sort select with an icon box, plus a Filters button showing the active count. */
 export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters }:
@@ -102,14 +110,14 @@ export function FiltersPanel({ open, onClose, kind, q, value, onApply }:
 
         <fieldset>
           <legend className="mb-2 text-lg font-semibold text-white">TMDB rating</legend>
-          <input
-            type="range" min={0} max={9} step={0.5}
-            value={draft.minRating ?? 0}
-            onChange={(e) => setDraft({ ...draft, minRating: Number(e.target.value) || undefined })}
-            className="w-full accent-indigo-500"
-            aria-label="Minimum TMDB rating"
+          <RatingRange
+            min={draft.minRating ?? 0}
+            max={draft.maxRating ?? 10}
+            onChange={(lo, hi) => setDraft({ ...draft, minRating: lo || undefined, maxRating: hi < 10 ? hi : undefined })}
           />
-          <div className="mt-1 text-sm text-gray-300">{draft.minRating ? `${draft.minRating} and up` : 'Any rating'}</div>
+          <div className="mt-2 text-sm text-gray-300">
+            {ratingLabel(draft.minRating, draft.maxRating) === 'Any rating' ? 'Any rating' : `TMDB rating ${ratingLabel(draft.minRating, draft.maxRating)}`}
+          </div>
         </fieldset>
 
         <fieldset>
@@ -122,7 +130,48 @@ export function FiltersPanel({ open, onClose, kind, q, value, onApply }:
             ))}
           </div>
         </fieldset>
+
+        <fieldset>
+          <legend className="mb-2 text-lg font-semibold text-white">On MonkeyServer</legend>
+          <label className="flex cursor-pointer items-center justify-between gap-4">
+            <span className="text-sm text-gray-300">Hide titles that are already available or requested</span>
+            <Toggle checked={!!draft.hideHave} onChange={(v) => setDraft({ ...draft, hideHave: v || undefined })} label="Hide what I have" />
+          </label>
+        </fieldset>
       </div>
     </SlideOver>
+  );
+}
+
+/** Two-handle 0–10 range in half steps (Figma: TMDB rating between X and Y). */
+function RatingRange({ min, max, onChange }: { min: number; max: number; onChange: (min: number, max: number) => void }) {
+  const pct = (v: number) => `${v * 10}%`;
+  return (
+    <div className="dual-range relative h-5">
+      <div className="absolute inset-x-0 top-[7px] h-1.5 rounded-full bg-gray-700" />
+      <div className="absolute top-[7px] h-1.5 rounded-full bg-indigo-500" style={{ left: pct(min), right: `calc(100% - ${pct(max)})` }} />
+      <input
+        type="range" min={0} max={10} step={0.5} value={min} aria-label="Minimum TMDB rating"
+        onChange={(e) => onChange(Math.min(Number(e.target.value), max - 0.5), max)}
+        style={{ zIndex: min > 9 ? 2 : 1 }}
+      />
+      <input
+        type="range" min={0} max={10} step={0.5} value={max} aria-label="Maximum TMDB rating"
+        onChange={(e) => onChange(min, Math.max(Number(e.target.value), min + 0.5))}
+      />
+    </div>
+  );
+}
+
+/** Seerr-style switch. */
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button" role="switch" aria-checked={checked} aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${checked ? 'bg-indigo-500' : 'bg-gray-700'}`}
+    >
+      <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+    </button>
   );
 }

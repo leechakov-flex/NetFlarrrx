@@ -135,3 +135,14 @@ describe('read API', () => {
     }
   });
 });
+
+describe('rating range', () => {
+  it('filters between minRating and maxRating', async () => {
+    const { body } = await j<BrowseResponse>('/api/titles?minRating=4&maxRating=6');
+    expect(body.total).toBeGreaterThan(0);
+    expect(body.items.every((i) => i.voteAverage! >= 4 && i.voteAverage! <= 6)).toBe(true);
+    const open = await j<BrowseResponse>('/api/titles?minRating=4&maxRating=10');
+    const min = await j<BrowseResponse>('/api/titles?minRating=4');
+    expect(open.body.total).toBe(min.body.total);       // 10 means no upper bound
+  });
+});

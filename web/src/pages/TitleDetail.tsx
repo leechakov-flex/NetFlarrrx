@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ArrowDownTrayIcon, FilmIcon } from '@heroicons/react/24/outline';
+import { FilmIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/20/solid';
 import { useMeta, useTitle } from '../lib/api';
 import { languageName, longDate, runtime, seasons, tmdbImage } from '../lib/format';
 import { Badge, Button, Credits, Empty, Spinner, statusBadge } from '../components/ui';
 import { TrailerModal } from '../components/TrailerModal';
+import { RequestButton } from '../components/RequestButton';
 
 const seerrLabel = { available: 'Available', partial: 'Partially available', requested: 'Requested', processing: 'Processing' } as const;
 
@@ -59,10 +60,7 @@ export function TitleDetail() {
             </span>
           </div>
           <div className="media-actions">
-            <Button buttonType="primary" disabled title="Requesting arrives in the next update">
-              <ArrowDownTrayIcon className="h-5 w-5" />
-              <span>Request</span>
-            </Button>
+            <RequestButton d={d} />
             {d.trailer && (
               <Button onClick={() => setTrailer(true)}>
                 <FilmIcon className="h-5 w-5" />

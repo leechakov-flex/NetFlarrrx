@@ -11,7 +11,7 @@ Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (
 | M0: data spike | Done Nov 20, 2026. Go on Watchmode's free plan: 7,211 titles, 29 credits per sync, 99.9% with a TMDB ID. |
 | M1: ingest | Deployed Nov 20. Daily sync with noise guards, TMDB enrichment, Seerr mirror, health endpoint. |
 | M2: browse UI | Built. Discover rows, Movies and Series with filters, Top rated, title detail with trailers, search. Styled to match Seerr. |
-| M3: requests | Next. The Request button is shown but disabled until then. |
+| M3: requests | Built. Request movies in one tap, pick seasons for series, passcode-protected, "Hide what I have" filter. |
 
 ## What runs
 
@@ -88,6 +88,10 @@ Then open <http://monkeyserver.local:8484>.
 After updating to M2, the app re-fetches every title from TMDB once (about 4 minutes, free) to pick up trailers and age ratings. Add an **HTTP** monitor in Uptime Kuma for `http://netflarrrx:8484/healthz` (it's on the same network). It returns 503 when a sync is held, failing, or more than 36 hours old.
 
 To update later: `docker compose pull netflarrrx && docker compose up -d netflarrrx`.
+
+### Requests (M3)
+
+Requests go to Seerr with its API key, so they're made as the Seerr admin and approved automatically; Sonarr or Radarr picks them up from there. Set `APP_PASSCODE` in `netflarrrx.env` so only people with the passcode can request: each phone or browser asks once and remembers it. Ten wrong tries from one device pause it for 15 minutes. To make requests as a different Seerr user (so they wait for approval), add `SEERR_USER_ID=<their Seerr user ID>`.
 
 ## Day-to-day commands
 

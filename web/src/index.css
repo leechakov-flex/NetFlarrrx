@@ -30,11 +30,11 @@
   .media-year { @apply text-2xl font-normal text-gray-400 xl:text-3xl; }
   .media-attributes { @apply mt-1 flex flex-wrap items-center justify-center gap-x-1 text-xs text-gray-300 sm:text-sm xl:mt-0 xl:justify-start xl:text-base; }
   .media-actions { @apply relative mt-4 flex w-full flex-shrink-0 flex-col gap-3 sm:w-auto sm:flex-row sm:justify-end xl:mt-0; }
-  .media-overview { @apply flex flex-col pb-4 pt-8 text-white lg:flex-row; }
+  .media-overview { @apply flex flex-col pb-4 pt-4 text-white lg:flex-row lg:pt-8; }
   .media-overview-left { @apply flex-1 lg:mr-8; }
   .media-overview h2 { @apply text-xl font-bold text-gray-300 sm:text-2xl; }
-  .media-overview p { @apply pt-2 text-sm text-gray-400 sm:text-base; }
-  .media-overview-right { @apply mt-8 w-full lg:mt-0 lg:w-80; }
+  .media-overview p { @apply text-sm leading-relaxed text-gray-100 sm:text-base; }
+  .media-overview-right { @apply mt-4 w-full lg:mt-0 lg:w-80; }
   .media-facts { @apply rounded-lg border border-gray-700 bg-gray-900 text-sm font-bold text-gray-300 shadow; }
   .media-fact { @apply flex justify-between border-b border-gray-700 px-4 py-2 last:border-b-0; }
   .media-fact-value { @apply ml-2 text-right text-sm font-normal text-gray-400; }
@@ -43,3 +43,19 @@
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
 }
+
+/* Two overlapping range inputs: only the thumbs take pointer events. */
+.dual-range input[type='range'] {
+  position: absolute; inset: 0; width: 100%; height: 20px; margin: 0;
+  background: transparent; pointer-events: none; -webkit-appearance: none; appearance: none;
+}
+.dual-range input[type='range']::-webkit-slider-runnable-track { background: transparent; height: 20px; }
+.dual-range input[type='range']::-moz-range-track { background: transparent; }
+.dual-range input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none; pointer-events: auto; cursor: pointer;
+  height: 20px; width: 20px; border-radius: 9999px; background: #fff; border: 2px solid #6366f1;
+}
+.dual-range input[type='range']::-moz-range-thumb {
+  pointer-events: auto; cursor: pointer; height: 16px; width: 16px; border-radius: 9999px; background: #fff; border: 2px solid #6366f1;
+}
+.dual-range input[type='range']:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.6); }

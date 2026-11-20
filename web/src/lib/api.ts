@@ -1,20 +1,43 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type {
-  BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, TitleDetail, TopResponse,
+  BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, TitleDetail, TopResponse,
 } from '../../../src/api/types';
 
-export type { BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, TitleDetail, TopResponse };
+export type { BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, TitleDetail, TopResponse };
 export type { TitleCard, HomeRow, SeerrState, SortKey } from '../../../src/api/types';
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public code?: string) { super(message); }
+}
+
+async function toError(res: Response) {
+  const body = (await res.json().catch(() => null)) as { error?: string; code?: string } | null;
+  return new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`, body?.code);
 }
 
 export async function getJson<T>(path: string): Promise<T> {
   const res = await fetch(path, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new ApiError(res.status, `${res.status} ${res.statusText}`);
+  if (!res.ok) throw await toError(res);
   return res.json() as Promise<T>;
 }
+
+export async function postJson<T>(path: string, body: unknown, passcode?: string | null): Promise<T> {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', ...(passcode ? { 'x-passcode': passcode } : {}) },
+    body: JSON.stringify(body ?? {}),
+  });
+  if (!res.ok) throw await toError(res);
+  return res.json() as Promise<T>;
+}
+
+// The passcode is kept on this device so it's asked for once.
+const PASSCODE_KEY = 'netflarrrx.passcode';
+export const savedPasscode = {
+  get(): string | null { try { return localStorage.getItem(PASSCODE_KEY); } catch { return null; } },
+  set(v: string) { try { localStorage.setItem(PASSCODE_KEY, v); } catch { /* private mode: ask each time */ } },
+  clear() { try { localStorage.removeItem(PASSCODE_KEY); } catch { /* ignore */ } },
+};
 
 export function browseParams(q: BrowseQuery, page?: number): string {
   const p = new URLSearchParams();
@@ -22,9 +45,11 @@ export function browseParams(q: BrowseQuery, page?: number): string {
   if (q.genres?.length) p.set('genres', q.genres.join(','));
   if (q.added) p.set('added', String(q.added));
   if (q.minRating) p.set('minRating', String(q.minRating));
+  if (q.maxRating !== undefined && q.maxRating < 10) p.set('maxRating', String(q.maxRating));
   if (q.minVotes) p.set('minVotes', String(q.minVotes));
   if (q.sort) p.set('sort', q.sort);
   if (q.q) p.set('q', q.q);
+  if (q.hideHave) p.set('hide', 'have');
   if (page && page > 1) p.set('page', String(page));
   return p.toString();
 }
@@ -54,3 +79,7 @@ export const useBrowseCount = (q: BrowseQuery, enabled: boolean) =>
     enabled,
     placeholderData: (prev) => prev,
   });
+
+/** Live from Seerr, so a short cache. */
+export const useSeasons = (id: number, enabled: boolean) =>
+  useQuery({ queryKey: ['seasons', id], queryFn: () => getJson<SeasonsResponse>(`/api/titles/${id}/seasons`), enabled, staleTime: 15_000, retry: 0 });

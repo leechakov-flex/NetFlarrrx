@@ -8,7 +8,12 @@ import type { FetchFn } from '../clients/http.js';
 
 function serve(port: number, fetchFn: FetchFn) {
   createServer(async (req, res) => {
-    const r = await fetchFn(`http://127.0.0.1:${port}${req.url}`);
+    const chunks: Buffer[] = [];
+    for await (const c of req) chunks.push(c as Buffer);
+    const headers = Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, String(v)]));
+    const r = await fetchFn(`http://127.0.0.1:${port}${req.url}`, {
+      method: req.method, headers, body: chunks.length ? Buffer.concat(chunks).toString('utf8') : undefined,
+    });
     res.writeHead(r.status, Object.fromEntries(r.headers));
     res.end(await r.text());
   }).listen(port, '127.0.0.1');

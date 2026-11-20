@@ -23,6 +23,8 @@ const buttonTypes = {
   primary: 'text-white border border-indigo-500 bg-indigo-600/80 hover:bg-indigo-600 active:bg-indigo-700',
   default: 'text-gray-200 bg-gray-800/80 border-gray-600 hover:text-white hover:bg-gray-700',
   ghost: 'text-white bg-transparent border-gray-600 hover:border-gray-200',
+  success: 'text-white border border-green-500 bg-green-500/80 hover:bg-green-500 active:bg-green-700',
+  warning: 'text-white border border-yellow-500 bg-yellow-500/80 hover:bg-yellow-500 active:bg-yellow-700',
 };
 export function Button({ buttonType = 'default', size = 'md', className = '', children, ...rest }:
   ButtonHTMLAttributes<HTMLButtonElement> & { buttonType?: keyof typeof buttonTypes; size?: 'md' | 'lg' }) {
@@ -73,7 +75,7 @@ export function Tag({ children, selected = false, onClick, removable = false }:
       onClick={onClick}
       aria-pressed={selected}
       className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm leading-snug ring-1 ring-inset transition ${
-        selected ? 'bg-indigo-600/80 font-medium text-white ring-indigo-500 hover:bg-indigo-600' : 'bg-gray-800 text-gray-200 ring-gray-600 hover:bg-gray-700'
+        selected ? 'bg-indigo-600 font-medium text-white ring-indigo-500 hover:bg-indigo-500' : 'bg-gray-800 text-gray-200 ring-gray-600 hover:bg-gray-700'
       }`}
     >
       {children}

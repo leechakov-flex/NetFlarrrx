@@ -10,6 +10,7 @@ import { TopRated } from './pages/TopRated';
 import { TitleDetail } from './pages/TitleDetail';
 import { More } from './pages/More';
 import { Empty } from './components/ui';
+import { FeedbackProvider } from './components/Feedback';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5 * 60_000, retry: 1, refetchOnWindowFocus: false } },
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
+      <FeedbackProvider>
       <BrowserRouter>
         <Layout>
           <Routes>
@@ -33,6 +35,7 @@ createRoot(document.getElementById('root')!).render(
           </Routes>
         </Layout>
       </BrowserRouter>
+      </FeedbackProvider>
     </QueryClientProvider>
   </StrictMode>,
 );

@@ -1,5 +1,5 @@
-import { Hono, type Context, type Next } from 'hono';
-import { timingSafeEqual } from 'node:crypto';
+import { Hono } from 'hono';
+import { passcodeGuard } from './api/passcode.js';
 import type { App } from './app.js';
 import { confirmHeldRun, recentRuns } from './sync/catalog.js';
 import { getJobState } from './db/db.js';
@@ -40,17 +40,9 @@ export function createServer(app: App, opts: ServerOptions = {}) {
     return c.json(h, h.ok ? 200 : 503);
   });
 
-  const requirePasscode = async (c: Context, next: Next) => {
-    const expected = app.cfg.APP_PASSCODE;
-    if (!expected) return next();
-    const given = c.req.header('x-passcode') ?? '';
-    const a = Buffer.from(given);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length || !timingSafeEqual(a, b)) return c.json({ error: 'passcode required' }, 401);
-    return next();
-  };
+  const requirePasscode = passcodeGuard(() => app.cfg.APP_PASSCODE);
 
-  http.route('/api', apiRoutes(app));
+  http.route('/api', apiRoutes(app, requirePasscode));
 
   http.get('/api/admin/status', (c) => c.json({
     health: app.health(),

@@ -16,6 +16,18 @@ const nav = [
   { to: '/top', label: 'Top rated', icon: TrophyIcon, active: TrophySolid, match: (p: string) => p.startsWith('/top') },
 ];
 
+function useMediaQuery(query: string) {
+  const get = () => typeof window !== 'undefined' && window.matchMedia(query).matches;
+  const [match, setMatch] = useState(get);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setMatch(mq.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, [query]);
+  return match;
+}
+
 function SearchInput() {
   const [params] = useSearchParams();
   const location = useLocation();
@@ -23,6 +35,7 @@ function SearchInput() {
   const onSearch = location.pathname === '/search';
   const [value, setValue] = useState(onSearch ? params.get('q') ?? '' : '');
   const timer = useRef<number | undefined>(undefined);
+  const wide = useMediaQuery('(min-width: 1024px)');
 
   useEffect(() => { if (!onSearch) setValue(''); }, [onSearch]);
 
@@ -32,6 +45,7 @@ function SearchInput() {
   };
 
   return (
+    // Figma: the wider desktop field says "Search Netflix titles".
     <form
       role="search"
       className="relative flex w-full items-center text-white focus-within:text-gray-200"
@@ -43,7 +57,7 @@ function SearchInput() {
         id="search_field"
         type="search"
         autoComplete="off"
-        placeholder="Search Netflix"
+        placeholder={wide ? 'Search Netflix titles' : 'Search Netflix'}
         value={value}
         onChange={(e) => {
           const q = e.target.value;

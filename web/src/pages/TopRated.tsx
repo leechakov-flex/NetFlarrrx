@@ -38,18 +38,18 @@ export function TopRated() {
       ) : top.data.items.length === 0 ? (
         <Empty>No titles have enough votes yet.</Empty>
       ) : (
-        <ol className="grid gap-3 lg:grid-cols-2">
+        <ol className="grid gap-4 lg:grid-cols-2 lg:gap-x-8">
           {top.data.items.map((t) => {
             const poster = tmdbImage.poster(t.posterPath);
             return (
               <li key={t.id}>
-                <Link to={`/title/${t.id}`} className="flex items-center gap-3 rounded-xl bg-gray-800 p-3 ring-1 ring-inset ring-gray-700 transition hover:ring-gray-500">
+                <Link to={`/title/${t.id}`} className="group flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
                   <span className="text-overseerr w-7 flex-shrink-0 text-center text-2xl font-bold">{t.rank}</span>
-                  <span className="relative h-[84px] w-14 flex-shrink-0 overflow-hidden rounded-md bg-gray-700 ring-1 ring-inset ring-gray-700">
+                  <span className="relative h-[84px] w-14 flex-shrink-0 overflow-hidden rounded-md bg-gray-700 ring-1 ring-gray-700">
                     {poster ? <img src={poster} alt="" loading="lazy" className="h-full w-full object-cover" /> : <FilmIcon className="m-auto mt-7 h-6 w-6 text-gray-500" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="line-clamp-2 block font-bold leading-snug text-white">{t.title}</span>
+                    <span className="line-clamp-2 block font-bold leading-snug text-white group-hover:underline">{t.title}</span>
                     <span className="mt-0.5 block text-sm text-gray-300">{[t.year, runtime(t.runtime)].filter(Boolean).join(' · ')}</span>
                     <span className="mt-0.5 flex items-center gap-1 text-sm">
                       <StarIcon className="h-4 w-4 text-amber-300" />
