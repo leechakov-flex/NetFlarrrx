@@ -1,0 +1,2507 @@
+{
+  "titles": [
+    {
+      "id": 1612010,
+      "title": "#Alive",
+      "year": 2020,
+      "imdb_id": "tt10620868",
+      "tmdb_id": 614696,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.607
+    },
+    {
+      "id": 3168551,
+      "title": "#BlackAF",
+      "year": 2020,
+      "imdb_id": "tt10311562",
+      "tmdb_id": 101200,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 94.969
+    },
+    {
+      "id": 3283890,
+      "title": "#Love",
+      "year": 2026,
+      "imdb_id": "tt38674953",
+      "tmdb_id": 302882,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 81.914
+    },
+    {
+      "id": 166,
+      "title": "#Realityhigh",
+      "year": 2017,
+      "imdb_id": "tt6119504",
+      "tmdb_id": 455656,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.703
+    },
+    {
+      "id": 1578419,
+      "title": "'83",
+      "year": 2021,
+      "imdb_id": "tt7518786",
+      "tmdb_id": 601337,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.36
+    },
+    {
+      "id": 1855744,
+      "title": "(Un)lucky Sisters",
+      "year": 2024,
+      "imdb_id": "tt33054529",
+      "tmdb_id": 1106052,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.408
+    },
+    {
+      "id": 1913595,
+      "title": "10 Dance",
+      "year": 2025,
+      "imdb_id": "tt34762360",
+      "tmdb_id": 1400032,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.014
+    },
+    {
+      "id": 1739741,
+      "title": "10 Days of a Curious Man",
+      "year": 2024,
+      "imdb_id": "tt28713370",
+      "tmdb_id": 1169361,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.85
+    },
+    {
+      "id": 1702060,
+      "title": "10 Days of a Good Man",
+      "year": 2023,
+      "imdb_id": "tt23334464",
+      "tmdb_id": 1073337,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.599
+    },
+    {
+      "id": 1910,
+      "title": "10,000 BC",
+      "year": 2008,
+      "imdb_id": "tt0443649",
+      "tmdb_id": 7840,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.41
+    },
+    {
+      "id": 355220,
+      "title": "100 Days My Prince",
+      "year": 2018,
+      "imdb_id": "tt8199972",
+      "tmdb_id": 81821,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 87.29
+    },
+    {
+      "id": 3270849,
+      "title": "100 Days of Deception",
+      "year": 2026,
+      "imdb_id": "tt39201866",
+      "tmdb_id": 293607,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 99.319
+    },
+    {
+      "id": 3169141,
+      "title": "100 Days to Fall in Love",
+      "year": 2020,
+      "imdb_id": "tt11243606",
+      "tmdb_id": 102966,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 95.347
+    },
+    {
+      "id": 3168426,
+      "title": "100 Humans: Life's Questions. Answered.",
+      "year": 2020,
+      "imdb_id": "tt11823088",
+      "tmdb_id": 100429,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 65.76
+    },
+    {
+      "id": 11036,
+      "title": "100 Meters",
+      "year": 2016,
+      "imdb_id": "tt5089786",
+      "tmdb_id": 402693,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 91.099
+    },
+    {
+      "id": 1826031,
+      "title": "100 Meters",
+      "year": 2025,
+      "imdb_id": "tt32600395",
+      "tmdb_id": 1295026,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.4
+    },
+    {
+      "id": 1644158,
+      "title": "1000 Miles From Christmas",
+      "year": 2021,
+      "imdb_id": "tt13782052",
+      "tmdb_id": 852590,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 79.139
+    },
+    {
+      "id": 3155722,
+      "title": "101st Marriage Proposal",
+      "year": 1991,
+      "imdb_id": "tt0209520",
+      "tmdb_id": 48455,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 76.765
+    },
+    {
+      "id": 11181,
+      "title": "10x10",
+      "year": 2018,
+      "imdb_id": "tt6210996",
+      "tmdb_id": 505177,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.003
+    },
+    {
+      "id": 1688947,
+      "title": "11.11",
+      "year": 2022,
+      "imdb_id": "tt18749778",
+      "tmdb_id": 975242,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 58.445
+    },
+    {
+      "id": 5107,
+      "title": "11.22.63",
+      "year": 2016,
+      "imdb_id": "tt2879552",
+      "tmdb_id": 64464,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 93.939
+    },
+    {
+      "id": 1676548,
+      "title": "11M: Terror in Madrid",
+      "year": 2022,
+      "imdb_id": "tt6275154",
+      "tmdb_id": 940332,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 76.28
+    },
+    {
+      "id": 1597757,
+      "title": "12 Hour Shift",
+      "year": 2020,
+      "imdb_id": "tt10309552",
+      "tmdb_id": 667141,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 90.904
+    },
+    {
+      "id": 1735551,
+      "title": "12th Fail",
+      "year": 2023,
+      "imdb_id": "tt23849204",
+      "tmdb_id": 1163258,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.104
+    },
+    {
+      "id": 1710222,
+      "title": "13 Bombs",
+      "year": 2023,
+      "imdb_id": "tt27490380",
+      "tmdb_id": 1126128,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 84.939
+    },
+    {
+      "id": 3617,
+      "title": "13 Reasons Why",
+      "year": 2017,
+      "imdb_id": "tt1837492",
+      "tmdb_id": 66788,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 98.827
+    },
+    {
+      "id": 3618,
+      "title": "13 Reasons Why: Beyond the Reasons",
+      "year": 2017,
+      "imdb_id": "tt8615966",
+      "tmdb_id": 80865,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 60.258
+    },
+    {
+      "id": 1650666,
+      "title": "137 Shots",
+      "year": 2021,
+      "imdb_id": "tt16379224",
+      "tmdb_id": 913179,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 69.149
+    },
+    {
+      "id": 1598061,
+      "title": "13: The Musical",
+      "year": 2022,
+      "imdb_id": "tt3975918",
+      "tmdb_id": 673271,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.35
+    },
+    {
+      "id": 11497,
+      "title": "13th",
+      "year": 2016,
+      "imdb_id": "tt5895028",
+      "tmdb_id": 407806,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.437
+    },
+    {
+      "id": 1647031,
+      "title": "14 Peaks: Nothing Is Impossible",
+      "year": 2021,
+      "imdb_id": "tt14079374",
+      "tmdb_id": 890825,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.294
+    },
+    {
+      "id": 3208148,
+      "title": "1670",
+      "year": 2023,
+      "imdb_id": "tt29420686",
+      "tmdb_id": 236450,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 86.917
+    },
+    {
+      "id": 11686,
+      "title": "17 Again",
+      "year": 2009,
+      "imdb_id": "tt0974661",
+      "tmdb_id": 16996,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.648
+    },
+    {
+      "id": 1647744,
+      "title": "18 Pages",
+      "year": 2022,
+      "imdb_id": "tt11915042",
+      "tmdb_id": 894758,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 90.578
+    },
+    {
+      "id": 1588492,
+      "title": "18 Presents",
+      "year": 2020,
+      "imdb_id": "tt10816484",
+      "tmdb_id": 630220,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.319
+    },
+    {
+      "id": 11117926,
+      "title": "180",
+      "year": 2026,
+      "imdb_id": "tt40891145",
+      "tmdb_id": 1659087,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.254
+    },
+    {
+      "id": 3182711,
+      "title": "1899",
+      "year": 2022,
+      "imdb_id": "tt9319668",
+      "tmdb_id": 90669,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 92.751
+    },
+    {
+      "id": 11099951,
+      "title": "18th Rose",
+      "year": 2026,
+      "imdb_id": "tt39751309",
+      "tmdb_id": 1631917,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.268
+    },
+    {
+      "id": 1752310,
+      "title": "18×2 Beyond Youthful Days",
+      "year": 2024,
+      "imdb_id": "tt31039829",
+      "tmdb_id": 1188258,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.715
+    },
+    {
+      "id": 1565000,
+      "title": "1917",
+      "year": 2019,
+      "imdb_id": "tt8579674",
+      "tmdb_id": 530915,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.902
+    },
+    {
+      "id": 11891,
+      "title": "1922",
+      "year": 2017,
+      "imdb_id": "tt6214928",
+      "tmdb_id": 452507,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.808
+    },
+    {
+      "id": 3785,
+      "title": "1983",
+      "year": 2018,
+      "imdb_id": "tt7371666",
+      "tmdb_id": 82798,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 86.563
+    },
+    {
+      "id": 550531,
+      "title": "1992",
+      "year": 2024,
+      "imdb_id": "tt27787158",
+      "tmdb_id": 225467,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 72.127
+    },
+    {
+      "id": 3162839,
+      "title": "1994",
+      "year": 2019,
+      "imdb_id": "tt10243640",
+      "tmdb_id": 89505,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 68.565
+    },
+    {
+      "id": 1486430,
+      "title": "2,215",
+      "year": 2018,
+      "imdb_id": "tt8891536",
+      "tmdb_id": 547144,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 76.197
+    },
+    {
+      "id": 1675133,
+      "title": "20th Century Girl",
+      "year": 2022,
+      "imdb_id": "tt15340724",
+      "tmdb_id": 851644,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.679
+    },
+    {
+      "id": 12490,
+      "title": "21 Jump Street",
+      "year": 2012,
+      "imdb_id": "tt1232829",
+      "tmdb_id": 64688,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.827
+    },
+    {
+      "id": 12543,
+      "title": "22 July",
+      "year": 2018,
+      "imdb_id": "tt7280898",
+      "tmdb_id": 474354,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.857
+    },
+    {
+      "id": 12544,
+      "title": "22 Jump Street",
+      "year": 2014,
+      "imdb_id": "tt2294449",
+      "tmdb_id": 187017,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.722
+    },
+    {
+      "id": 11115921,
+      "title": "23 000 Lives",
+      "year": 2026,
+      "imdb_id": "tt41983440",
+      "tmdb_id": 1656220,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.824
+    },
+    {
+      "id": 1690692,
+      "title": "24 Hours with Gaspar",
+      "year": 2023,
+      "imdb_id": "tt14773940",
+      "tmdb_id": 1013240,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 88.605
+    },
+    {
+      "id": 3311641,
+      "title": "25 Years of You",
+      "year": 2026,
+      "imdb_id": "tt43619278",
+      "tmdb_id": 326063,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 79.538
+    },
+    {
+      "id": 1849165,
+      "title": "27 Nights",
+      "year": 2025,
+      "imdb_id": "tt38095263",
+      "tmdb_id": 1327769,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.514
+    },
+    {
+      "id": 1563543,
+      "title": "27 Steps of May",
+      "year": 2018,
+      "imdb_id": "tt9695156",
+      "tmdb_id": 551024,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 87.254
+    },
+    {
+      "id": 3189756,
+      "title": "28 Days Haunted",
+      "year": 2022,
+      "imdb_id": "tt22227040",
+      "tmdb_id": 210922,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 68.806
+    },
+    {
+      "id": 1780773,
+      "title": "28 Years Later",
+      "year": 2025,
+      "imdb_id": "tt10548174",
+      "tmdb_id": 1100988,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.932
+    },
+    {
+      "id": 1810796,
+      "title": "28 Years Later: The Bone Temple",
+      "year": 2026,
+      "imdb_id": "tt32141377",
+      "tmdb_id": 1272837,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.918
+    },
+    {
+      "id": 11015325,
+      "title": "29",
+      "year": 2026,
+      "imdb_id": "tt37737315",
+      "tmdb_id": 1510769,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.085
+    },
+    {
+      "id": 1868219,
+      "title": "2nd Miracle in Cell No. 7",
+      "year": 2024,
+      "imdb_id": "tt33701992",
+      "tmdb_id": 1367010,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 91.962
+    },
+    {
+      "id": 3182191,
+      "title": "3 Body Problem",
+      "year": 2024,
+      "imdb_id": "tt13016388",
+      "tmdb_id": 108545,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 98.791
+    },
+    {
+      "id": 13028,
+      "title": "3 Ninjas Kick Back",
+      "year": 1994,
+      "imdb_id": "tt0109015",
+      "tmdb_id": 18885,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.311
+    },
+    {
+      "id": 31287,
+      "title": "3%",
+      "year": 2016,
+      "imdb_id": "tt4922804",
+      "tmdb_id": 68467,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 92.512
+    },
+    {
+      "id": 31350,
+      "title": "30 for 30",
+      "year": 2009,
+      "imdb_id": "tt1408430",
+      "tmdb_id": 31677,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 98.085
+    },
+    {
+      "id": 553743,
+      "title": "32. godišnja dodjela nagrada za glumce",
+      "year": 2026,
+      "imdb_id": "tt38946993",
+      "tmdb_id": 1676207,
+      "tmdb_type": "movie",
+      "type": "tv_special",
+      "popularity_percentile": 2.917
+    },
+    {
+      "id": 1596981,
+      "title": "365 Days",
+      "year": 2020,
+      "imdb_id": "tt10886166",
+      "tmdb_id": 664413,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.815
+    },
+    {
+      "id": 1638586,
+      "title": "365 Days: This Day",
+      "year": 2022,
+      "imdb_id": "tt12996154",
+      "tmdb_id": 829557,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.948
+    },
+    {
+      "id": 1540076,
+      "title": "37 Seconds",
+      "year": 2019,
+      "imdb_id": "tt6156138",
+      "tmdb_id": 570735,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.697
+    },
+    {
+      "id": 3155328,
+      "title": "3Below: Tales of Arcadia",
+      "year": 2018,
+      "imdb_id": "tt7736544",
+      "tmdb_id": 84154,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 93.092
+    },
+    {
+      "id": 1767390,
+      "title": "4 Kings 2",
+      "year": 2023,
+      "imdb_id": "tt30195433",
+      "tmdb_id": 968232,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 92.317
+    },
+    {
+      "id": 1678483,
+      "title": "40 Years Young",
+      "year": 2022,
+      "imdb_id": "tt16969906",
+      "tmdb_id": 949270,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 75.103
+    },
+    {
+      "id": 1822767,
+      "title": "404 Run Run",
+      "year": 2024,
+      "imdb_id": "tt32362537",
+      "tmdb_id": 1290213,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.665
+    },
+    {
+      "id": 3184265,
+      "title": "42 Days of Darkness",
+      "year": 2022,
+      "imdb_id": "tt15090462",
+      "tmdb_id": 197190,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 87.691
+    },
+    {
+      "id": 31561,
+      "title": "48 Hours",
+      "year": 1988,
+      "imdb_id": "tt0271894",
+      "tmdb_id": 3719,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 98.518
+    },
+    {
+      "id": 1538265,
+      "title": "4K Fireplace",
+      "year": 2015,
+      "imdb_id": "tt5275236",
+      "tmdb_id": 470412,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 67.373
+    },
+    {
+      "id": 1564528,
+      "title": "4L",
+      "year": 2019,
+      "imdb_id": "tt8242160",
+      "tmdb_id": 584427,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 80.371
+    },
+    {
+      "id": 553003,
+      "title": "50 Seconds: The Fernando Báez Sosa Case",
+      "year": 2025,
+      "imdb_id": "tt38808290",
+      "tmdb_id": 304849,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 48.149
+    },
+    {
+      "id": 1842497,
+      "title": "500 Días de Escobar: la vertiginosa caída del capo",
+      "year": 2023,
+      "imdb_id": "tt32149531",
+      "tmdb_id": 1318668,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 87.541
+    },
+    {
+      "id": 3174313,
+      "title": "50M²",
+      "year": 2021,
+      "imdb_id": "tt11617848",
+      "tmdb_id": 115970,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 75.68
+    },
+    {
+      "id": 1813566,
+      "title": "53 Sundays",
+      "year": 2026,
+      "imdb_id": "tt32155665",
+      "tmdb_id": 1276704,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.574
+    },
+    {
+      "id": 14264,
+      "title": "6 Balloons",
+      "year": 2018,
+      "imdb_id": "tt6142496",
+      "tmdb_id": 500634,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 84.641
+    },
+    {
+      "id": 14313,
+      "title": "6 Underground",
+      "year": 2019,
+      "imdb_id": "tt8106534",
+      "tmdb_id": 509967,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.717
+    },
+    {
+      "id": 14318,
+      "title": "6 Years",
+      "year": 2015,
+      "imdb_id": "tt3799372",
+      "tmdb_id": 323674,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 87.531
+    },
+    {
+      "id": 3202560,
+      "title": "6ixtynin9: The Series",
+      "year": 2023,
+      "imdb_id": "tt28623191",
+      "tmdb_id": 231380,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 69.641
+    },
+    {
+      "id": 3202925,
+      "title": "7 Bears",
+      "year": 2025,
+      "imdb_id": "tt20917852",
+      "tmdb_id": 231728,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 89.569
+    },
+    {
+      "id": 3158891,
+      "title": "7 Days Out",
+      "year": 2018,
+      "imdb_id": "tt9315990",
+      "tmdb_id": 85159,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 31.215
+    },
+    {
+      "id": 1641427,
+      "title": "7 Prisoners",
+      "year": 2021,
+      "imdb_id": "tt14168118",
+      "tmdb_id": 785538,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 85.682
+    },
+    {
+      "id": 1646878,
+      "title": "7 Women and a Murder",
+      "year": 2021,
+      "imdb_id": "tt15206378",
+      "tmdb_id": 890541,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.243
+    },
+    {
+      "id": 1693821,
+      "title": "72 HOURS",
+      "year": 2026,
+      "imdb_id": "tt36304003",
+      "tmdb_id": 949838,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.796
+    },
+    {
+      "id": 3162047,
+      "title": "7Seeds",
+      "year": 2019,
+      "imdb_id": "tt9348718",
+      "tmdb_id": 85940,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 95.104
+    },
+    {
+      "id": 14857,
+      "title": "8 Mile",
+      "year": 2002,
+      "imdb_id": "tt0298203",
+      "tmdb_id": 65,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.775
+    },
+    {
+      "id": 1870245,
+      "title": "8 Vasanthalu",
+      "year": 2025,
+      "imdb_id": "tt31316162",
+      "tmdb_id": 1370032,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.858
+    },
+    {
+      "id": 1677127,
+      "title": "80 for Brady",
+      "year": 2023,
+      "imdb_id": "tt18079362",
+      "tmdb_id": 942922,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.609
+    },
+    {
+      "id": 544325,
+      "title": "800 Meters",
+      "year": 2022,
+      "imdb_id": "tt13323170",
+      "tmdb_id": 158088,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 89.3
+    },
+    {
+      "id": 15103,
+      "title": "9 to 5",
+      "year": 1980,
+      "imdb_id": "tt0080319",
+      "tmdb_id": 19494,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.857
+    },
+    {
+      "id": 3240310,
+      "title": "900 Days Without Anabel",
+      "year": 2024,
+      "imdb_id": "tt34164659",
+      "tmdb_id": 274905,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 81.89
+    },
+    {
+      "id": 1810149,
+      "title": "96 Minutes",
+      "year": 2025,
+      "imdb_id": "tt34381460",
+      "tmdb_id": 1271895,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.136
+    },
+    {
+      "id": 15259,
+      "title": "99 Songs",
+      "year": 2019,
+      "imdb_id": "tt7559180",
+      "tmdb_id": 545071,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 83.767
+    },
+    {
+      "id": 5469,
+      "title": "99.9 Criminal Lawyer",
+      "year": 2016,
+      "imdb_id": "tt5487318",
+      "tmdb_id": 66584,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 92.269
+    },
+    {
+      "id": 1586763,
+      "title": "A Babysitter's Guide to Monster Hunting",
+      "year": 2020,
+      "imdb_id": "tt4844150",
+      "tmdb_id": 624963,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.381
+    },
+    {
+      "id": 1769774,
+      "title": "A Balloon's Landing",
+      "year": 2024,
+      "imdb_id": "tt31843865",
+      "tmdb_id": 1214266,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.571
+    },
+    {
+      "id": 1715399,
+      "title": "A Beautiful Life",
+      "year": 2023,
+      "imdb_id": "tt15282148",
+      "tmdb_id": 1119173,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 88.359
+    },
+    {
+      "id": 1893058,
+      "title": "A Big Bold Beautiful Journey",
+      "year": 2025,
+      "imdb_id": "tt13650700",
+      "tmdb_id": 1241921,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.382
+    },
+    {
+      "id": 3214330,
+      "title": "A Body That Works",
+      "year": 2023,
+      "imdb_id": "tt23856194",
+      "tmdb_id": 220158,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 52.519
+    },
+    {
+      "id": 1583857,
+      "title": "A Boy Called Christmas",
+      "year": 2021,
+      "imdb_id": "tt10187208",
+      "tmdb_id": 615666,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.714
+    },
+    {
+      "id": 32123,
+      "title": "A Boy Named Flora A",
+      "year": 2017,
+      "imdb_id": "tt6284014",
+      "tmdb_id": 73638,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 56.618
+    },
+    {
+      "id": 1682385,
+      "title": "A Breath of Fresh Air",
+      "year": 2022,
+      "imdb_id": "tt19119646",
+      "tmdb_id": 970423,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 71.5
+    },
+    {
+      "id": 1796025,
+      "title": "A Bright Lawyer",
+      "year": 2025,
+      "imdb_id": "tt32864398",
+      "tmdb_id": 1251875,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 91.932
+    },
+    {
+      "id": 1836926,
+      "title": "A Brother and 7 Siblings",
+      "year": 2024,
+      "imdb_id": "tt32881480",
+      "tmdb_id": 1310741,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.057
+    },
+    {
+      "id": 1920919,
+      "title": "A Business Proposal",
+      "year": 2025,
+      "imdb_id": "tt35295730",
+      "tmdb_id": 1406956,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 91.081
+    },
+    {
+      "id": 1646348,
+      "title": "A California Christmas: City Lights",
+      "year": 2021,
+      "imdb_id": "tt13701962",
+      "tmdb_id": 882096,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.351
+    },
+    {
+      "id": 1620491,
+      "title": "A Castle for Christmas",
+      "year": 2021,
+      "imdb_id": "tt13070602",
+      "tmdb_id": 758879,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.003
+    },
+    {
+      "id": 11089038,
+      "title": "A Child of My Own",
+      "year": 2026,
+      "imdb_id": "tt33565722",
+      "tmdb_id": 1616131,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.895
+    },
+    {
+      "id": 1619159,
+      "title": "A Choo",
+      "year": 2020,
+      "imdb_id": "tt12689526",
+      "tmdb_id": 288287,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.59
+    },
+    {
+      "id": 1781864,
+      "title": "A Christmas Castle Proposal: A Royal in Paradise 2",
+      "year": 2024,
+      "imdb_id": "tt29922811",
+      "tmdb_id": 1231623,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 99.935
+    },
+    {
+      "id": 43047,
+      "title": "A Christmas Prince",
+      "year": 2017,
+      "imdb_id": "tt7608418",
+      "tmdb_id": 483104,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.074
+    },
+    {
+      "id": 1590877,
+      "title": "A Christmas Prince: The Royal Baby",
+      "year": 2019,
+      "imdb_id": "tt10006006",
+      "tmdb_id": 587693,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.349
+    },
+    {
+      "id": 43048,
+      "title": "A Christmas Prince: The Royal Wedding",
+      "year": 2018,
+      "imdb_id": "tt8709036",
+      "tmdb_id": 525041,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.012
+    },
+    {
+      "id": 1622506,
+      "title": "A Classic Horror Story",
+      "year": 2021,
+      "imdb_id": "tt12877640",
+      "tmdb_id": 768334,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.845
+    },
+    {
+      "id": 1629782,
+      "title": "A Cop Movie",
+      "year": 2021,
+      "imdb_id": "tt14035242",
+      "tmdb_id": 701524,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.283
+    },
+    {
+      "id": 1941596,
+      "title": "A Copenhagen Love Story",
+      "year": 2025,
+      "imdb_id": "tt33501878",
+      "tmdb_id": 1426674,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 93.922
+    },
+    {
+      "id": 556033,
+      "title": "A Couple of Lies",
+      "year": 2026,
+      "imdb_id": "tt42767924",
+      "tmdb_id": 336240,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 92.693
+    },
+    {
+      "id": 4162991,
+      "title": "A Cowboy Christmas Romance",
+      "year": 2023,
+      "imdb_id": "tt29521467",
+      "tmdb_id": 1195473,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 87.493
+    },
+    {
+      "id": 1688067,
+      "title": "A Cut Above",
+      "year": 2022,
+      "imdb_id": "tt21265550",
+      "tmdb_id": 997023,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 68.637
+    },
+    {
+      "id": 1683914,
+      "title": "A Day and a Half",
+      "year": 2023,
+      "imdb_id": "tt20414642",
+      "tmdb_id": 978783,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.442
+    },
+    {
+      "id": 3273423,
+      "title": "A Day Like No Other",
+      "year": 2026,
+      "imdb_id": "tt37540577",
+      "tmdb_id": 295684,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 71.544
+    },
+    {
+      "id": 1642107,
+      "title": "A Day to Die",
+      "year": 2022,
+      "imdb_id": "tt14412366",
+      "tmdb_id": 864116,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.075
+    },
+    {
+      "id": 1984004,
+      "title": "A Deadly American Marriage",
+      "year": 2025,
+      "imdb_id": "tt36592065",
+      "tmdb_id": 1466938,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.548
+    },
+    {
+      "id": 1746194,
+      "title": "A Deadly Invitation",
+      "year": 2023,
+      "imdb_id": "tt13022120",
+      "tmdb_id": 1179664,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 90.955
+    },
+    {
+      "id": 32284,
+      "title": "A Different World",
+      "year": 1987,
+      "imdb_id": "tt0092339",
+      "tmdb_id": 115,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 98.975
+    },
+    {
+      "id": 3284517,
+      "title": "A Different World",
+      "year": 2026,
+      "imdb_id": "tt33081352",
+      "tmdb_id": 305357,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 93.442
+    },
+    {
+      "id": 32288,
+      "title": "A Discovery of Witches",
+      "year": 2018,
+      "imdb_id": "tt2177461",
+      "tmdb_id": 77236,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 98.097
+    },
+    {
+      "id": 11056833,
+      "title": "A Dog's Perfect Christmas",
+      "year": 2026,
+      "imdb_id": "tt38515310",
+      "tmdb_id": 1570488,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.993
+    },
+    {
+      "id": 1595989,
+      "title": "A Fall from Grace",
+      "year": 2020,
+      "imdb_id": "tt11390036",
+      "tmdb_id": 651070,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.124
+    },
+    {
+      "id": 1626805,
+      "title": "A Family",
+      "year": 2021,
+      "imdb_id": "tt13356884",
+      "tmdb_id": 736146,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.165
+    },
+    {
+      "id": 2756715,
+      "title": "A Family Affair",
+      "year": 2024,
+      "imdb_id": "tt21051906",
+      "tmdb_id": 987686,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.183
+    },
+    {
+      "id": 1642010,
+      "title": "A Faraway Land",
+      "year": 2021,
+      "imdb_id": "tt15260940",
+      "tmdb_id": 863103,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 82.817
+    },
+    {
+      "id": 2741202,
+      "title": "A Farewell to Ozark",
+      "year": 2022,
+      "imdb_id": "tt21024510",
+      "tmdb_id": 968967,
+      "tmdb_type": "movie",
+      "type": "short_film",
+      "popularity_percentile": 98.127
+    },
+    {
+      "id": 11077860,
+      "title": "A Father's Miracle",
+      "year": 2025,
+      "imdb_id": "tt29466658",
+      "tmdb_id": 1600028,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.42
+    },
+    {
+      "id": 1743153,
+      "title": "A Foggy Tale",
+      "year": 2025,
+      "imdb_id": "tt32080855",
+      "tmdb_id": 1174334,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.242
+    },
+    {
+      "id": 553760,
+      "title": "A Friend, a Murderer",
+      "year": 2026,
+      "imdb_id": "tt40029064",
+      "tmdb_id": 315755,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 69.751
+    },
+    {
+      "id": 17459,
+      "title": "A Futile and Stupid Gesture",
+      "year": 2018,
+      "imdb_id": "tt5566790",
+      "tmdb_id": 391710,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 93.767
+    },
+    {
+      "id": 32370,
+      "title": "A Gentleman's Dignity",
+      "year": 2012,
+      "imdb_id": "tt2362760",
+      "tmdb_id": 43135,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 84.01
+    },
+    {
+      "id": 3193783,
+      "title": "A Girl and an Astronaut",
+      "year": 2023,
+      "imdb_id": "tt19724076",
+      "tmdb_id": 217858,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 79.329
+    },
+    {
+      "id": 3212649,
+      "title": "A Good Girl's Guide to Murder",
+      "year": 2024,
+      "imdb_id": "tt28118211",
+      "tmdb_id": 218342,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 95.604
+    },
+    {
+      "id": 11093995,
+      "title": "A Gorilla Story: Told by David Attenborough",
+      "year": 2026,
+      "imdb_id": "tt39314348",
+      "tmdb_id": 1623125,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.792
+    },
+    {
+      "id": 17923,
+      "title": "A Haunted House",
+      "year": 2013,
+      "imdb_id": "tt2243537",
+      "tmdb_id": 139038,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.465
+    },
+    {
+      "id": 17924,
+      "title": "A Haunted House 2",
+      "year": 2014,
+      "imdb_id": "tt2828996",
+      "tmdb_id": 184345,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.788
+    },
+    {
+      "id": 1822732,
+      "title": "A House of Dynamite",
+      "year": 2025,
+      "imdb_id": "tt32376165",
+      "tmdb_id": 1290159,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.65
+    },
+    {
+      "id": 1684516,
+      "title": "A Hundred Flowers",
+      "year": 2022,
+      "imdb_id": "tt18395238",
+      "tmdb_id": 936490,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 93.006
+    },
+    {
+      "id": 1651884,
+      "title": "A Jazzman's Blues",
+      "year": 2022,
+      "imdb_id": "tt14307536",
+      "tmdb_id": 921643,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.822
+    },
+    {
+      "id": 1802443,
+      "title": "A Journey",
+      "year": 2024,
+      "imdb_id": "tt31805808",
+      "tmdb_id": 1260916,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 79.809
+    },
+    {
+      "id": 3187768,
+      "title": "A Kidnapping Scandal: The Florence Cassez Affair",
+      "year": 2022,
+      "imdb_id": "tt21388530",
+      "tmdb_id": 207242,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 56.493
+    },
+    {
+      "id": 3204374,
+      "title": "A Killer Paradox",
+      "year": 2024,
+      "imdb_id": "tt28642796",
+      "tmdb_id": 202783,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 92.072
+    },
+    {
+      "id": 32488,
+      "title": "A Korean Odyssey",
+      "year": 2017,
+      "imdb_id": "tt7099334",
+      "tmdb_id": 75123,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 93.574
+    },
+    {
+      "id": 18404,
+      "title": "A Land Imagined",
+      "year": 2019,
+      "imdb_id": "tt8726116",
+      "tmdb_id": 537526,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 73.849
+    },
+    {
+      "id": 11093654,
+      "title": "A Letter to My Youth",
+      "year": 2026,
+      "imdb_id": "tt39240255",
+      "tmdb_id": 1602705,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.97
+    },
+    {
+      "id": 1732730,
+      "title": "A Life Too Short: The Isabella Nardoni Case",
+      "year": 2023,
+      "imdb_id": "tt28552695",
+      "tmdb_id": 1158959,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 94.4
+    },
+    {
+      "id": 32519,
+      "title": "A Life: A Love",
+      "year": 2017,
+      "imdb_id": "tt6235440",
+      "tmdb_id": 69809,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 81.882
+    },
+    {
+      "id": 1868608,
+      "title": "A Line of Fire",
+      "year": 2025,
+      "imdb_id": "tt33712667",
+      "tmdb_id": 1367575,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.716
+    },
+    {
+      "id": 1699391,
+      "title": "A Long Way to Come Home",
+      "year": 2023,
+      "imdb_id": "tt23472308",
+      "tmdb_id": 1057016,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 69.085
+    },
+    {
+      "id": 4155013,
+      "title": "A Lot Like Christmas",
+      "year": 2021,
+      "imdb_id": "tt16150870",
+      "tmdb_id": 877819,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 90.649
+    },
+    {
+      "id": 3173146,
+      "title": "A Love So Beautiful",
+      "year": 2020,
+      "imdb_id": "tt13642264",
+      "tmdb_id": 114395,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 87.359
+    },
+    {
+      "id": 3179624,
+      "title": "A Love So Beautiful",
+      "year": 2017,
+      "imdb_id": "tt8434720",
+      "tmdb_id": 75387,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 85.845
+    },
+    {
+      "id": 2697696,
+      "title": "A Love Song for Latasha",
+      "year": 2019,
+      "imdb_id": "tt8993180",
+      "tmdb_id": 631344,
+      "tmdb_type": "movie",
+      "type": "short_film",
+      "popularity_percentile": 94.424
+    },
+    {
+      "id": 1444320,
+      "title": "A Madea Family Funeral",
+      "year": 2019,
+      "imdb_id": "tt7054636",
+      "tmdb_id": 464504,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.618
+    },
+    {
+      "id": 1637473,
+      "title": "A Magnificent Life",
+      "year": 2025,
+      "imdb_id": "tt13968662",
+      "tmdb_id": 840873,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.594
+    },
+    {
+      "id": 18931,
+      "title": "A Man Called Ove",
+      "year": 2015,
+      "imdb_id": "tt4080728",
+      "tmdb_id": 348678,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.943
+    },
+    {
+      "id": 549230,
+      "title": "A Man in Full",
+      "year": 2024,
+      "imdb_id": "tt15845610",
+      "tmdb_id": 225120,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 83.585
+    },
+    {
+      "id": 1677772,
+      "title": "A Man of Action",
+      "year": 2022,
+      "imdb_id": "tt12703292",
+      "tmdb_id": 945897,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.879
+    },
+    {
+      "id": 3217040,
+      "title": "A Man on the Inside",
+      "year": 2024,
+      "imdb_id": "tt26670955",
+      "tmdb_id": 245312,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 95.49
+    },
+    {
+      "id": 1694951,
+      "title": "A Merry Christmas Wish",
+      "year": 2022,
+      "imdb_id": "tt19898828",
+      "tmdb_id": 971503,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 96.306
+    },
+    {
+      "id": 1915264,
+      "title": "A Merry Little Ex-Mas",
+      "year": 2025,
+      "imdb_id": "tt34992378",
+      "tmdb_id": 1401318,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.166
+    },
+    {
+      "id": 3188552,
+      "title": "A Model Family",
+      "year": 2022,
+      "imdb_id": "tt21289712",
+      "tmdb_id": 132171,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 76.719
+    },
+    {
+      "id": 19466,
+      "title": "A Most Violent Year",
+      "year": 2014,
+      "imdb_id": "tt2937898",
+      "tmdb_id": 241239,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.304
+    },
+    {
+      "id": 1648836,
+      "title": "A Naija Christmas",
+      "year": 2021,
+      "imdb_id": "tt15565704",
+      "tmdb_id": 882102,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 68.537
+    },
+    {
+      "id": 548452,
+      "title": "A Nearly Normal Family",
+      "year": 2023,
+      "imdb_id": "tt22780536",
+      "tmdb_id": 235571,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 81.139
+    },
+    {
+      "id": 1700753,
+      "title": "A Night at the Kindergarten",
+      "year": 2022,
+      "imdb_id": "tt19724270",
+      "tmdb_id": 1065796,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 91.762
+    },
+    {
+      "id": 550658,
+      "title": "A Nonsense Christmas with Sabrina Carpenter",
+      "year": 2024,
+      "imdb_id": "tt33427273",
+      "tmdb_id": 1358820,
+      "tmdb_type": "movie",
+      "type": "tv_special",
+      "popularity_percentile": 60.45
+    },
+    {
+      "id": 1819837,
+      "title": "A Normal Woman",
+      "year": 2025,
+      "imdb_id": "tt35668683",
+      "tmdb_id": 1285728,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 80.91
+    },
+    {
+      "id": 1698934,
+      "title": "A Not So Merry Christmas",
+      "year": 2022,
+      "imdb_id": "tt23808016",
+      "tmdb_id": 1053419,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 86.831
+    },
+    {
+      "id": 1710966,
+      "title": "A Part of You",
+      "year": 2024,
+      "imdb_id": "tt27411270",
+      "tmdb_id": 1127108,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.031
+    },
+    {
+      "id": 3170889,
+      "title": "A Perfect Crime",
+      "year": 2020,
+      "imdb_id": "tt12939836",
+      "tmdb_id": 110412,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 73.87
+    },
+    {
+      "id": 1638121,
+      "title": "A Perfect Fit",
+      "year": 2021,
+      "imdb_id": "tt13606090",
+      "tmdb_id": 800669,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 89.842
+    },
+    {
+      "id": 1681063,
+      "title": "A Perfect Pairing",
+      "year": 2022,
+      "imdb_id": "tt15215512",
+      "tmdb_id": 934761,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.118
+    },
+    {
+      "id": 547885,
+      "title": "A Perfect Story",
+      "year": 2023,
+      "imdb_id": "tt23183618",
+      "tmdb_id": 226216,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 84.051
+    },
+    {
+      "id": 1887999,
+      "title": "A Private Life",
+      "year": 2025,
+      "imdb_id": "tt33852162",
+      "tmdb_id": 1290432,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.649
+    },
+    {
+      "id": 1346262,
+      "title": "A Pure Desi Romance",
+      "year": 2013,
+      "imdb_id": "tt2988272",
+      "tmdb_id": 209410,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 91.464
+    },
+    {
+      "id": 3175127,
+      "title": "A Queen Is Born",
+      "year": 2020,
+      "imdb_id": "tt12571792",
+      "tmdb_id": 112917,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 50.393
+    },
+    {
+      "id": 1636699,
+      "title": "A Quiet Place: Day One",
+      "year": 2024,
+      "imdb_id": "tt13433802",
+      "tmdb_id": 762441,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.861
+    },
+    {
+      "id": 1770724,
+      "title": "A Ranjith Cinema",
+      "year": 2023,
+      "imdb_id": "tt13004806",
+      "tmdb_id": 911289,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 84.009
+    },
+    {
+      "id": 1582151,
+      "title": "A Remarkable Tale",
+      "year": 2019,
+      "imdb_id": "tt8296660",
+      "tmdb_id": 542930,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 76.207
+    },
+    {
+      "id": 3216535,
+      "title": "A Round of Applause",
+      "year": 2024,
+      "imdb_id": "tt31049778",
+      "tmdb_id": 244842,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 76.235
+    },
+    {
+      "id": 1721618,
+      "title": "A Royal Date for Christmas",
+      "year": 2023,
+      "imdb_id": "tt28188089",
+      "tmdb_id": 1142780,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 89.687
+    },
+    {
+      "id": 1685782,
+      "title": "A Sacrifice",
+      "year": 2024,
+      "imdb_id": "tt16491560",
+      "tmdb_id": 931628,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.378
+    },
+    {
+      "id": 1568633,
+      "title": "A Second Chance: Rivals!",
+      "year": 2019,
+      "imdb_id": "tt9810420",
+      "tmdb_id": 588730,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 84.025
+    },
+    {
+      "id": 1608061,
+      "title": "A Secret Love",
+      "year": 2020,
+      "imdb_id": "tt3260524",
+      "tmdb_id": 687156,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.089
+    },
+    {
+      "id": 32803,
+      "title": "A Series of Unfortunate Events",
+      "year": 2017,
+      "imdb_id": "tt4834206",
+      "tmdb_id": 65294,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 97.425
+    },
+    {
+      "id": 1343101,
+      "title": "A Shaun the Sheep Movie: Farmageddon",
+      "year": 2019,
+      "imdb_id": "tt6193408",
+      "tmdb_id": 422803,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.623
+    },
+    {
+      "id": 1863414,
+      "title": "A Sprinkle of Christmas",
+      "year": 2024,
+      "imdb_id": "tt32604419",
+      "tmdb_id": 1359604,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 88.642
+    },
+    {
+      "id": 3189323,
+      "title": "A Storm for Christmas",
+      "year": 2022,
+      "imdb_id": "tt15700830",
+      "tmdb_id": 210532,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 80.866
+    },
+    {
+      "id": 1758333,
+      "title": "A Sudden Case of Christmas",
+      "year": 2024,
+      "imdb_id": "tt32352172",
+      "tmdb_id": 1197662,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.854
+    },
+    {
+      "id": 1594367,
+      "title": "A Sun",
+      "year": 2019,
+      "imdb_id": "tt10883506",
+      "tmdb_id": 622951,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 97.788
+    },
+    {
+      "id": 11176163,
+      "title": "A Sunday Affair",
+      "year": 2023,
+      "imdb_id": "tt25830860",
+      "tmdb_id": 1076955,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 75.244
+    },
+    {
+      "id": 3150035,
+      "title": "A Taiwanese Tale of Two Cities",
+      "year": 2018,
+      "imdb_id": "tt8893498",
+      "tmdb_id": 82110,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 85.079
+    },
+    {
+      "id": 3177748,
+      "title": "A Tale Dark & Grimm",
+      "year": 2021,
+      "imdb_id": "tt2386826",
+      "tmdb_id": 133355,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 90.678
+    },
+    {
+      "id": 3162986,
+      "title": "A Thousand Goodnights",
+      "year": 2019,
+      "imdb_id": "tt10370952",
+      "tmdb_id": 88168,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 82.936
+    },
+    {
+      "id": 547499,
+      "title": "A Thousand Tomorrows",
+      "year": 2023,
+      "imdb_id": "tt21157352",
+      "tmdb_id": 221151,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 78.803
+    },
+    {
+      "id": 3193401,
+      "title": "A Time Called You",
+      "year": 2023,
+      "imdb_id": "tt21627438",
+      "tmdb_id": 196474,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 89.094
+    },
+    {
+      "id": 11070602,
+      "title": "A Time for Bravery",
+      "year": 2025,
+      "imdb_id": "tt37961727",
+      "tmdb_id": 1589891,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.316
+    },
+    {
+      "id": 1703382,
+      "title": "A Tourist's Guide to Love",
+      "year": 2023,
+      "imdb_id": "tt20115096",
+      "tmdb_id": 813726,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.423
+    },
+    {
+      "id": 11208283,
+      "title": "A Toxic Love Story",
+      "year": 2026,
+      "imdb_id": "tt43619305",
+      "tmdb_id": 1723460,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 97.093
+    },
+    {
+      "id": 3264209,
+      "title": "A Tragedy Foretold: Flight 3054",
+      "year": 2025,
+      "imdb_id": "tt36351172",
+      "tmdb_id": 287420,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 34.768
+    },
+    {
+      "id": 1693051,
+      "title": "A Trip to Infinity",
+      "year": 2022,
+      "imdb_id": "tt21929356",
+      "tmdb_id": 1005031,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.345
+    },
+    {
+      "id": 1858780,
+      "title": "A True Gentleman",
+      "year": 2024,
+      "imdb_id": "tt23218054",
+      "tmdb_id": 1352821,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.695
+    },
+    {
+      "id": 1767679,
+      "title": "A Vampire in the Family",
+      "year": 2023,
+      "imdb_id": "tt23744022",
+      "tmdb_id": 1211419,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.498
+    },
+    {
+      "id": 1967125,
+      "title": "A Very Good Girl",
+      "year": 2023,
+      "imdb_id": "tt27327494",
+      "tmdb_id": 1105324,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 92.458
+    },
+    {
+      "id": 524362,
+      "title": "A Very Murray Christmas",
+      "year": 2015,
+      "imdb_id": "tt4537842",
+      "tmdb_id": 364067,
+      "tmdb_type": "movie",
+      "type": "tv_special",
+      "popularity_percentile": 77.593
+    },
+    {
+      "id": 4145719,
+      "title": "A Very Vintage Christmas",
+      "year": 2019,
+      "imdb_id": "tt10295168",
+      "tmdb_id": 626282,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 98.92
+    },
+    {
+      "id": 3226968,
+      "title": "A Virtuous Business",
+      "year": 2024,
+      "imdb_id": "tt33509073",
+      "tmdb_id": 255086,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 87.41
+    },
+    {
+      "id": 1610457,
+      "title": "A Week Away",
+      "year": 2021,
+      "imdb_id": "tt11388278",
+      "tmdb_id": 699102,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.424
+    },
+    {
+      "id": 1614257,
+      "title": "A Whisker Away",
+      "year": 2020,
+      "imdb_id": "tt11958344",
+      "tmdb_id": 667520,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.595
+    },
+    {
+      "id": 1910107,
+      "title": "A Widow's Game",
+      "year": 2025,
+      "imdb_id": "tt33474172",
+      "tmdb_id": 1397832,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 98.054
+    },
+    {
+      "id": 3176260,
+      "title": "A Wonderful Sight",
+      "year": 2021,
+      "imdb_id": "tt14731794",
+      "tmdb_id": 129475,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 80.886
+    },
+    {
+      "id": 1446645,
+      "title": "A Wonderful World",
+      "year": 2006,
+      "imdb_id": "tt0456467",
+      "tmdb_id": 69380,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 70.676
+    },
+    {
+      "id": 1644515,
+      "title": "A World Without",
+      "year": 2021,
+      "imdb_id": "tt15484488",
+      "tmdb_id": 877372,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 72.335
+    },
+    {
+      "id": 3220052,
+      "title": "A-List to Playlist",
+      "year": 2024,
+      "imdb_id": "tt33038099",
+      "tmdb_id": 248123,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 85.116
+    },
+    {
+      "id": 33246,
+      "title": "A.I.C.O. Incarnation",
+      "year": 2018,
+      "imdb_id": "tt8116380",
+      "tmdb_id": 77778,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 89.443
+    },
+    {
+      "id": 1765588,
+      "title": "Aadikeshava",
+      "year": 2023,
+      "imdb_id": "tt25434168",
+      "tmdb_id": 1069884,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 85.752
+    },
+    {
+      "id": 113948,
+      "title": "Aaha Kalyanam",
+      "year": 2014,
+      "imdb_id": "tt2995992",
+      "tmdb_id": 251898,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 71.585
+    },
+    {
+      "id": 113981,
+      "title": "Aaina",
+      "year": 1993,
+      "imdb_id": "tt0106203",
+      "tmdb_id": 43971,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 85.589
+    },
+    {
+      "id": 114048,
+      "title": "Aaja Nachle",
+      "year": 2007,
+      "imdb_id": "tt0986213",
+      "tmdb_id": 14159,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.334
+    },
+    {
+      "id": 1517307,
+      "title": "Aakhri Adaalat",
+      "year": 1988,
+      "imdb_id": "tt0177505",
+      "tmdb_id": 474084,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 80.766
+    },
+    {
+      "id": 1890329,
+      "title": "Aap Jaisa Koi",
+      "year": 2025,
+      "imdb_id": "tt33888131",
+      "tmdb_id": 1391013,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.58
+    },
+    {
+      "id": 3233621,
+      "title": "AARO: All-domain Anomaly Resolution Office",
+      "year": 2024,
+      "imdb_id": "tt33886219",
+      "tmdb_id": 261792,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 81.506
+    },
+    {
+      "id": 11119193,
+      "title": "Aaron Chen: Funny Garden",
+      "year": 2026,
+      "imdb_id": "tt40224365",
+      "tmdb_id": 1660968,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 68.927
+    },
+    {
+      "id": 3236389,
+      "title": "Aaron Rodgers: Enigma",
+      "year": 2024,
+      "imdb_id": "tt33350486",
+      "tmdb_id": 270973,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 89.298
+    },
+    {
+      "id": 1842229,
+      "title": "Aaryan",
+      "year": 2025,
+      "imdb_id": "tt28434143",
+      "tmdb_id": 1318308,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 93.312
+    },
+    {
+      "id": 1556312,
+      "title": "Aashik Aawara",
+      "year": 1993,
+      "imdb_id": "tt0106206",
+      "tmdb_id": 333931,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 74.77
+    },
+    {
+      "id": 11011355,
+      "title": "Abandoned Man",
+      "year": 2025,
+      "imdb_id": "tt34691776",
+      "tmdb_id": 1495723,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.45
+    },
+    {
+      "id": 1832783,
+      "title": "Abang Adik",
+      "year": 2023,
+      "imdb_id": "tt27445004",
+      "tmdb_id": 1027982,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 95.069
+    },
+    {
+      "id": 4164559,
+      "title": "Abducted at an HBCU: A Black Girl Missing Movie",
+      "year": 2024,
+      "imdb_id": "tt32560625",
+      "tmdb_id": 1317021,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 80.75
+    },
+    {
+      "id": 4161908,
+      "title": "Abducted on Prom Night",
+      "year": 2023,
+      "imdb_id": "tt27630783",
+      "tmdb_id": 1123493,
+      "tmdb_type": "movie",
+      "type": "tv_movie",
+      "popularity_percentile": 81.282
+    },
+    {
+      "id": 3174638,
+      "title": "Abla Fahita: Drama Queen",
+      "year": 2021,
+      "imdb_id": "tt11570224",
+      "tmdb_id": 104043,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 67.347
+    },
+    {
+      "id": 115213,
+      "title": "About Last Night",
+      "year": 1986,
+      "imdb_id": "tt0090583",
+      "tmdb_id": 18169,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 96.997
+    },
+    {
+      "id": 115237,
+      "title": "About Time",
+      "year": 2013,
+      "imdb_id": "tt2194499",
+      "tmdb_id": 122906,
+      "tmdb_type": "movie",
+      "type": "movie",
+      "popularity_percentile": 99.894
+    },
+    {
+      "id": 550890,
+      "title": "Abraham Lincoln",
+      "year": 2022,
+      "imdb_id": "tt17079876",
+      "tmdb_id": 156095,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 66.053
+    },
+    {
+      "id": 5803,
+      "title": "Absentia",
+      "year": 2017,
+      "imdb_id": "tt6794990",
+      "tmdb_id": 72755,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 97.634
+    },
+    {
+      "id": 3201443,
+      "title": "Absolute Beginners",
+      "year": 2023,
+      "imdb_id": "tt27688981",
+      "tmdb_id": 230372,
+      "tmdb_type": "tv",
+      "type": "tv_miniseries",
+      "popularity_percentile": 84.952
+    },
+    {
+      "id": 33811,
+      "title": "Abstract: The Art of Design",
+      "year": 2017,
+      "imdb_id": "tt6333098",
+      "tmdb_id": 70177,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 84.744
+    },
+    {
+      "id": 3168780,
+      "title": "Absurd Planet",
+      "year": 2020,
+      "imdb_id": "tt12027008",
+      "tmdb_id": 101836,
+      "tmdb_type": "tv",
+      "type": "tv_series",
+      "popularity_percentile": 77.475
+    }
+  ],
+  "page": 1,
+  "total_pages": 29,
+  "total_results": 7211
+}

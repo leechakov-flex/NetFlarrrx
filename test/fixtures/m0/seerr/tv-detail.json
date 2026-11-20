@@ -1,0 +1,2454 @@
+{
+  "createdBy": [
+    {
+      "id": 1407486,
+      "credit_id": "5e8119680bc5290016efaabc",
+      "name": "Kenya Barris",
+      "original_name": "Kenya Barris",
+      "gender": 2,
+      "profile_path": "/rJlBuLI9hf34Iy0kE3zlqDNSF2P.jpg"
+    }
+  ],
+  "episodeRunTime": [
+    35
+  ],
+  "firstAirDate": "2020-04-17",
+  "genres": [
+    {
+      "id": 35,
+      "name": "Comedy"
+    }
+  ],
+  "relatedVideos": [],
+  "homepage": "https://www.netflix.com/title/81056700",
+  "id": 101200,
+  "inProduction": false,
+  "languages": [
+    "en"
+  ],
+  "lastAirDate": "2020-04-17",
+  "name": "#blackAF",
+  "networks": [
+    {
+      "id": 213,
+      "name": "Netflix",
+      "originCountry": "",
+      "logoPath": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png"
+    }
+  ],
+  "numberOfEpisodes": 8,
+  "numberOfSeasons": 1,
+  "originCountry": [
+    "US"
+  ],
+  "originalLanguage": "en",
+  "originalName": "#blackAF",
+  "tagline": "It's all about perspective.",
+  "overview": "A father takes an irreverent and honest approach to parenting and relationships.",
+  "popularity": 2.9407,
+  "productionCompanies": [
+    {
+      "id": 114690,
+      "name": "Khalabo Ink Society",
+      "originCountry": "US",
+      "logoPath": "/dP4q0910XaQmW6WsDGNaAyZDK8J.png"
+    }
+  ],
+  "productionCountries": [
+    {
+      "iso_3166_1": "US",
+      "name": "United States of America"
+    }
+  ],
+  "contentRatings": {
+    "results": [
+      {
+        "descriptors": [],
+        "iso_3166_1": "US",
+        "rating": "TV-MA"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "NL",
+        "rating": "12"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "KR",
+        "rating": "19"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "AT",
+        "rating": "14"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "IE",
+        "rating": "15"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "PL",
+        "rating": "16"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "HU",
+        "rating": "16"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "CZ",
+        "rating": "18+"
+      },
+      {
+        "descriptors": [],
+        "iso_3166_1": "RO",
+        "rating": "AP"
+      }
+    ]
+  },
+  "spokenLanguages": [
+    {
+      "englishName": "English",
+      "iso_639_1": "en",
+      "name": "English"
+    }
+  ],
+  "seasons": [
+    {
+      "airDate": "2020-04-17",
+      "episodeCount": 8,
+      "id": 146437,
+      "name": "Season 1",
+      "overview": "",
+      "seasonNumber": 1,
+      "posterPath": "/aSRV53GdUAMaxQP35hZaSugEjpz.jpg"
+    }
+  ],
+  "status": "Canceled",
+  "type": "Scripted",
+  "voteAverage": 5.913,
+  "voteCount": 46,
+  "backdropPath": "/sSRFTSdVbpcsZV6332MzBbGky5G.jpg",
+  "lastEpisodeToAir": {
+    "id": 2230596,
+    "airDate": "2020-04-17",
+    "episodeNumber": 8,
+    "name": "i know you may not get this, but the reason we deserve a vacation is... because of slavery",
+    "overview": "As Joya takes time to focus on herself before her event, Drea tries to bond with Chloe, Pops handles an incident, and Kenya switches up his behavior.",
+    "productionCode": "",
+    "seasonNumber": 1,
+    "showId": 101200,
+    "voteAverage": 3.1,
+    "voteCount": 7,
+    "stillPath": "/rfkXJPFKzR7owcooIpj4cMy34Xk.jpg"
+  },
+  "posterPath": "/rZsWeJzJbsb14IjNgTeBP3FEmvx.jpg",
+  "credits": {
+    "cast": [
+      {
+        "character": "Kenya Barris",
+        "creditId": "5e811984498ef90017c93f43",
+        "id": 1407486,
+        "name": "Kenya Barris",
+        "order": 0,
+        "gender": 2,
+        "profilePath": "/rJlBuLI9hf34Iy0kE3zlqDNSF2P.jpg"
+      },
+      {
+        "character": "Joya Barris",
+        "creditId": "5e81198a2a210c00152a887d",
+        "id": 80591,
+        "name": "Rashida Jones",
+        "order": 1,
+        "gender": 1,
+        "profilePath": "/cgWGm9eYCretBWeljPVtpRV7n6V.jpg"
+      },
+      {
+        "character": "Drea Barris",
+        "creditId": "5e96fb65140bad001499af9a",
+        "id": 1632530,
+        "name": "Iman Benson",
+        "order": 2,
+        "gender": 1,
+        "profilePath": "/6s8Cyc4rxDRpX1vYnczU52RM4IM.jpg"
+      },
+      {
+        "character": "Chloe Barris",
+        "creditId": "5e96fb52140bad001499af86",
+        "id": 1352920,
+        "name": "Genneya Walton",
+        "order": 3,
+        "gender": 1,
+        "profilePath": "/eP3wMmU1drxDHW54t5hvDcIxs05.jpg"
+      },
+      {
+        "character": "Izzy Barris",
+        "creditId": "5e96fb723cd12c0014bda93a",
+        "id": 1711181,
+        "name": "Scarlet Spencer",
+        "order": 4,
+        "gender": 1,
+        "profilePath": "/zaHIbaUmPcfx2vp3UXRKMMV8Y3.jpg"
+      },
+      {
+        "character": "Pops Barris",
+        "creditId": "5e96fb802cefc200148e453c",
+        "id": 2482809,
+        "name": "Justin Claiborne",
+        "order": 5,
+        "gender": 0,
+        "profilePath": "/75KIWiorc1kbjPBL1DY3myeLtmq.jpg"
+      },
+      {
+        "character": "Kam Barris",
+        "creditId": "5e96fb8b5907de0019de0bc4",
+        "id": 1969888,
+        "name": "Ravi Cabot-Conyers",
+        "order": 6,
+        "gender": 2,
+        "profilePath": "/uM5F2LcmFLJeMrguucByChufpbT.jpg"
+      },
+      {
+        "character": "Brooklyn Barris",
+        "creditId": "5e96fba72cefc200198e5f49",
+        "id": 2602381,
+        "name": "Richard Gardenhire Jr.",
+        "order": 7,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Danny",
+        "creditId": "647a52b1caef2d01362a8b4e",
+        "id": 1893099,
+        "name": "Gil Ozeri",
+        "order": 8,
+        "gender": 2,
+        "profilePath": "/nCQ26myxkz5cq3RLTnBR1fRhJZm.jpg"
+      },
+      {
+        "character": "Broadway",
+        "creditId": "66123e35356a71017d250cbc",
+        "id": 35111,
+        "name": "Bumper Robinson",
+        "order": 514,
+        "gender": 2,
+        "profilePath": "/9KU72zZXIfsGAPgHmhlJmTYvor9.jpg"
+      },
+      {
+        "character": "Leeza",
+        "creditId": "66123e428c0a4801640448b7",
+        "id": 113867,
+        "name": "Angela Kinsey",
+        "order": 518,
+        "gender": 1,
+        "profilePath": "/qHFidnMcFqUWdMFyjmXufBlYckd.jpg"
+      },
+      {
+        "character": "Nelson",
+        "creditId": "66123e44356a71017d250cd8",
+        "id": 88928,
+        "name": "Nelson Franklin",
+        "order": 519,
+        "gender": 2,
+        "profilePath": "/2YYnTxpFmS5i9qRkb6H4Nxky2px.jpg"
+      },
+      {
+        "character": "Mikala",
+        "creditId": "66123e451f3319017dc2c875",
+        "id": 1657539,
+        "name": "Andrea Ellsworth",
+        "order": 520,
+        "gender": 1,
+        "profilePath": "/XxuY1rveQuY9hknA9SqY77AyoN.jpg"
+      },
+      {
+        "character": "Jerome Sinfeld",
+        "creditId": "66123e47c1606a017cf02dd1",
+        "id": 1612078,
+        "name": "Jonathan Groff",
+        "order": 521,
+        "gender": 2,
+        "profilePath": "/lUU2dykjii03qosadsQmfp78JUa.jpg"
+      },
+      {
+        "character": "Marquise",
+        "creditId": "66123e4a356a71017d250ce1",
+        "id": 2009215,
+        "name": "Doug Hall",
+        "order": 523,
+        "gender": 2,
+        "profilePath": null
+      },
+      {
+        "character": "Emily",
+        "creditId": "66123e4bd768fe012f413eff",
+        "id": 2365319,
+        "name": "Emily G. Miller",
+        "order": 524,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Lavette",
+        "creditId": "66123e76df86a8017e544cd4",
+        "id": 9781,
+        "name": "Nia Long",
+        "order": 542,
+        "gender": 1,
+        "profilePath": "/heVQkCGKUuKKRjRJaZIBrEKGhYA.jpg"
+      },
+      {
+        "character": "Lupe",
+        "creditId": "66123e4db3390301626ed941",
+        "id": 3513225,
+        "name": "Mónica Estrada",
+        "order": 525,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Peaches",
+        "creditId": "66123e8ac1606a017cf02e44",
+        "id": 1166342,
+        "name": "Tae Heckard",
+        "order": 545,
+        "gender": 1,
+        "profilePath": "/7i0pBL6Rnr2BzSeLh4f7W8rvd4M.jpg"
+      },
+      {
+        "character": "Cousin Harold",
+        "creditId": "60854626e61e6d0029b301ce",
+        "id": 1181339,
+        "name": "Melvin Gregg",
+        "order": 500,
+        "gender": 2,
+        "profilePath": "/tIeYOezPPBpUmVuzYO7idcWPuUz.jpg"
+      },
+      {
+        "character": "Knowledge Bennett",
+        "creditId": "60d1f05d35c30a00270c5746",
+        "id": 3132760,
+        "name": "Knowledge Bennett",
+        "order": 501,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Steven Levitan",
+        "creditId": "66123e1b1fa1c8017cd35f90",
+        "id": 1215785,
+        "name": "Steven Levitan",
+        "order": 502,
+        "gender": 2,
+        "profilePath": "/xPT11b4ABpd9idTMBpoaaCH801J.jpg"
+      },
+      {
+        "character": "Kara",
+        "creditId": "66123e1c19690c017ca4c153",
+        "id": 154826,
+        "name": "Catherine Reitman",
+        "order": 503,
+        "gender": 1,
+        "profilePath": "/8o7vcMrjk7u2t4a5NatGTxjghmR.jpg"
+      },
+      {
+        "character": "John",
+        "creditId": "66123e1e1f3319017dc2c841",
+        "id": 1864860,
+        "name": "Paul Bartholomew",
+        "order": 504,
+        "gender": 2,
+        "profilePath": "/vbBODVBU8sLWOVySHNX5apgYWXG.jpg"
+      },
+      {
+        "character": "Scooter Braun",
+        "creditId": "66123e20356a71017d250ca0",
+        "id": 971001,
+        "name": "Scooter Braun",
+        "order": 505,
+        "gender": 2,
+        "profilePath": "/kjpSj1Z7boL5yazKFLsDrRLuU0E.jpg"
+      },
+      {
+        "character": "Male",
+        "creditId": "66123e211fa1c8017cd35f9d",
+        "id": 1745989,
+        "name": "Maurice Williams",
+        "order": 506,
+        "gender": 2,
+        "profilePath": null
+      },
+      {
+        "character": "Female",
+        "creditId": "66123e23356a71017d250ca6",
+        "id": 3719063,
+        "name": "Ambyr Michelle",
+        "order": 507,
+        "gender": 1,
+        "profilePath": null
+      },
+      {
+        "character": "Female",
+        "creditId": "66123e241f3319017dc2c84a",
+        "id": 3852005,
+        "name": "Jamai Fisher",
+        "order": 508,
+        "gender": 1,
+        "profilePath": "/52g63DHNDf2Xl9P8YcPavbO4PHF.jpg"
+      },
+      {
+        "character": "Jay Rock",
+        "creditId": "66123e2a1108a8017d8e0f19",
+        "id": 3037721,
+        "name": "Jay Rock",
+        "order": 509,
+        "gender": 2,
+        "profilePath": "/fLFjvfsyQVjedh9NPBlIxNKFYWQ.jpg"
+      },
+      {
+        "character": "Sarkis",
+        "creditId": "66123e2b1fa1c80149d17e4f",
+        "id": 4457395,
+        "name": "Sevak Hakoyan",
+        "order": 510,
+        "gender": 2,
+        "profilePath": null
+      },
+      {
+        "character": "Issac",
+        "creditId": "66123e2cd768fe017b4361ea",
+        "id": 1360027,
+        "name": "Brandon Ruiter",
+        "order": 511,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Salvadoran Nanny",
+        "creditId": "66123e2e67dcc901639c1d31",
+        "id": 1077346,
+        "name": "Laura Patalano",
+        "order": 512,
+        "gender": 1,
+        "profilePath": "/zw1PyiEujvLKWvS7hAwNH46freS.jpg"
+      },
+      {
+        "character": "Lindsay",
+        "creditId": "66123e2f8c0a48017e050d58",
+        "id": 2510369,
+        "name": "Madison Shamoun",
+        "order": 513,
+        "gender": 1,
+        "profilePath": "/gPfRWCuKPd0trIXDAzTVTab40Xh.jpg"
+      },
+      {
+        "character": "Tom the Cameraman",
+        "creditId": "66123e365b370d014a64c048",
+        "id": 1940361,
+        "name": "Joel Marsh",
+        "order": 515,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Izzy's White Friend",
+        "creditId": "66123e38df86a8017e544c8c",
+        "id": 1154569,
+        "name": "Abigail Zoe Lewis",
+        "order": 516,
+        "gender": 1,
+        "profilePath": "/oDpDWt8PBjyyQxc639CW2BJDSsv.jpg"
+      },
+      {
+        "character": "Izzy's White Friend",
+        "creditId": "66123e3a356a71017d250cc9",
+        "id": 3094294,
+        "name": "Isabelle JoLynn Murphy",
+        "order": 517,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Jim",
+        "creditId": "66123e481108a8017d8e0f53",
+        "id": 31711,
+        "name": "Troy Garity",
+        "order": 522,
+        "gender": 2,
+        "profilePath": "/eNK78vBECYQbug1h7jFVo8OeHr0.jpg"
+      },
+      {
+        "character": "Ava DuVernay",
+        "creditId": "66123e5567dcc901309aff74",
+        "id": 929825,
+        "name": "Ava DuVernay",
+        "order": 526,
+        "gender": 1,
+        "profilePath": "/84rc8I3Wf5zkCWGMNeTtmRekHW0.jpg"
+      },
+      {
+        "character": "Issa Rae",
+        "creditId": "66123e571108a8017d8e0f69",
+        "id": 1455336,
+        "name": "Issa Rae",
+        "order": 527,
+        "gender": 1,
+        "profilePath": "/uFjimuDgBv8kckApr19t8DykxPH.jpg"
+      },
+      {
+        "character": "Tischina",
+        "creditId": "66123e5a1108a8017d8e0f70",
+        "id": 1865285,
+        "name": "KJ Smith",
+        "order": 528,
+        "gender": 1,
+        "profilePath": "/2Kd2OKzvavxQUxG37yUkKUbvBxa.jpg"
+      },
+      {
+        "character": "Aunt Nadine",
+        "creditId": "66123e5cb33903017b6fc8bf",
+        "id": 80597,
+        "name": "Kym Whitley",
+        "order": 529,
+        "gender": 1,
+        "profilePath": "/kWo5pJe9Ogi3YQAocVoDMP1Sndj.jpg"
+      },
+      {
+        "character": "Lena Waithe",
+        "creditId": "66123e5ddf86a8014b531104",
+        "id": 1059572,
+        "name": "Lena Waithe",
+        "order": 530,
+        "gender": 1,
+        "profilePath": "/yidK25mjpxTTYCICmZnxgks6utx.jpg"
+      },
+      {
+        "character": "Uncle Ray",
+        "creditId": "66123e5f1108a8017d8e0f7a",
+        "id": 51944,
+        "name": "Mike Epps",
+        "order": 531,
+        "gender": 2,
+        "profilePath": "/kDI4E3ALm2rVkF38GwhWwXmDq0a.jpg"
+      },
+      {
+        "character": "Grandpa Barris",
+        "creditId": "66123e61b09bde017ebdc109",
+        "id": 56853,
+        "name": "Phil Morris",
+        "order": 532,
+        "gender": 2,
+        "profilePath": "/iZADKc1QdCFpTvu0KnU3BZBwtrE.jpg"
+      },
+      {
+        "character": "Tim Story",
+        "creditId": "66123e636f43ec014ac1290b",
+        "id": 20400,
+        "name": "Tim Story",
+        "order": 533,
+        "gender": 2,
+        "profilePath": "/9tixtZ4m2gpfBXPpVS2aFhGZg9D.jpg"
+      },
+      {
+        "character": "Tyler Perry",
+        "creditId": "66123e64df86a8017e544cbf",
+        "id": 80602,
+        "name": "Tyler Perry",
+        "order": 534,
+        "gender": 2,
+        "profilePath": "/8KU0OizemVLrERXt5HJIa0PAkIN.jpg"
+      },
+      {
+        "character": "Grandma",
+        "creditId": "66123e66d768fe012f413f06",
+        "id": 31138,
+        "name": "Valarie Pettiford",
+        "order": 535,
+        "gender": 1,
+        "profilePath": "/dC0Vlziflnu8lHrltozNa4uL6pK.jpg"
+      },
+      {
+        "character": "Will Packer",
+        "creditId": "66123e686f43ec017dc267a4",
+        "id": 31121,
+        "name": "Will Packer",
+        "order": 536,
+        "gender": 2,
+        "profilePath": "/8dzepdXQMwpwBKtgTsyo9nbwbVE.jpg"
+      },
+      {
+        "character": "Director",
+        "creditId": "66123e6a67dcc9017c9d268b",
+        "id": 1653368,
+        "name": "Yassir Lester",
+        "order": 537,
+        "gender": 2,
+        "profilePath": "/cxQk4vTeBnFPgTvmVpYtkmTKVTf.jpg"
+      },
+      {
+        "character": "Derek",
+        "creditId": "66123e6b356a71017d250d0b",
+        "id": 1612717,
+        "name": "Chris Brew",
+        "order": 538,
+        "gender": 2,
+        "profilePath": null
+      },
+      {
+        "character": "Simone",
+        "creditId": "66123e6e5b370d014a64c079",
+        "id": 3208665,
+        "name": "Jazzy Jade",
+        "order": 539,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Executive",
+        "creditId": "66123e6f356a710164240413",
+        "id": 1648342,
+        "name": "Scott Ibarra",
+        "order": 540,
+        "gender": 0,
+        "profilePath": null
+      },
+      {
+        "character": "Barista",
+        "creditId": "66123e71d768fe017b436255",
+        "id": 2650046,
+        "name": "Taylor Murphy-Sinclair",
+        "order": 541,
+        "gender": 1,
+        "profilePath": "/tFsA0edqDZki6WucOf8c11XETnx.jpg"
+      },
+      {
+        "character": "Jasmine",
+        "creditId": "66123e775b370d0157638b63",
+        "id": 1377385,
+        "name": "Bresha Webb",
+        "order": 543,
+        "gender": 1,
+        "profilePath": "/8sGdWcAFVUAvAtlkDvoLLlL6QzR.jpg"
+      },
+      {
+        "character": "Dr. Peterson",
+        "creditId": "66123e806f43ec014ac12917",
+        "id": 35476,
+        "name": "Brittany Daniel",
+        "order": 544,
+        "gender": 1,
+        "profilePath": "/vVnKokLIiv6lW6eQ4hQwla9fHuX.jpg"
+      },
+      {
+        "character": "Flight Attendant",
+        "creditId": "66123e8cc68b69017d057caa",
+        "id": 1614589,
+        "name": "Catherine Kelley",
+        "order": 546,
+        "gender": 1,
+        "profilePath": "/9XtWSTPtSoFXz7aSML7W5edQwkM.jpg"
+      },
+      {
+        "character": "Cute Guy",
+        "creditId": "66123e955b370d014a64c0a1",
+        "id": 3866212,
+        "name": "Lakota Johnson",
+        "order": 547,
+        "gender": 0,
+        "profilePath": "/iBhqBDvu7J3yN7xqoIEcvkfFESw.jpg"
+      },
+      {
+        "character": "Book Signing Woman",
+        "creditId": "66123e97df86a8017e544cfc",
+        "id": 4638950,
+        "name": "Ateca Ravuvu",
+        "order": 548,
+        "gender": 1,
+        "profilePath": "/s6OCJsT5hfyeWpIC0Fn82R1N4LZ.jpg"
+      }
+    ],
+    "crew": []
+  },
+  "externalIds": {
+    "facebookId": null,
+    "freebaseId": null,
+    "freebaseMid": null,
+    "imdbId": "tt10311562",
+    "instagramId": "blackafnetflix",
+    "tvdbId": 378773,
+    "tvrageId": null,
+    "twitterId": null
+  },
+  "keywords": [
+    {
+      "id": 2831,
+      "name": "slavery"
+    },
+    {
+      "id": 40870,
+      "name": "race"
+    },
+    {
+      "id": 155247,
+      "name": "irreverence"
+    },
+    {
+      "id": 193171,
+      "name": "sitcom"
+    },
+    {
+      "id": 325784,
+      "name": "comforting"
+    }
+  ],
+  "watchProviders": [
+    {
+      "iso_3166_1": "AD",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AD",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AL",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AU",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 51,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "AZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=AZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BB",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BB",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BH",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BM",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 42,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BS",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BY",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "BZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=BZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 4,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 92,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CH",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CI",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CL",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CM",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CU",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CV",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CV",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CY",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "CZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=CZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=DE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 86,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DK",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=DK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=DO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "DZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=DZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "EC",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=EC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "EE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=EE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "EG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=EG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ES",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ES",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 52,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "FI",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=FI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "FJ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=FJ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "FR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=FR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 52,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GB",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GB",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 87,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GF",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GF",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GH",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GI",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GQ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GQ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "GT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=GT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HK",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=HK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HN",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=HN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "HU",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=HU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ID",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ID",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=IE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IL",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=IL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IN",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=IN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IQ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=IQ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IS",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=IS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "IT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=IT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "JM",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=JM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "JO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=JO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 2,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "JP",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=JP",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 24,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "KE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=KE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "KR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=KR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 26,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "KW",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=KW",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LB",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LB",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LC",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LI",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LU",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LV",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LV",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "LY",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=LY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MC",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MD",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MD",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ME",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ME",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MK",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ML",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ML",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MU",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MU",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MX",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MX",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 42,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MY",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "MZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=MZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=NE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=NG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NI",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=NI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NL",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=NL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=NO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "NZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=NZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "OM",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=OM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PF",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PF",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PH",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PK",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PL",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PL",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PS",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "PY",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=PY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "QA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=QA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "RO",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=RO",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "RS",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=RS",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SC",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SI",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SI",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SK",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SK",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SM",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SN",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "SV",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=SV",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TC",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TC",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TD",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TD",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TH",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TH",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TN",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TN",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TR",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TR",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TT",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TT",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TW",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TW",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "TZ",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=TZ",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "UG",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=UG",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "US",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=US",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 3,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        },
+        {
+          "displayPriority": 154,
+          "logoPath": "/eGUwOOIxcazwEBxqJpSN5sWEu6V.png",
+          "id": 1796,
+          "name": "Netflix Standard with Ads"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "UY",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=UY",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "VE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=VE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "YE",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=YE",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ZA",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ZA",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 0,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ZM",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ZM",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    },
+    {
+      "iso_3166_1": "ZW",
+      "link": "https://www.themoviedb.org/tv/101200-blackaf/watch?locale=ZW",
+      "buy": [],
+      "flatrate": [
+        {
+          "displayPriority": 1,
+          "logoPath": "/rK1KljqmbvO9HQa1PBFLILWah72.png",
+          "id": 8,
+          "name": "Netflix"
+        }
+      ]
+    }
+  ],
+  "onUserWatchlist": false
+}

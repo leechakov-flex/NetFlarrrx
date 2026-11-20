@@ -23,10 +23,10 @@ const args = parseArgs(process.argv.slice(2));
 loadDotEnv(resolve(process.cwd(), '.env'));
 
 const cfg = {
-  watchmodeKey: process.env.WATCHMODE_API_KEY || '',
-  tmdbToken: process.env.TMDB_READ_TOKEN || '',
-  seerrKey: process.env.SEERR_API_KEY || '',
-  seerrUrl: (process.env.SEERR_URL || 'http://monkeyserver.local:5055').replace(/\/+$/, ''),
+  watchmodeKey: envValue('WATCHMODE_API_KEY'),
+  tmdbToken: envValue('TMDB_READ_TOKEN'),
+  seerrKey: envValue('SEERR_API_KEY'),
+  seerrUrl: (envValue('SEERR_URL') || 'http://monkeyserver.local:5055').replace(/\/+$/, ''),
   watchmodeBase: (process.env.WATCHMODE_BASE || 'https://api.watchmode.com/v1').replace(/\/+$/, ''),
   tmdbBase: (process.env.TMDB_BASE || 'https://api.themoviedb.org/3').replace(/\/+$/, ''),
   netflixSourceId: 203,
@@ -349,7 +349,17 @@ async function seerr(path, opts = {}) {
   return request('seerr', `${cfg.seerrUrl}${path}`, { 'X-Api-Key': cfg.seerrKey }, opts);
 }
 
+const AUTH_HINTS = {
+  watchmode: 'Check WATCHMODE_API_KEY in .env (Watchmode dashboard).',
+  tmdb: 'Check TMDB_READ_TOKEN in .env: use the long "API Read Access Token" that starts with eyJ.',
+  seerr: 'Check SEERR_API_KEY in .env (Seerr -> Settings -> General -> API Key).',
+};
+const authFailed = new Set();
+
 async function request(service, url, headers, { retries = 1, quiet404 = false } = {}) {
+  // After one auth failure, skip the rest of that service's calls instead of
+  // logging the same error dozens of times.
+  if (authFailed.has(service)) return { ok: false, status: 401, body: null, headers: new Headers(), skipped: true };
   let attempt = 0;
   for (;;) {
     attempt += 1;
@@ -363,6 +373,11 @@ async function request(service, url, headers, { retries = 1, quiet404 = false } 
       try { body = text ? JSON.parse(text) : null; } catch { body = { _non_json: text.slice(0, 200) }; }
       if (res.ok) return { ok: true, status: res.status, body, headers: res.headers };
       if (res.status === 404 && quiet404) return { ok: false, status: 404, body, headers: res.headers };
+      if (res.status === 401 || res.status === 403) {
+        authFailed.add(service);
+        recordError(service, url, `HTTP ${res.status} (auth) — ${AUTH_HINTS[service]} Skipping the rest of ${service}.`, body);
+        return { ok: false, status: res.status, body, headers: res.headers };
+      }
       const retryable = res.status === 429 || res.status >= 500;
       if (retryable && attempt <= retries) {
         const ra = Number(res.headers.get('retry-after'));
@@ -388,23 +403,29 @@ function recordError(service, url, message, body) {
 
 // ---------- sanitizing ----------
 
-const SENSITIVE_KEY = /(e-?mail|token|password|passwd|secret|api_?key|apikey|plex(id|username|token)|jellyfin(userid|username|authtoken|deviceid)|avatar|ip_?address|recoverylink)/i;
+const SENSITIVE_KEY = /(e-?mail|token|password|passwd|secret|api_?key|apikey|plex(id|username|token)|jellyfin(userid|username|authtoken|deviceid)|avatar|ip_?address|recoverylink|displayname|^username$)/i;
 
 export function sanitize(value) {
   if (Array.isArray(value)) return value.map(sanitize);
   if (value && typeof value === 'object') {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      out[k] = SENSITIVE_KEY.test(k) ? '<redacted>' : sanitize(v);
+      out[k] = SENSITIVE_KEY.test(k) && v !== null ? '<redacted>' : sanitize(v);
     }
     return out;
   }
-  if (typeof value === 'string') {
-    let s = value;
-    for (const secret of SECRETS) s = s.split(secret).join('<redacted>');
-    return s;
-  }
+  if (typeof value === 'string') return scrubString(value);
   return value;
+}
+
+// Secrets, private LAN addresses, and Plex server machine IDs inside URLs.
+export function scrubString(value) {
+  let s = value;
+  for (const secret of SECRETS) s = s.split(secret).join('<redacted>');
+  s = s.replace(/\b(?:10|127|192\.168|172\.(?:1[6-9]|2\d|3[01]))(?:\.\d{1,3}){2,3}\b/g, '<lan-ip>');
+  s = s.replace(/(server\/)[0-9a-f]{16,}/gi, '$1<plex-server>');
+  s = s.replace(/(machineIdentifier=|server%2F|server=)[0-9a-f]{16,}/gi, '$1<plex-server>');
+  return s;
 }
 
 function scrubUrl(url) {
@@ -497,6 +518,16 @@ function loadDotEnv(path) {
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
     if (!(key in process.env)) process.env[key] = val;
   }
+}
+
+// Trims whitespace and one pair of surrounding quotes. `docker run --env-file`
+// passes quotes through literally, which breaks auth headers.
+function envValue(name) {
+  let v = (process.env[name] || '').trim();
+  if (v.length >= 2 && ((v[0] === '"' && v.at(-1) === '"') || (v[0] === "'" && v.at(-1) === "'"))) {
+    v = v.slice(1, -1).trim();
+  }
+  return v;
 }
 
 function pick(obj, keys) {

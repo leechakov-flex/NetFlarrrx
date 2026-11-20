@@ -81,11 +81,13 @@ function startMock() {
       if (p === '/api/v1/auth/me') return send(200, { id: 1, email: 'lee@example.com', plexToken: 'abc', userType: 2, permissions: 2 });
       if (p === '/api/v1/settings/public') return send(200, { mediaServerType: 1, partialRequestsEnabled: true });
       if (p === '/api/v1/media') return send(200, { pageInfo: { results: 2 }, results: [
-        { id: 1, mediaType: 'movie', tmdbId: 501, status: 5, seasons: [] },
+        { id: 1, mediaType: 'movie', tmdbId: 501, status: 5, seasons: [],
+          serviceUrl: 'http://192.168.68.172:7878/movie/501',
+          mediaUrl: 'https://app.plex.tv/desktop#!/server/e68aa12bc3d4e5f60718293a4b5c6d7e8f901234/details?key=1' },
         { id: 2, mediaType: 'tv', tmdbId: 900, status: 4, seasons: [{ seasonNumber: 1, status: 5 }] },
       ] });
       if (p === '/api/v1/request') return send(200, { pageInfo: { results: 1 }, results: [
-        { id: 7, status: 2, requestedBy: { id: 1, email: 'lee@example.com', avatar: '/a.png' } },
+        { id: 7, status: 2, requestedBy: { id: 1, email: 'lee@example.com', avatar: '/a.png', displayName: 'leechakov', username: null } },
       ] });
       if (p.startsWith('/api/v1/movie/')) return send(200, { id: 501, mediaInfo: { status: 5, tmdbId: 501 } });
       if (p.startsWith('/api/v1/tv/')) return send(200, { id: 900, seasons: [{}, {}], mediaInfo: { status: 4 } });
@@ -163,8 +165,38 @@ test('spike runs end to end, counts correctly, and leaks no secrets', async () =
       for (const secret of Object.values(KEYS)) assert.ok(!text.includes(secret), `${f} contains a key`);
       assert.ok(!text.includes('lee@example.com'), `${f} contains an email`);
       assert.ok(!text.includes('"abc"'), `${f} contains a plex token`);
+      assert.ok(!text.includes('192.168.68.172'), `${f} contains a LAN IP`);
+      assert.ok(!text.includes('e68aa12bc3d4e5f6'), `${f} contains a Plex server ID`);
+      assert.ok(!text.includes('leechakov'), `${f} contains a display name`);
     }
     assert.ok(readFileSync(join(out, 'report.md'), 'utf8').includes('Netflix US titles: **7**'));
+  } finally {
+    server.close();
+  }
+});
+
+test('quoted values work, and a bad key fails once per service', async () => {
+  const { server, port, hits } = await startMock();
+  const out = mkdtempSync(join(tmpdir(), 'spike-auth-'));
+  try {
+    const { stdout } = await runSpike({
+      WATCHMODE_API_KEY: 'wrong-key-0000000000',             // bad
+      TMDB_READ_TOKEN: `"${KEYS.TMDB_READ_TOKEN}"`,          // quoted, as docker --env-file passes it
+      SEERR_API_KEY: ` ${KEYS.SEERR_API_KEY} `,              // stray spaces
+      WATCHMODE_BASE: `http://127.0.0.1:${port}/wm`,
+      TMDB_BASE: `http://127.0.0.1:${port}/tmdb`,
+      SEERR_URL: `http://127.0.0.1:${port}`,
+      WATCHMODE_DELAY_MS: '0',
+      TMDB_DELAY_MS: '0',
+    }, out);
+    const report = JSON.parse(readFileSync(join(out, 'report.json'), 'utf8'));
+    const wmErrors = report.errors.filter((e) => e.service === 'watchmode');
+    assert.equal(wmErrors.length, 1, stdout);
+    assert.match(wmErrors[0].error, /WATCHMODE_API_KEY/);
+    assert.equal(hits.watchmode, 1, 'no further Watchmode calls after the 401');
+    assert.equal(report.errors.filter((e) => e.service === 'tmdb').length, 0, 'quoted TMDB token accepted');
+    assert.equal(report.findings.tmdb_discover_netflix_us.tv, 1234);
+    assert.equal(report.findings.seerr_status.version, '3.4.1', 'padded Seerr key accepted');
   } finally {
     server.close();
   }

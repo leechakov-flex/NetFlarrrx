@@ -1,0 +1,217 @@
+{
+  "generated_at": "2026-11-20T20:39:37.722Z",
+  "spike_version": 1,
+  "node": "v22.23.5",
+  "checks": {
+    "watchmode_status_before": {
+      "quota": 2500,
+      "quotaUsed": 29
+    },
+    "watchmode_rate_headers": {
+      "x-ratelimit-limit": "1000",
+      "x-ratelimit-remaining": "971",
+      "x-account-quota": "2500",
+      "x-account-quota-used": "29"
+    },
+    "watchmode_status_after": {
+      "quota": 2500,
+      "quotaUsed": 58
+    }
+  },
+  "findings": {
+    "watchmode": {
+      "total_results_reported": 7211,
+      "total_pages": 29,
+      "pages_fetched": 29,
+      "failed_pages": [],
+      "unique_titles": 7211,
+      "duplicates_across_pages": 0,
+      "complete_crawl": true,
+      "credits_used_this_run": 29,
+      "credits_per_full_sync_estimate": 29,
+      "monthly_credits_daily_sync_estimate": 870,
+      "by_type": {
+        "movie": 3724,
+        "tv_series": 2396,
+        "tv_miniseries": 731,
+        "tv_special": 194,
+        "tv_movie": 117,
+        "short_film": 49
+      },
+      "titles_without_tmdb_id": 9,
+      "titles_without_tmdb_id_pct": 0.1,
+      "titles_with_unexpected_tmdb_type": 0,
+      "list_titles_fields": [
+        "id",
+        "imdb_id",
+        "popularity_percentile",
+        "title",
+        "tmdb_id",
+        "tmdb_type",
+        "type",
+        "year"
+      ]
+    },
+    "tmdb_netflix_providers": [
+      {
+        "provider_id": 8,
+        "provider_name": "Netflix"
+      },
+      {
+        "provider_id": 175,
+        "provider_name": "Netflix Kids"
+      },
+      {
+        "provider_id": 1796,
+        "provider_name": "Netflix Standard with Ads"
+      }
+    ],
+    "tmdb_discover_netflix_us": {
+      "movie": 4819,
+      "tv": 3671
+    },
+    "tmdb_sample": {
+      "sampled": 60,
+      "matched": 60,
+      "not_found": 0,
+      "match_rate_pct": 100,
+      "original_language": {
+        "en": 27,
+        "hi": 6,
+        "ja": 4,
+        "es": 4,
+        "ko": 3,
+        "de": 3,
+        "tr": 3,
+        "te": 2,
+        "it": 2,
+        "pt": 2,
+        "sv": 1,
+        "fr": 1,
+        "ml": 1,
+        "ta": 1
+      },
+      "english_original_pct": 45,
+      "vote_count_p25": 20,
+      "vote_count_median": 100,
+      "vote_count_p75": 333,
+      "no_keywords": 12,
+      "no_poster": 0
+    },
+    "seerr_status": {
+      "version": "3.3.0",
+      "commitTag": "703faf95f454ffecae99a5e86ea761b3b524c6df",
+      "updateAvailable": true,
+      "commitsBehind": 0
+    },
+    "seerr_api_key_user": "<redacted>",
+    "seerr_public_settings": {
+      "mediaServerType": 1,
+      "partialRequestsEnabled": true,
+      "enableSpecialEpisodes": false,
+      "movie4kEnabled": false,
+      "series4kEnabled": false,
+      "originalLanguage": ""
+    },
+    "seerr_media": {
+      "page_info": {
+        "pages": 5,
+        "pageSize": 50,
+        "results": 213,
+        "page": 1
+      },
+      "status_values_seen": {
+        "3": 5,
+        "4": 21,
+        "5": 22,
+        "7": 2
+      },
+      "media_types_seen": {
+        "tv": 32,
+        "movie": 18
+      },
+      "fields": [
+        "createdAt",
+        "downloadStatus",
+        "downloadStatus4k",
+        "externalServiceId",
+        "externalServiceId4k",
+        "externalServiceSlug",
+        "externalServiceSlug4k",
+        "iOSPlexUrl",
+        "id",
+        "imdbId",
+        "jellyfinMediaId",
+        "jellyfinMediaId4k",
+        "lastSeasonChange",
+        "mediaAddedAt",
+        "mediaType",
+        "mediaUrl",
+        "ratingKey",
+        "ratingKey4k",
+        "seasons",
+        "serviceId",
+        "serviceId4k",
+        "serviceUrl",
+        "status",
+        "status4k",
+        "tmdbId",
+        "tvdbId",
+        "updatedAt"
+      ],
+      "season_fields": [
+        "createdAt",
+        "id",
+        "seasonNumber",
+        "status",
+        "status4k",
+        "updatedAt"
+      ]
+    },
+    "seerr_requests": {
+      "page_info": {
+        "pages": 17,
+        "pageSize": 10,
+        "results": 161,
+        "page": 1
+      },
+      "status_values_seen": {
+        "2": 4,
+        "5": 6
+      },
+      "fields": [
+        "canRemove",
+        "createdAt",
+        "id",
+        "is4k",
+        "isAutoRequest",
+        "languageProfileId",
+        "media",
+        "modifiedBy",
+        "profileId",
+        "profileName",
+        "requestedBy",
+        "rootFolder",
+        "seasonCount",
+        "seasons",
+        "serverId",
+        "status",
+        "tags",
+        "type",
+        "updatedAt"
+      ]
+    },
+    "seerr_movie_lookup": {
+      "tmdb_id": 614696,
+      "has_mediaInfo": false,
+      "mediaInfo_fields": []
+    },
+    "seerr_tv_lookup": {
+      "tmdb_id": 101200,
+      "has_mediaInfo": false,
+      "seasons_listed": 1,
+      "mediaInfo_fields": []
+    }
+  },
+  "errors": []
+}

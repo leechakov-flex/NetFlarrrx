@@ -6,7 +6,7 @@ Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (
 
 ## Status
 
-**M0: data spike.** `scripts/spike.mjs` checks the three APIs read-only and writes a sanitized report. Nothing else is built yet.
+**M0: done (Nov 20, 2026).** Go on Watchmode's free plan: 7,211 Netflix US titles, 29 credits per sync, 99.9% with a TMDB ID. Real responses, scrubbed, are in `test/fixtures/m0/`. Next: M1 ingest.
 
 ## M0: run the spike
 

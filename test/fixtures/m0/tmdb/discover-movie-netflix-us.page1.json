@@ -1,0 +1,109 @@
+{
+  "page": 1,
+  "total_pages": 241,
+  "total_results": 4819,
+  "results": [
+    {
+      "adult": false,
+      "backdrop_path": "/bjt53Hjqwl9VrtJkDv39GwmE1QN.jpg",
+      "genre_ids": [
+        28,
+        80,
+        53
+      ],
+      "id": 1616687,
+      "title": "Never Surrender",
+      "original_language": "id",
+      "original_title": "Serangan Balik",
+      "overview": "When a deadly gang descends on his remote home, a guilt-ridden veteran and the estranged grandchildren he barely knows must unite to survive.",
+      "popularity": 225.878,
+      "poster_path": "/hKROmLddpzpjkxKKVFYFRAOXX1b.jpg",
+      "release_date": "2026-11-11",
+      "softcore": false,
+      "video": false,
+      "vote_average": 6.927,
+      "vote_count": 55
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/psTMZj8gvsfYVfvd7FZCHH4xL6P.jpg",
+      "genre_ids": [
+        53,
+        9648
+      ],
+      "id": 1543469,
+      "title": "Heartland",
+      "original_language": "en",
+      "original_title": "Heartland",
+      "overview": "Former country music legend Misty Jones returns to Nashville to unravel the truth behind her rising-star niece's disappearance.",
+      "popularity": 113.1954,
+      "poster_path": "/zhxlzxBlO1sWB1rPn7RmAoeQ2na.jpg",
+      "release_date": "2026-11-13",
+      "softcore": false,
+      "video": false,
+      "vote_average": 6.252,
+      "vote_count": 103
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/qHvap0vpfTBIbv7cnR0OyBRqQHG.jpg",
+      "genre_ids": [
+        10749,
+        35
+      ],
+      "id": 1551025,
+      "title": "Guarding Stars",
+      "original_language": "en",
+      "original_title": "Guarding Stars",
+      "overview": "When a no-nonsense bodyguard is assigned to protect a charming action star over the holidays, sparks fly, secrets unravel, and Christmas gets a whole lot more complicated.",
+      "popularity": 109.5127,
+      "poster_path": "/wWNizZ4IcSld3xXH1WEXziJiNJN.jpg",
+      "release_date": "2026-11-18",
+      "softcore": false,
+      "video": false,
+      "vote_average": 7.3,
+      "vote_count": 38
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/5lTZyuBTNOfawsfPT8Q0cIg6qAF.jpg",
+      "genre_ids": [
+        27,
+        53
+      ],
+      "id": 1339713,
+      "title": "Obsession",
+      "original_language": "en",
+      "original_title": "Obsession",
+      "overview": "After breaking the mysterious \"One Wish Willow\" to win his crush's heart, a hopeless romantic finds himself getting exactly what he asked for but soon discovers that some desires come at a dark, sinister price.",
+      "popularity": 73.585,
+      "poster_path": "/bRwnj8WEKBCvmfeUNOukJPwB43K.jpg",
+      "release_date": "2026-05-13",
+      "softcore": false,
+      "video": false,
+      "vote_average": 8.159,
+      "vote_count": 6688
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/oHBhHoNe59VH6bUMazDtJmWOFSS.jpg",
+      "genre_ids": [
+        878,
+        27,
+        28
+      ],
+      "id": 940721,
+      "title": "Godzilla Minus One",
+      "original_language": "ja",
+      "original_title": "ゴジラ-1.0",
+      "overview": "In postwar Japan, Godzilla brings new devastation to an already scorched landscape. With no military intervention or government help in sight, the survivors must join together in the face of despair and fight back against an unrelenting horror.",
+      "popularity": 73.1427,
+      "poster_path": "/2E2WTX0TJEflAged6kzErwqX1kt.jpg",
+      "release_date": "2023-11-03",
+      "softcore": false,
+      "video": false,
+      "vote_average": 7.63,
+      "vote_count": 3716
+    }
+  ]
+}

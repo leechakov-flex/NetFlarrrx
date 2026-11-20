@@ -1,0 +1,135 @@
+{
+  "adult": false,
+  "backdrop_path": "/wzbO83x1CJqhoKYciDNa3aC37qT.jpg",
+  "created_by": [
+    {
+      "id": 2158114,
+      "credit_id": "6ac36df11375fff7812a681a",
+      "name": "Amanda Högberg",
+      "original_name": "Amanda Högberg",
+      "gender": 1,
+      "profile_path": "/ynOM3RQlVlNHOjpxqLNNEdZF1Ot.jpg"
+    },
+    {
+      "id": 5364533,
+      "credit_id": "6ac36e01f29ad927dbdcc8ea",
+      "name": "Axel Stjärne",
+      "original_name": "Axel Stjärne",
+      "gender": 0,
+      "profile_path": null
+    }
+  ],
+  "episode_run_time": [],
+  "first_air_date": "2026-10-30",
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 9648,
+      "name": "Mystery"
+    }
+  ],
+  "homepage": "https://www.netflix.com/title/81944880",
+  "id": 336240,
+  "in_production": false,
+  "languages": [
+    "sv"
+  ],
+  "last_air_date": "2026-10-30",
+  "last_episode_to_air": {
+    "id": 7900724,
+    "name": "Episode 4",
+    "overview": "In the wake of a spiraling chain of events in Sicily, a twisting web of lies and scheming threatens to reveal a disturbing — and deadly — truth.",
+    "vote_average": 0,
+    "vote_count": 0,
+    "air_date": "2026-10-30",
+    "episode_number": 4,
+    "episode_type": "finale",
+    "production_code": "",
+    "runtime": 48,
+    "season_number": 1,
+    "show_id": 336240,
+    "still_path": "/2mJOZ6v6Lf0AcXaKCp9DSEjx0KC.jpg"
+  },
+  "name": "A Couple of Lies",
+  "next_episode_to_air": null,
+  "networks": [
+    {
+      "id": 213,
+      "logo_path": "/wwemzKWzjKYJFfCeiB57q3r4Bcm.png",
+      "name": "Netflix",
+      "origin_country": ""
+    }
+  ],
+  "number_of_episodes": 4,
+  "number_of_seasons": 1,
+  "origin_country": [
+    "SE"
+  ],
+  "original_language": "sv",
+  "original_name": "Bytet",
+  "overview": "A seemingly idyllic home swap between Sicily and Stockholm turns toxic as two wealthy couples go to extremes to protect themselves — and their secrets.",
+  "popularity": 7.7122,
+  "poster_path": "/1k8bldCgOvWk9IDaMqokUE78qaX.jpg",
+  "production_companies": [],
+  "production_countries": [],
+  "seasons": [
+    {
+      "air_date": "2026-10-30",
+      "episode_count": 4,
+      "id": 545743,
+      "name": "Limited Series",
+      "overview": "",
+      "poster_path": "/1k8bldCgOvWk9IDaMqokUE78qaX.jpg",
+      "season_number": 1,
+      "vote_average": 0
+    }
+  ],
+  "softcore": false,
+  "spoken_languages": [
+    {
+      "english_name": "Swedish",
+      "iso_639_1": "sv",
+      "name": "svenska"
+    }
+  ],
+  "status": "Ended",
+  "tagline": "",
+  "type": "Miniseries",
+  "vote_average": 4.6,
+  "vote_count": 19,
+  "keywords": {
+    "results": [
+      {
+        "name": "sicily, italy",
+        "id": 629
+      },
+      {
+        "name": "based on novel or book",
+        "id": 818
+      },
+      {
+        "name": "stockholm archipelago",
+        "id": 210080
+      },
+      {
+        "name": "wealthy couple",
+        "id": 239482
+      },
+      {
+        "name": "house swapping",
+        "id": 274691
+      },
+      {
+        "name": "thriller",
+        "id": 316362
+      },
+      {
+        "name": "secrets",
+        "id": 375280
+      }
+    ]
+  }
+}
