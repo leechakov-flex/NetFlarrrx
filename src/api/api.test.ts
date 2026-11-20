@@ -40,10 +40,11 @@ describe('read API', () => {
     expect(body.eligible).toBeGreaterThan(100);
   });
 
-  it('/api/home returns the four rows, newest first, with totals', async () => {
+  it('/api/home returns the fixed rows, newest first, then theme rows', async () => {
     const { body } = await j<HomeResponse>('/api/home');
     expect(body.showTrackingNotice).toBe(true);
-    expect(body.rows.map((r) => r.slug)).toEqual(['new-week', 'new-month', 'popular', 'acclaimed']);
+    expect(body.rows.map((r) => r.slug).slice(0, 4)).toEqual(['new-week', 'new-month', 'popular', 'acclaimed']);
+    expect(body.rows.slice(4).every((r) => r.link?.startsWith('/browse?theme='))).toBe(true);
     const week = body.rows[0]!;
     expect(week.total).toBe(10);
     const dates = week.items.map((i) => i.addedAt!);
@@ -57,7 +58,9 @@ describe('read API', () => {
     await a2.pipeline('cli');
     run(a2.db, `UPDATE titles SET original_language = 'en'`);
     const h = (await (await createServer(a2).request('/api/home')).json()) as HomeResponse;
-    expect(h.rows.map((r) => r.slug)).toEqual(['popular']);
+    expect(h.rows[0]!.slug).toBe('popular');
+    expect(h.rows.map((r) => r.slug)).not.toContain('new-week');
+    expect(h.rows.map((r) => r.slug)).not.toContain('new-month');
     a2.close();
   });
 

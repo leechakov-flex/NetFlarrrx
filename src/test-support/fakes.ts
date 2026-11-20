@@ -83,7 +83,6 @@ export class FakeTmdb {
   };
 }
 
-/** Seerr /api/v1/media over a fixed list, paged like the real server. */
 /**
  * Seerr: a mutable media list, series details, public settings, and request
  * creation that behaves like Seerr (records the request, marks media pending).

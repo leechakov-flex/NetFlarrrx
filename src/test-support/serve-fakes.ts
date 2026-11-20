@@ -33,7 +33,14 @@ const tmdbFetch: FetchFn = varied
       body.vote_average = Math.round(((id % 47) / 47 * 4 + 5) * 10) / 10;
       body.vote_count = (id * 131) % 9000;
       body.popularity = (id * 17) % 500;
-      body.runtime = 85 + (id % 70);
+      body.runtime = 70 + (id % 80);
+      // Spread a few theme keywords so every thematic row has something to show.
+      const kws = [
+        ...(id % 7 === 0 ? [{ id: 10051, name: 'heist' }] : []),
+        ...(id % 5 === 0 ? [{ id: 9672, name: 'based on true story' }] : []),
+        ...(id % 3 === 0 ? [{ id: 11162, name: 'miniseries' }] : []),
+      ];
+      if ('keywords' in body) body.keywords = { keywords: kws, results: kws };
       body.number_of_seasons = 1 + (id % 4);
       body.overview = 'A lighthouse keeper on a remote island starts receiving radio messages from a ship that sank forty years ago. As the storms close in, she has to decide whether to answer.';
       return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });

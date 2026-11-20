@@ -4,13 +4,16 @@ import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { confirmHeldRun, recentRuns } from './sync/catalog.js';
 import { setLogLevel } from './log.js';
+import { keywordSearch, themePreview, themesFor } from './catalog/queries.js';
 
 const USAGE = `Usage: cli <command>
   status            catalog counts, health and the last 10 sync runs
   sync              run sync -> enrich -> Seerr mirror now (uses ~29 Watchmode credits)
   confirm <run-id>  apply a held sync run
   enrich            fetch TMDB details for titles that need them
-  seerr-mirror      refresh the Seerr status mirror`;
+  seerr-mirror      refresh the Seerr status mirror
+  themes [slug]     thematic rows: counts, which keywords do the work, sample titles
+  keywords <text>   TMDB keywords containing <text>, with how many shown titles have each`;
 
 async function main() {
   const [cmd, arg] = process.argv.slice(2);
@@ -39,6 +42,25 @@ async function main() {
       }
       case 'enrich': console.log(JSON.stringify(await app.enrich(), null, 2)); break;
       case 'seerr-mirror': console.log(JSON.stringify(await app.mirror(), null, 2)); break;
+      case 'themes': {
+        const list = themesFor(cfg).filter((t) => !arg || t.slug === arg);
+        if (!list.length) throw new Error(`No theme "${arg}". Themes: ${themesFor(cfg).map((t) => t.slug).join(', ')}`);
+        for (const t of list) {
+          const p = themePreview(app.db, cfg, t, arg ? 40 : 12);
+          console.log(`\n${t.title} (${t.slug})${t.home ? '' : ' [not on Discover]'}: ${p.n} titles, ${p.movies} movies, ${p.series} series, ${p.dated} dated`);
+          if (p.bySignal.length) console.table(p.bySignal);
+          console.table(p.items.map((i) => ({
+            title: i.title.slice(0, 44), year: i.year, kind: i.kind, rating: i.vote_average, votes: i.vote_count,
+            length: i.kind === 'movie' ? (i.runtime ? `${i.runtime}m` : '') : (i.seasons ? `${i.seasons}s` : ''),
+          })));
+        }
+        break;
+      }
+      case 'keywords': {
+        if (!arg) throw new Error('keywords needs some text, e.g. keywords heist');
+        console.table(keywordSearch(app.db, cfg, arg));
+        break;
+      }
       default: console.error(`Unknown command: ${cmd}\n${USAGE}`); process.exitCode = 2;
     }
   } finally {

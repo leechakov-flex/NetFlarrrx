@@ -46,6 +46,7 @@ export interface BrowseQuery {
   page?: number;                   // 1-based
   q?: string;                      // title search
   hideHave?: boolean;              // drop titles already available, partial, processing or requested in Seerr
+  theme?: string;                  // thematic row slug
 }
 
 export interface BrowseResponse {
@@ -53,7 +54,10 @@ export interface BrowseResponse {
   page: number;
   pageSize: number;
   items: TitleCard[];
+  theme?: { slug: string; title: string; sort: SortKey };
 }
+
+export interface ThemeSummary { slug: string; title: string; kind: Kind | null; sort: SortKey; home: boolean; count: number }
 
 export interface Genre { id: number; name: string; count: number }
 

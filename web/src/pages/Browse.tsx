@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { BrowseQuery, Kind, SortKey } from '../lib/api';
-import { useBrowse, useGenres, useMeta } from '../lib/api';
+import { useBrowse, useGenres, useMeta, useThemes } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
 import { Credits, Empty, PageTitle, Spinner, Tag } from '../components/ui';
 
-const parseFilters = (p: URLSearchParams): Filters & { sort: SortKey } => ({
+const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: string } => ({
+  theme: p.get('theme') || undefined,
   genres: p.get('genres')?.split(',').map(Number).filter((n) => n > 0) || undefined,
   added: ([7, 30, 90] as const).find((n) => String(n) === p.get('added')) ?? undefined,
   minRating: Number(p.get('minRating')) || undefined,
   maxRating: p.get('maxRating') !== null && Number(p.get('maxRating')) < 10 ? Number(p.get('maxRating')) : undefined,
   hideHave: p.get('hide') === 'have' || undefined,
   minVotes: Number(p.get('minVotes')) || undefined,
-  sort: (p.get('sort') as SortKey) || 'added',
+  sort: (p.get('sort') as SortKey) || undefined,
 });
 
 export function Browse({ kind, title, search = false }: { kind?: Kind; title: string; search?: boolean }) {
@@ -24,13 +25,18 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   const res = useBrowse(query);
   const genres = useGenres(kind);
   const meta = useMeta();
+  const themes = useThemes();
+  const theme = f.theme ? (res.data?.pages[0]?.theme ?? themes.data?.find((t) => t.slug === f.theme)) : undefined;
+  const defaultSort: SortKey = theme?.sort ?? 'added';
+  const sort = f.sort ?? defaultSort;
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const update = (next: Partial<Filters & { sort: SortKey }>) => {
     const merged = { ...f, ...next };
     const p = new URLSearchParams();
     if (q) p.set('q', q);
-    if (merged.sort && merged.sort !== 'added') p.set('sort', merged.sort);
+    if (f.theme) p.set('theme', f.theme);
+    if (merged.sort && merged.sort !== defaultSort) p.set('sort', merged.sort);
     if (merged.added) p.set('added', String(merged.added));
     if (merged.genres?.length) p.set('genres', merged.genres.join(','));
     if (merged.minRating) p.set('minRating', String(merged.minRating));
@@ -70,9 +76,9 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   return (
     <>
       <div className="flex flex-col justify-between lg:flex-row lg:items-end">
-        <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : title}</PageTitle>
+        <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme ? '\u00a0' : title}</PageTitle>
         <div className="lg:mb-4">
-          <SortFilterBar sort={f.sort} onSort={(sort) => update({ sort })} filterCount={activeFilterCount(f)} onOpenFilters={() => setFiltersOpen(true)} />
+          <SortFilterBar sort={sort} onSort={(s) => update({ sort: s })} filterCount={activeFilterCount(f)} onOpenFilters={() => setFiltersOpen(true)} />
         </div>
       </div>
 
@@ -107,6 +113,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         onClose={() => setFiltersOpen(false)}
         kind={kind}
         q={q}
+        theme={f.theme}
         value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave }}
         onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave })}
       />

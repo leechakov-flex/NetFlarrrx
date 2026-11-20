@@ -1,4 +1,6 @@
-import { useMeta } from '../lib/api';
+import { Link } from 'react-router-dom';
+import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { useMeta, useThemes } from '../lib/api';
 import { longDate, relativeTime } from '../lib/format';
 import { Badge, Credits, PageTitle, Spinner } from '../components/ui';
 
@@ -8,10 +10,29 @@ const healthBadge: Record<string, ['success' | 'warning' | 'default', string]> =
 
 export function More() {
   const meta = useMeta();
+  const themes = useThemes();
   const m = meta.data;
   return (
     <>
       <PageTitle>More</PageTitle>
+      {themes.data && themes.data.length > 0 && (
+        <section className="mb-8 max-w-xl">
+          <h2 className="mb-3 text-xl font-bold text-gray-200">Collections</h2>
+          <ul className="media-facts">
+            {themes.data.map((t) => (
+              <li key={t.slug}>
+                <Link to={`/browse?theme=${t.slug}`} className="media-fact items-center transition hover:bg-gray-800">
+                  <span>{t.title}</span>
+                  <span className="flex items-center gap-1 text-sm font-normal text-gray-400">
+                    {t.count.toLocaleString()} <ChevronRightIcon className="h-5 w-5" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <h2 className="mb-3 text-xl font-bold text-gray-200">Catalog</h2>
       {!m ? <div className="flex justify-center py-16"><Spinner /></div> : (
         <div className="media-facts max-w-xl">
           <div className="media-fact"><span>Sync</span><span className="media-fact-value"><Badge type={(healthBadge[m.health] ?? healthBadge.stale!)[0]}>{(healthBadge[m.health] ?? healthBadge.stale!)[1]}</Badge></span></div>

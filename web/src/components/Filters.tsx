@@ -58,14 +58,14 @@ export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters }:
   );
 }
 
-export function FiltersPanel({ open, onClose, kind, q, value, onApply }:
-  { open: boolean; onClose: () => void; kind?: Kind; q?: string; value: Filters; onApply: (f: Filters) => void }) {
+export function FiltersPanel({ open, onClose, kind, q, theme, value, onApply }:
+  { open: boolean; onClose: () => void; kind?: Kind; q?: string; theme?: string; value: Filters; onApply: (f: Filters) => void }) {
   const [draft, setDraft] = useState<Filters>(value);
   // Reset the draft each time the panel opens (not on every parent render).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) setDraft(value); }, [open]);
   const genres = useGenres(kind);
-  const count = useBrowseCount({ kind, q, ...draft }, open);
+  const count = useBrowseCount({ kind, q, theme, ...draft }, open);
   const noun = kind === 'movie' ? 'movies' : kind === 'series' ? 'series' : 'titles';
   const toggleGenre = (id: number) => {
     const set = new Set(draft.genres ?? []);

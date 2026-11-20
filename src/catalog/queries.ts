@@ -1,14 +1,14 @@
 import type { Config } from '../config.js';
 import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere } from './rules.js';
+import { loadThemes, themeWhere, type ThemeRule } from './themes.js';
 import type {
-  BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, TitleCard, TitleDetail, TopResponse,
+  BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ThemeSummary, TitleCard, TitleDetail, TopResponse,
 } from '../api/types.js';
 
 export const PAGE_SIZE = 40;
 export const ROW_LIMIT = 20;
 export const TOP_MIN_VOTES = 200;
-export const ACCLAIMED = { minRating: 7.5, minVotes: 1000 };
 const DAY = 86_400_000;
 
 const CARD_COLUMNS = `
@@ -40,12 +40,23 @@ const toCard = (r: CardRow): TitleCard => ({
   backOnNetflix: r.back_on_service === 1, voteAverage: r.vote_average, voteCount: r.vote_count, seerr: seerrState(r.seerr_status),
 });
 
+// Themes are read once per config (i.e. per process); edit themes.json and restart.
+const themeCache = new WeakMap<Config, ThemeRule[]>();
+export function themesFor(cfg: Config): ThemeRule[] {
+  let t = themeCache.get(cfg);
+  if (!t) { t = loadThemes(cfg); themeCache.set(cfg, t); }
+  return t;
+}
+export const findTheme = (cfg: Config, slug: string | undefined) => (slug ? themesFor(cfg).find((t) => t.slug === slug) : undefined);
+
 /** Builds WHERE clauses for browse-style filters on top of the eligibility rule. */
 function filters(cfg: Config, q: BrowseQuery, now: Date) {
   const base = eligibleWhere(cfg);
   const where = [base.sql];
   const params: (string | number)[] = [...base.params];
   if (q.kind) { where.push('tk.kind = ?'); params.push(q.kind); }
+  const theme = findTheme(cfg, q.theme);
+  if (theme) { const t = themeWhere(theme); where.push(t.sql); params.push(...t.params); }
   if (q.added) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - q.added * DAY).toISOString()); }
   if (q.minRating) { where.push('tk.vote_average >= ?'); params.push(q.minRating); }
   if (q.maxRating !== undefined && q.maxRating < 10) { where.push('tk.vote_average <= ?'); params.push(q.maxRating); }
@@ -73,13 +84,15 @@ const ORDER: Record<NonNullable<BrowseQuery['sort']>, string> = {
 };
 
 export function browse(db: Db, cfg: Config, q: BrowseQuery, now = new Date()): BrowseResponse {
+  const theme = findTheme(cfg, q.theme);
+  if (theme && !q.sort) q = { ...q, sort: theme.sort };
   const f = filters(cfg, q, now);
   const page = Math.max(1, Math.floor(q.page ?? 1));
   const total = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${f.sql}`, f.params)!.n;
   const rows = all<CardRow>(db,
     `SELECT ${CARD_COLUMNS} ${FROM} WHERE ${f.sql} ORDER BY ${ORDER[q.sort ?? 'added']}, tk.id LIMIT ? OFFSET ?`,
     [...f.params, PAGE_SIZE, (page - 1) * PAGE_SIZE]);
-  return { total, page, pageSize: PAGE_SIZE, items: rows.map(toCard) };
+  return { total, page, pageSize: PAGE_SIZE, items: rows.map(toCard), ...(theme ? { theme: { slug: theme.slug, title: theme.title, sort: theme.sort } } : {}) };
 }
 
 function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: BrowseQuery, link: string | null, extraWhere = '', extraParams: (string | number)[] = []): HomeRow {
@@ -102,8 +115,7 @@ export function home(db: Db, cfg: Config, now = new Date()): HomeResponse {
     row(db, cfg, now, 'new-week', 'New this week', { added: 7, sort: 'added' }, '/browse?added=7'),
     row(db, cfg, now, 'new-month', 'New this month', { added: 30, sort: 'added' }, '/browse?added=30'),
     row(db, cfg, now, 'popular', 'Popular on Netflix', { sort: 'popularity' }, '/browse?sort=popularity'),
-    row(db, cfg, now, 'acclaimed', 'Critically acclaimed', { minRating: ACCLAIMED.minRating, minVotes: ACCLAIMED.minVotes, sort: 'rating' },
-      `/browse?minRating=${ACCLAIMED.minRating}&minVotes=${ACCLAIMED.minVotes}&sort=rating`),
+    ...themesFor(cfg).filter((t) => t.home).map((t) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort }, `/browse?theme=${t.slug}`)),
   ];
   return {
     trackingSince: since,
@@ -164,4 +176,49 @@ export function meta(db: Db, cfg: Config, health: string, now = new Date()): Met
   const w = filters(cfg, { added: 7 }, now);
   const newThisWeek = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${w.sql}`, w.params)!.n;
   return { trackingSince: trackingSince(db, cfg), lastSyncAt: lastSync, health, eligible, newThisWeek, languageRule: cfg.LANGUAGE_RULE, passcodeRequired };
+}
+
+export function themes(db: Db, cfg: Config, now = new Date()): ThemeSummary[] {
+  return themesFor(cfg).map((t) => {
+    const f = filters(cfg, { theme: t.slug }, now);
+    const count = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${f.sql}`, f.params)!.n;
+    return { slug: t.slug, title: t.title, kind: t.kind ?? null, sort: t.sort, home: t.home, count };
+  });
+}
+
+/** For tuning (CLI): totals, how many each signal catches, and sample titles. */
+export function themePreview(db: Db, cfg: Config, rule: ThemeRule, sample = 12, now = new Date()) {
+  const base = filters(cfg, {}, now);
+  const t = themeWhere(rule);
+  const where = `${base.sql} AND ${t.sql}`;
+  const params = [...base.params, ...t.params];
+  const counts = get<{ n: number; movies: number; series: number; dated: number }>(db,
+    `SELECT count(*) n, coalesce(sum(tk.kind = 'movie'), 0) movies, coalesce(sum(tk.kind = 'series'), 0) series, coalesce(sum(a.added_at IS NOT NULL), 0) dated ${FROM} WHERE ${where}`, params)!;
+  // Which signals do the work: count per keyword / genre / type, within the theme.
+  const bySignal: { signal: string; titles: number }[] = [];
+  for (const kw of rule.signals?.keywords ?? []) {
+    bySignal.push({ signal: `keyword: ${kw}`, titles: get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${where} AND EXISTS (
+      SELECT 1 FROM title_keywords x JOIN keywords k ON k.id = x.keyword_id WHERE x.title_id = tk.id AND lower(k.name) = ?)`, [...params, kw.toLowerCase()])!.n });
+  }
+  for (const g of rule.signals?.genres ?? []) {
+    bySignal.push({ signal: `genre: ${g}`, titles: get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${where} AND EXISTS (
+      SELECT 1 FROM title_genres x JOIN genres gg ON gg.id = x.genre_id WHERE x.title_id = tk.id AND lower(gg.name) = ?)`, [...params, g.toLowerCase()])!.n });
+  }
+  for (const ty of rule.signals?.types ?? []) {
+    bySignal.push({ signal: `type: ${ty}`, titles: get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${where} AND tk.watchmode_type = ?`, [...params, ty])!.n });
+  }
+  const items = all<{ title: string; year: number | null; kind: string; vote_average: number | null; vote_count: number | null; runtime: number | null; seasons: number | null }>(db,
+    `SELECT COALESCE(tk.tmdb_title, tk.title) title, tk.year, tk.kind, tk.vote_average, tk.vote_count, tk.runtime, tk.seasons ${FROM}
+     WHERE ${where} ORDER BY ${ORDER[rule.sort]}, tk.id LIMIT ?`, [...params, sample]);
+  return { ...counts, bySignal, items };
+}
+
+/** For tuning (CLI): keyword names containing some text, with how many shown titles carry each. */
+export function keywordSearch(db: Db, cfg: Config, text: string, limit = 40, now = new Date()) {
+  const base = filters(cfg, {}, now);
+  return all<{ name: string; titles: number }>(db, `
+    SELECT k.name, count(DISTINCT tk.id) titles ${FROM}
+    JOIN title_keywords x ON x.title_id = tk.id JOIN keywords k ON k.id = x.keyword_id
+    WHERE ${base.sql} AND lower(k.name) LIKE ?
+    GROUP BY k.id ORDER BY titles DESC, k.name LIMIT ?`, [...base.params, `%${text.toLowerCase()}%`, limit]);
 }

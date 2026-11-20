@@ -1,9 +1,9 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type {
-  BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, TitleDetail, TopResponse,
+  BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse,
 } from '../../../src/api/types';
 
-export type { BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, TitleDetail, TopResponse };
+export type { BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
 export type { TitleCard, HomeRow, SeerrState, SortKey } from '../../../src/api/types';
 
 export class ApiError extends Error {
@@ -50,6 +50,7 @@ export function browseParams(q: BrowseQuery, page?: number): string {
   if (q.sort) p.set('sort', q.sort);
   if (q.q) p.set('q', q.q);
   if (q.hideHave) p.set('hide', 'have');
+  if (q.theme) p.set('theme', q.theme);
   if (page && page > 1) p.set('page', String(page));
   return p.toString();
 }
@@ -83,3 +84,4 @@ export const useBrowseCount = (q: BrowseQuery, enabled: boolean) =>
 /** Live from Seerr, so a short cache. */
 export const useSeasons = (id: number, enabled: boolean) =>
   useQuery({ queryKey: ['seasons', id], queryFn: () => getJson<SeasonsResponse>(`/api/titles/${id}/seasons`), enabled, staleTime: 15_000, retry: 0 });
+export const useThemes = () => useQuery({ queryKey: ['themes'], queryFn: () => getJson<ThemeSummary[]>('/api/themes'), staleTime: 10 * 60_000 });

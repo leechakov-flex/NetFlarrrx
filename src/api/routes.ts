@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { App } from '../app.js';
 import type { MiddlewareHandler } from 'hono';
-import { browse, genres, home, meta, titleDetail, top } from '../catalog/queries.js';
+import { browse, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 
@@ -20,6 +20,7 @@ const BrowseParams = z.object({
   page: z.coerce.number().int().min(1).max(10_000).optional(),
   q: z.string().max(100).optional(),
   hide: z.enum(['have']).optional(),
+  theme: z.string().regex(/^[a-z0-9-]{1,60}$/).optional(),
 });
 
 const RequestBody = z.object({ seasons: z.array(z.number().int().min(0).max(1000)).max(200).optional() }).strict();
@@ -41,6 +42,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     const p = BrowseParams.safeParse(c.req.query());
     if (!p.success) return c.json({ error: 'bad query', issues: p.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`) }, 400);
     const { hide, ...q } = p.data;
+    if (q.theme && !findTheme(cfg, q.theme)) return c.json({ error: 'unknown theme' }, 404);
     return c.json(browse(db, cfg, { ...(q as Parameters<typeof browse>[2]), hideHave: hide === 'have' }));
   });
 
@@ -85,6 +87,8 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   // Lets the UI check a passcode before saving it on the device.
   api.post('/passcode/check', requirePasscode, (c) => c.json({ ok: true }));
+
+  api.get('/themes', (c) => c.json(themes(db, cfg)));
 
   api.get('/genres', (c) => {
     const k = kind.optional().safeParse(c.req.query('kind'));
