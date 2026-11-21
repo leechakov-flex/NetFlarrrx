@@ -119,7 +119,7 @@ function WhereToWatch({ d }: { d: Detail }) {
   if (d.watch.soon) {
     const where = d.watch.soon.service ? SERVICE_NAMES[d.watch.soon.service] : null;
     rows.push({ tag: `${shortDate(d.watch.soon.date)} · ${where ?? 'Rent or buy'}`, tone: 'soon',
-      text: where ? `Streams on ${where} from ${shortDate(d.watch.soon.date)}. It moves to New on your services that day.` : `Out to rent or buy from ${shortDate(d.watch.soon.date)}.` });
+      text: where ? `Streams on ${where} from ${shortDate(d.watch.soon.date)}. It moves to Just released that day.` : `Out to rent or buy from ${shortDate(d.watch.soon.date)}.` });
   }
   if (d.watch.stores.length || d.digital) {
     rows.push({ tag: 'Rent or buy', tone: 'digital', text: d.watch.services.length ? d.watch.stores.join(', ') || 'Digital stores' : `Not on your services yet. Rent or buy on ${d.watch.stores.slice(0, 3).join(', ') || 'digital stores'}.` });

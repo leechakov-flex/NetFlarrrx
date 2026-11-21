@@ -145,7 +145,9 @@ const ORDER: Record<NonNullable<BrowseQuery['sort']>, string> = {
   // Dated arrivals first. Titles already on Netflix when tracking began have no
   // date, so they follow by their latest release or episode (a fair proxy for
   // "recently added"), then popularity. Future dates (pre-announced) count as today.
-  added: `a.added_at IS NULL, a.added_at DESC, min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) DESC, tk.popularity DESC`,
+  // By day, not the exact time: each service syncs at its own minute, and the one that ran
+  // last would otherwise lead every row. Within a day, the most popular first.
+  added: `a.added_at IS NULL, date(a.added_at) DESC, CASE WHEN a.added_at IS NULL THEN 0 ELSE tk.popularity END DESC, min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) DESC, tk.popularity DESC`,
   rating: 'tk.vote_average DESC, tk.vote_count DESC',
   popularity: 'tk.popularity DESC',
   release: `tk.release_date IS NULL, min(tk.release_date, date('now')) DESC, tk.popularity DESC`,
@@ -260,7 +262,7 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResp
     built[i] = r.row;
   }
   const rows = built.filter((r): r is HomeRow => r !== undefined);
-  // Shows you follow in Sonarr that have a new season out (Figma screen 9). Second, after "New on your services".
+  // Shows you follow in Sonarr that have a new season out (Figma screen 9). Second, after "Just released".
   const seasonsRow = newSeasonsRow(db, cfg, now, only);
   if (seasonsRow) rows.splice(Math.min(1, rows.length), 0, seasonsRow);
   return {

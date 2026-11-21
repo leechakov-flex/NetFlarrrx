@@ -36,11 +36,11 @@ export function Discover() {
           <p className="type-label-strong">
             {home.data.trackingSince ? `Tracking since ${longDate(home.data.trackingSince)}` : 'Starting to track your services'}
           </p>
-          <p className="mt-0.5 type-body-default">“New on your services” fills in as titles arrive. Until then, the newest releases lead.</p>
+          <p className="mt-0.5 type-body-default">“Just released” fills in as titles arrive. Until then, the newest releases lead.</p>
         </div>
       )}
       {home.isPending
-        ? ['New on your services', 'New to rent or buy', 'Coming soon', 'Stand-up specials'].map((t) => <SliderPlaceholder key={t} title={t} />)
+        ? ['Just released', 'Available from theaters', 'Coming soon', 'Stand-up specials'].map((t) => <SliderPlaceholder key={t} title={t} />)
         : <div className={`transition-opacity ${home.isPlaceholderData ? 'pointer-events-none opacity-40' : ''}`}>{home.data.rows.map((row) => <Slider key={row.slug} row={row} />)}</div>}
       {home.data && home.data.rows.length === 0 && <Empty>No titles yet. The first sync is still running.</Empty>}
       <Credits />

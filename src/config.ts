@@ -36,7 +36,7 @@ const schema = z.object({
   NETFLIX_SOURCE_ID: num(203),
   // Services to track (comma list; Netflix is always on). See src/services.ts.
   SERVICES: z.preprocess(clean, z.string().default('netflix,prime,hbomax,hulu,disney,paramount,peacock')),
-  TRACK_DIGITAL: bool(true),        // "New to rent or buy" from TMDB (free)
+  TRACK_DIGITAL: bool(true),        // "Available from theaters" (new to rent or buy) from TMDB (free)
   TRACK_UPCOMING: bool(true),       // "Coming soon" from TMDB (free)
   REGION: z.preprocess(clean, z.string().default('US')),
   LANGUAGE_RULE: z.preprocess(clean, z.enum(['en', 'all']).default('en')),

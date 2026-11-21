@@ -72,9 +72,9 @@ export const STANDUP =["stand-up comedy", "stand-up special", "stand up comedy",
  * tracking history builds; "for you" needs titles available in Seerr).
  */
 export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
-  // New on your services
-  { slug: 'new-week', title: 'New on your services', addedWithin: 7 },
-  { slug: 'new-digital', title: 'New to rent or buy', kind: 'movie', how: ['digital'], addedWithin: 45, sort: 'added' },
+  // Just released (new on your services)
+  { slug: 'new-week', title: 'Just released', addedWithin: 7 },
+  { slug: 'new-digital', title: 'Available from theaters', kind: 'movie', how: ['digital'], addedWithin: 45, sort: 'added' },
   { slug: 'coming-soon', title: 'Coming soon', how: ['soon'], sort: 'soon' },
   { slug: 'new-month', title: 'New this month', addedWithin: 30 },
   { slug: 'new-movies', title: 'New movies', kind: 'movie', released: { withinDays: 120 }, sort: 'release',

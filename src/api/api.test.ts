@@ -61,7 +61,7 @@ describe('read API', () => {
     // 10 new this week, less one that's requested in Seerr: Discover only shows what's new to you.
     expect(week.total).toBe(9);
     expect(body.rows.filter((r) => r.slug !== 'coming-soon').every((r) => r.link?.includes('hide=have'))).toBe(true);
-    const dates = week.items.map((i) => i.addedAt!);
+    const dates = week.items.map((i) => i.addedAt!.slice(0, 10));   // newest day first (popular first within a day)
     expect([...dates].sort().reverse()).toEqual(dates);
     expect(body.rows[1]!.total).toBe(19);
     expect(body.rows.find((r) => r.slug === 'acclaimed')!.items.every((i) => i.voteAverage! >= 7.5 && i.voteCount! >= 1000)).toBe(true);
