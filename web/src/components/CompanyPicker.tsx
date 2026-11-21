@@ -83,7 +83,7 @@ export function CompanyPickerSheet({ open, onClose, value, onApply }: { open: bo
   if (open !== wasOpen) { setWasOpen(open); if (open) setDraft(value); }
   const n = (draft.studios?.length ?? 0) + (draft.networks?.length ?? 0);
   return (
-    <SlideOver open={open} onClose={onClose} title="Studios and networks" subText="Studios narrow movies; networks narrow series."
+    <SlideOver open={open} onClose={onClose} accentTitle title="Studios and networks" subText="Studios narrow movies; networks narrow series."
       footer={
         <div className="flex gap-3">
           <Button onClick={() => setDraft({})}>Clear</Button>

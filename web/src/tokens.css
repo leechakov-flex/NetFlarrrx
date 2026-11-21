@@ -33,6 +33,17 @@
   --glass-active: #ffffff24;
   --glass-tint: #818cf8;
   --glass-shadow: #00000059;
+  --bg-danger: #ef4444;
+  --bg-unreleased: #0ea5e9e5;
+  --bg-not-found: #f97316;
+  --bg-progress: #6366f18c;
+  --bg-accent-subtle: #6366f124;
+  --text-on-warning: #fef9c3;
+  --text-on-success: #dcfce7;
+  --text-on-info: #e0e7ff;
+  --border-warning: #eab308;
+  --border-warning-subtle: #eab30899;
+  --border-info-subtle: #818cf899;
 }
 
 @layer components {

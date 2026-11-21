@@ -19,23 +19,23 @@ export function Badge({ type = 'default', children, className = '' }: { type?: k
   );
 }
 
-// Seerr Common/Button (md and lg sizes)
+// Figma "Button": a pill, 10px x 16px padding, Label/Default, 20px icons 8px from the label.
+// Primary is the white button; Default is outlined on black; Ghost is outlined and transparent.
 const buttonTypes = {
-  // Figma "Button / Primary": the white button on the title page.
-  inverse: 'text-ink-inverse border-inverse bg-inverse hover:bg-white active:bg-gray-200',
-  primary: 'text-white border border-indigo-500 bg-indigo-600/80 hover:bg-indigo-600 active:bg-indigo-700',
-  default: 'text-gray-200 bg-gray-800/80 border-gray-600 hover:text-white hover:bg-gray-700',
-  ghost: 'text-white bg-transparent border-gray-600 hover:border-gray-200',
-  success: 'text-white border border-green-500 bg-green-500/80 hover:bg-green-500 active:bg-green-700',
-  warning: 'text-white border border-yellow-500 bg-yellow-500/80 hover:bg-yellow-500 active:bg-yellow-700',
+  primary: 'text-ink-inverse border-app bg-inverse hover:bg-white active:bg-gray-200',
+  inverse: 'text-ink-inverse border-app bg-inverse hover:bg-white active:bg-gray-200',   // same as primary (older name)
+  default: 'text-ink-secondary bg-app border-line-strong hover:text-ink-primary hover:bg-raised',
+  ghost: 'text-ink-primary bg-transparent border-line-strong hover:border-line-muted',
+  success: 'text-ink-primary border-green-500 bg-success/80 hover:bg-success',
+  warning: 'text-ink-primary border-yellow-500 bg-yellow-500/80 hover:bg-yellow-500 active:bg-yellow-700',
 };
 export function Button({ buttonType = 'default', size = 'md', className = '', children, ...rest }:
   ButtonHTMLAttributes<HTMLButtonElement> & { buttonType?: keyof typeof buttonTypes; size?: 'md' | 'lg' }) {
-  const sizes = { md: 'px-4 py-2 text-sm', lg: 'px-6 py-3 text-base' };
+  const sizes = { md: 'px-4 py-2.5', lg: 'px-6 py-3' };
   return (
     <button
       type="button"
-      className={`inline-flex items-center justify-center gap-2 rounded-md border font-medium leading-5 transition duration-150 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-50 ${buttonTypes[buttonType]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full border type-label-default transition duration-150 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 disabled:cursor-not-allowed disabled:opacity-50 ${buttonTypes[buttonType]} ${sizes[size]} ${className}`}
       {...rest}
     >
       {children}
@@ -77,12 +77,13 @@ export function Tag({ children, selected = false, onClick, removable = false }:
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm leading-snug ring-1 ring-inset transition ${
-        selected ? 'bg-indigo-600 font-medium text-white ring-indigo-500 hover:bg-indigo-500' : 'bg-gray-800 text-gray-200 ring-gray-600 hover:bg-gray-700'
+      // Figma FilterChip: Off = outlined, On = white. Removable (active filter) chips use Body/Default with an ✕.
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 transition ${removable ? 'type-body-default' : 'type-label-default'} ${
+        selected ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'
       }`}
     >
       {children}
-      {removable && <span aria-hidden className="ml-0.5 text-gray-400">✕</span>}
+      {removable && <Icons.xmark aria-hidden className="h-4 w-4 text-ink-muted" />}
     </button>
   );
 }
@@ -108,7 +109,8 @@ export function Credits() {
 }
 
 export function PageTitle({ children }: { children: ReactNode }) {
-  return <h1 className="mb-4 mt-6 truncate text-2xl font-bold leading-7 text-gray-100 sm:text-4xl sm:leading-9"><span className="text-overseerr">{children}</span></h1>;
+  // Figma Heading/Page, text/primary; the page's content starts 16px below.
+  return <h1 className="mb-4 mt-4 truncate type-heading-page text-ink-primary">{children}</h1>;
 }
 
 export function Empty({ children }: { children: ReactNode }) {

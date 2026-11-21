@@ -25,18 +25,18 @@ export function Slider({ row }: { row: HomeRow }) {
     <section>
       <div className="slider-header">
         {row.link ? (
-          <Link to={row.link} className="slider-title min-w-0 pr-4">
+          <Link to={row.link} className="slider-title pr-4">
             <span className="truncate">{row.title}</span>
-            <Icons.chevronRight className="ml-2 h-4 w-4 text-ink-muted" />
+            <Icons.chevronRight className="h-6 w-6 flex-shrink-0 text-ink-muted" />
           </Link>
         ) : (
           <div className="slider-title"><span className="truncate">{row.title}</span></div>
         )}
         {row.total > 0 && (row.slug.startsWith('new') || row.slug === 'for-you') && (
-          <span className="ml-auto flex-shrink-0 type-caption-default text-ink-muted">{row.total.toLocaleString()} {row.total === 1 ? 'title' : 'titles'}</span>
+          <span className="ml-auto flex-shrink-0 type-label-default text-ink-muted">{row.total.toLocaleString()} {row.total === 1 ? 'title' : 'titles'}</span>
         )}
       </div>
-      <div ref={strip} onScroll={onScroll} className="scrollbar-none -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-4 pt-1 md:gap-4">
+      <div ref={strip} onScroll={onScroll} className="scrollbar-none -mx-4 lg:-mx-8 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 lg:px-8 pb-1 pt-1 md:gap-4 lg:scroll-px-8">
         {row.items.map((card) => (
           <div key={card.id} className="snap-start">
             <TitleCard card={card} art={row.art} />
@@ -71,7 +71,7 @@ export function SliderPlaceholder({ title }: { title: string }) {
   return (
     <section>
       <div className="slider-header"><div className="slider-title">{title}</div></div>
-      <div className="-mx-4 flex gap-3 overflow-hidden px-4 pb-4 md:gap-4">
+      <div className="-mx-4 lg:-mx-8 flex gap-3 overflow-hidden px-4 lg:px-8 pb-1 pt-1 md:gap-4">
         {Array.from({ length: 8 }, (_, i) => <TitleCardPlaceholder key={i} />)}
       </div>
     </section>

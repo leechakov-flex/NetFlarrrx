@@ -240,7 +240,7 @@ function requestLook(d: TitleDetail) {
 function DownloadButton({ dl }: { dl: NonNullable<TitleDetail['download']> }) {
   const pct = Math.floor(dl.progress * 100);
   const stuck = dl.state === 'stalled' || dl.state === 'metadata' || dl.state === 'error';
-  const base = 'relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-md border px-4 py-2 text-sm font-medium leading-5 transition';
+  const base = 'relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full border px-4 py-2.5 type-label-default transition';
   if (stuck) {
     const label = dl.state === 'stalled' ? `Stalled ${pct}%` : dl.state === 'metadata' ? 'Finding peers' : 'Download failed';
     return (

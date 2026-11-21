@@ -4,6 +4,7 @@ import { useLibrary, type LibraryItem } from '../lib/api';
 import { relativeTime } from '../lib/format';
 import { Credits, Empty, PageTitle, Spinner } from '../components/ui';
 import { Icons } from '../components/icons';
+import { BackButton } from '../components/Layout';
 
 type Type = 'all' | 'movie' | 'tv';
 type Sort = 'added' | 'title' | 'year';
@@ -47,6 +48,7 @@ export function Library() {
   if (!first.configured) {
     return (
       <div className="max-w-xl">
+        <BackButton className="mt-4 lg:hidden" />
         <PageTitle>Library</PageTitle>
         <p className="type-body-default text-ink-secondary">Connect Jellyfin to see everything you already have here.</p>
         <ol className="mt-4 list-decimal space-y-1.5 pl-5 type-body-default text-ink-tertiary">
@@ -57,37 +59,39 @@ export function Library() {
       </div>
     );
   }
-  const chip = (on: boolean) => `flex-shrink-0 rounded-full px-3.5 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-surface text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
+  const chip = (on: boolean) => `flex-shrink-0 rounded-full px-3 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
   const counts = first.counts;
   return (
-    <>
-      <PageTitle>Library</PageTitle>
-      <p className="-mt-2 mb-4 type-body-small text-ink-tertiary">
+    // Figma Mobile / Library: everything 12px apart; the back button is the top bar on phones.
+    <div className="flex flex-col gap-3 pt-4">
+      <BackButton className="lg:hidden" />
+      <h1 className="truncate type-heading-page text-ink-primary">Library</h1>
+      <p className="type-body-small text-ink-tertiary">
         {counts.movie.toLocaleString()} movies · {counts.tv.toLocaleString()} series in Jellyfin{first.syncedAt ? ` · checked ${relativeTime(first.syncedAt)}` : ''}
         {first.error && <span className="text-yellow-200"> · last check failed: {first.error}</span>}
       </p>
       <label className="flex max-w-xl items-center gap-2 rounded-full bg-surface px-4 py-2.5 ring-1 ring-line-strong focus-within:ring-indigo-400">
-        <Icons.search className="h-5 w-5 text-ink-muted" />
+        <Icons.search className="h-[18px] w-[18px] text-ink-muted" />
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Do I have…" aria-label="Search your library"
-          className="min-w-0 flex-1 bg-transparent type-body-default text-white placeholder:text-ink-muted focus:outline-none" />
+          className="min-w-0 flex-1 bg-transparent type-body-default text-ink-primary placeholder:text-ink-muted focus:outline-none" />
         {q && <button type="button" aria-label="Clear" onClick={() => setQ('')}><Icons.xmarkCircle className="h-5 w-5 text-ink-muted" /></button>}
       </label>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {([['all', 'All'], ['movie', 'Movies'], ['tv', 'Series']] as [Type, string][]).map(([k, label]) => (
           <button key={k} type="button" className={chip(type === k)} aria-pressed={type === k} onClick={() => set({ type: k === 'all' ? null : k })}>{label}</button>
         ))}
         <select value={sort} onChange={(e) => set({ sort: e.target.value === 'added' ? null : e.target.value })} aria-label="Sort"
-          className="ml-auto rounded-full bg-surface px-3 py-1.5 type-label-default text-ink-secondary ring-1 ring-inset ring-line-strong">
+          className="ml-auto rounded-full bg-app px-3 py-1.5 type-label-default text-ink-secondary ring-1 ring-inset ring-line-strong">
           {SORTS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
         </select>
       </div>
-      <p className="mt-4 mb-3 type-caption-default text-ink-muted">
+      <p className="type-caption-default text-ink-muted">
         {params.get('q') ? `${first.total.toLocaleString()} match${first.total === 1 ? '' : 'es'} for “${params.get('q')}”` : `${first.total.toLocaleString()} titles`}
       </p>
       {items.length === 0 ? (
         <Empty>{params.get('q') ? 'Not in your library. Search all services to request it.' : 'Nothing here yet.'}</Empty>
       ) : (
-        <div className={`grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 ${res.isPlaceholderData ? 'opacity-50' : ''}`}>
+        <div className={`grid grid-cols-3 gap-x-[11px] gap-y-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 ${res.isPlaceholderData ? 'opacity-50' : ''}`}>
           {items.map((it) => <LibraryCard key={it.id} it={it} />)}
         </div>
       )}
@@ -97,7 +101,7 @@ export function Library() {
       <div ref={sentinel} />
       {res.isFetchingNextPage && <div className="flex justify-center py-6"><Spinner /></div>}
       <Credits />
-    </>
+    </div>
   );
 }
 
@@ -111,7 +115,7 @@ function LibraryCard({ it }: { it: LibraryItem }) {
           : <div className="absolute inset-0 flex items-center justify-center p-2 text-center type-caption-strong text-ink-secondary">{it.title}</div>}
         <span className="absolute left-2 top-2 rounded-full bg-gray-900/70 px-2 type-badge-tag uppercase tracking-wide text-ink-secondary ring-1 ring-white/10">{it.type === 'movie' ? 'Movie' : 'Series'}</span>
       </div>
-      <div className="mt-1.5 truncate type-caption-strong text-white">{it.title}</div>
+      <div className="mt-0.5 truncate type-caption-strong text-ink-primary">{it.title}</div>
       <div className="truncate type-body-xsmall text-ink-muted">{[it.year, it.seasons ? `${it.seasons} season${it.seasons === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ')}</div>
     </>
   );

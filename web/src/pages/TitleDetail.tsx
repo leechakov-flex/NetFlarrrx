@@ -31,23 +31,23 @@ export function TitleDetail() {
   const genreLine = [d.kind === 'movie' ? 'Movie' : 'Series', ...d.genres.slice(0, 2).map((g) => g.name), d.year].filter(Boolean).join(' · ');
 
   return (
-    <div className="-mx-4">
+    <div className="-mx-4 lg:-mx-8">
       <Hero art={heroArt} wide={wide}>
         {logo ? (
           <img src={logo} alt={d.title} className="mx-auto h-24 w-[72%] max-w-sm object-contain object-bottom drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] lg:mx-0 lg:h-28 lg:w-auto lg:max-w-md lg:object-left-bottom" />
         ) : (
-          <h1 className="type-heading-page text-white lg:text-4xl">
+          <h1 className="type-heading-page text-ink-primary">
             {d.title}{d.year && <span className="type-heading-page-suffix text-ink-muted"> ({d.year})</span>}
           </h1>
         )}
-        <p className="mt-3 type-body-lead text-ink-secondary">{genreLine}</p>
+        <p className="mt-1 type-body-lead text-ink-secondary">{genreLine}</p>
         {(d.soon || d.inLibrary) && (
-          <div className="mt-3 flex justify-center gap-2 lg:justify-start">
+          <div className="mt-6 flex justify-center gap-2 lg:justify-start">
             {d.inLibrary && <Badge type="success">In your library</Badge>}
             {d.soon && !d.inLibrary && <Badge type="primary">Coming {shortDate(d.soon.date)}</Badge>}
           </div>
         )}
-        <div className="mt-4 flex justify-center gap-3 lg:justify-start">
+        <div className={`${d.soon || d.inLibrary ? 'mt-3' : 'mt-6'} flex justify-center gap-3 lg:justify-start`}>
           <RequestButton d={d} />
           {d.trailer && (
             <Button buttonType="ghost" onClick={() => setTrailer(true)}>
@@ -63,18 +63,18 @@ export function TitleDetail() {
         )}
       </Hero>
 
-      <div className="px-4 lg:grid lg:grid-cols-[1fr_20rem] lg:gap-8">
+      <div className="px-4 lg:px-8 lg:grid lg:grid-cols-[1fr_20rem] lg:gap-8">
         <div className="min-w-0">
           {d.overview
-            ? <p className="mt-2 type-body-default text-ink-strong lg:text-base">{d.overview}</p>
-            : <p className="mt-2 type-body-default text-ink-muted">{d.soon ? 'No overview yet. It fills in from TMDB as the premiere gets closer.' : 'No overview on TMDB yet.'}</p>}
+            ? <p className="type-body-default text-ink-strong">{d.overview}</p>
+            : <p className="type-body-default text-ink-muted">{d.soon ? 'No overview yet. It fills in from TMDB as the premiere gets closer.' : 'No overview on TMDB yet.'}</p>}
           {d.newSeason && <NewSeasonBanner d={d} />}
           <WhereToWatch d={d} />
           {d.cast.length > 0 && <CastRow people={d.cast} />}
           {d.related.length > 0 && (
-            <section className="mt-8">
-              <h2 className="slider-title mb-3">Related</h2>
-              <div className="scrollbar-none -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:gap-4">
+            <section className="mt-6">
+              <h2 className="slider-title mb-4 h-7">Related</h2>
+              <div className="scrollbar-none -mx-4 lg:-mx-8 flex snap-x gap-3 overflow-x-auto px-4 lg:px-8 pb-1 pt-1 md:gap-4">
                 {d.related.map((c) => <div key={c.id} className="snap-start"><TitleCard card={c} /></div>)}
               </div>
             </section>
@@ -82,7 +82,7 @@ export function TitleDetail() {
         </div>
         <Facts d={d} />
       </div>
-      <div className="px-4"><Credits /></div>
+      <div className="px-4 lg:px-8"><Credits /></div>
       {trailer && d.trailer && <TrailerModal videoKey={d.trailer.key} title={d.trailer.name ? `${d.title} · ${d.trailer.name}` : d.title} onClose={() => setTrailer(false)} />}
     </div>
   );
@@ -137,11 +137,11 @@ function WhereToWatch({ d }: { d: Detail }) {
   };
   return (
     <section className="mt-6">
-      <h2 className="type-heading-group text-white">Where to watch</h2>
+      <h2 className="type-heading-group text-ink-primary">Where to watch</h2>
       <div className="mt-3 overflow-hidden rounded-lg border border-line">
         {rows.map((r, i) => (
           <div key={i} className={`flex items-center gap-3 px-3 py-3 ${i ? 'border-t border-line' : ''}`}>
-            <span className="w-[5.5rem] flex-shrink-0">
+            <span className="w-[72px] flex-shrink-0">
               <span className={`inline-block max-w-full truncate rounded-full px-2 type-badge-tag leading-5 ${tagClass[r.tone]}`}>{r.tag}</span>
             </span>
             <span className="min-w-0 type-body-default text-ink-tertiary">{r.text}</span>
@@ -155,9 +155,9 @@ function WhereToWatch({ d }: { d: Detail }) {
 /** Figma "PersonCard": headshot (TMDB profile photo) or initials, name, role. */
 function CastRow({ people }: { people: Detail['cast'] }) {
   return (
-    <section className="mt-8">
-      <h2 className="slider-title mb-3">Cast &amp; Crew</h2>
-      <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+    <section className="mt-6">
+      <h2 className="slider-title mb-4 h-7">Cast &amp; Crew</h2>
+      <div className="scrollbar-none -mx-4 lg:-mx-8 flex gap-3 overflow-x-auto px-4 lg:px-8 pb-1">
         {people.map((p, i) => <Person key={`${p.name}-${i}`} p={p} />)}
       </div>
     </section>
@@ -175,7 +175,7 @@ function Person({ p }: { p: Detail['cast'][number] }) {
         {photo ? <img src={photo} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover transition group-hover:scale-105" />
           : <span className="type-heading-section text-ink-secondary">{initials}</span>}
       </div>
-      <div className="mt-2 type-caption-strong text-white" style={{ WebkitLineClamp: 2, display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical' }}>{p.name}</div>
+      <div className="mt-2 type-caption-strong text-ink-primary" style={{ WebkitLineClamp: 2, display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical' }}>{p.name}</div>
       {p.role && <div className="type-body-xsmall text-ink-muted" style={{ WebkitLineClamp: 2, display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical' }}>{p.role}</div>}
     </Link>
   );
@@ -185,13 +185,13 @@ function Facts({ d }: { d: Detail }) {
   const meta = useMeta();
   const added = d.addedAt ? longDate(d.addedAt) : meta.data?.trackingSince && !d.soon ? `Before ${longDate(meta.data.trackingSince)}` : null;
   return (
-    <div className="mt-8 lg:mt-2">
+    <div className="mt-6 lg:mt-0">
       <div className="media-facts">
         {d.voteAverage !== null && d.voteCount ? (
-          <div className="media-fact justify-end gap-1.5">
-            <Icons.star className="h-4 w-4 self-center text-rating" />
-            <span>{d.voteAverage.toFixed(1)} TMDB</span>
-            <span className="font-normal text-ink-muted">· {d.voteCount.toLocaleString()} votes</span>
+          <div className="flex items-center gap-1.5 border-b border-line py-2">
+            <Icons.star className="h-4 w-4 text-rating" />
+            <span className="type-label-strong text-ink-tertiary">{d.voteAverage.toFixed(1)} TMDB</span>
+            <span className="type-body-default text-ink-muted">· {d.voteCount.toLocaleString()} votes</span>
           </div>
         ) : null}
         {d.soon

@@ -14,8 +14,9 @@
 @layer components {
   .text-overseerr { @apply bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text text-transparent; }
 
-  .slider-header { @apply relative mb-4 mt-6 flex items-center; }
-  .slider-title { @apply inline-flex items-center text-xl font-bold leading-7 text-ink-secondary sm:truncate sm:text-2xl sm:leading-9; }
+  /* Figma SliderHeader: Heading/Section in text/tertiary, 24px chevron, 16px above the cards; rows 24px apart (28 on desktop). */
+  .slider-header { @apply relative mb-4 mt-5 flex h-7 items-center gap-2 lg:mt-6; }
+  .slider-title { @apply inline-flex min-w-0 items-center gap-2 type-heading-section text-ink-tertiary; }
   a.slider-title { @apply transition duration-300 hover:text-white; }
 
   ul.cards-vertical { @apply grid gap-4; grid-template-columns: repeat(auto-fill, minmax(9.375rem, 1fr)); }
@@ -35,9 +36,10 @@
   .media-overview h2 { @apply text-xl font-bold text-gray-300 sm:text-2xl; }
   .media-overview p { @apply text-sm leading-relaxed text-gray-100 sm:text-base; }
   .media-overview-right { @apply mt-4 w-full lg:mt-0 lg:w-80; }
-  .media-facts { @apply rounded-lg border border-gray-700 bg-gray-900 text-sm font-bold text-gray-300 shadow; }
-  .media-fact { @apply flex justify-between border-b border-gray-700 px-4 py-2 last:border-b-0; }
-  .media-fact-value { @apply ml-2 text-right text-sm font-normal text-gray-400; }
+  /* Figma media-facts / MediaFact: rows with a bottom rule, Label/Bold label and Body/Default value. */
+  .media-facts { @apply rounded-lg bg-app type-label-bold text-ink-tertiary; }
+  .media-fact { @apply flex justify-between border-b border-line px-4 py-2 last:border-b-0; }
+  .media-fact-value { @apply ml-2 text-right type-body-default text-ink-muted; }
 
   .scrollbar-none { scrollbar-width: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }

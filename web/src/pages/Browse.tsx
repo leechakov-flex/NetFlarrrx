@@ -108,7 +108,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
       </div>
 
       {chips.length > 0 && (
-        <div className="mb-3 flex flex-wrap gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {chips.map((c) => <Tag key={c.label} removable onClick={c.clear}>{c.label}</Tag>)}
         </div>
       )}

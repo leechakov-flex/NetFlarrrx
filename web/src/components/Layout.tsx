@@ -46,7 +46,7 @@ function SearchInput({ placeholder = 'Search all services', autoFocus = false }:
       onSubmit={(e) => { e.preventDefault(); window.clearTimeout(timer.current); go(value, onSearch); }}
     >
       <label htmlFor="search_field" className="sr-only">Search</label>
-      <Icons.search className="pointer-events-none absolute left-4 h-4 w-4" />
+      <Icons.search className="pointer-events-none absolute left-4 h-5 w-5 text-ink-tertiary" />
       <input
         id="search_field"
         type="search"
@@ -60,7 +60,7 @@ function SearchInput({ placeholder = 'Search all services', autoFocus = false }:
           window.clearTimeout(timer.current);
           timer.current = window.setTimeout(() => go(q, onSearch), 350);
         }}
-        className="block w-full rounded-full border border-line-strong bg-gray-900/80 py-2 pl-10 pr-10 type-body-default text-white placeholder-gray-300 hover:border-line-muted focus:border-line-muted focus:bg-gray-900 focus:placeholder-gray-400 focus:outline-none focus:ring-0 sm:text-base [&::-webkit-search-cancel-button]:hidden"
+        className="block w-full rounded-full border border-line-strong bg-app py-[9px] pl-11 pr-10 type-body-default text-ink-primary placeholder:text-ink-tertiary hover:border-line-muted focus:border-line-muted focus:outline-none focus:ring-0 [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
         <button type="button" aria-label="Clear search" onClick={() => { setValue(''); go('', true); }}
@@ -78,10 +78,10 @@ function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
       <div className="px-4 pt-5">
-        <Link to="/" className="block text-3xl font-bold"><span className="text-overseerr">MonkeySee</span></Link>
+        <Link to="/" className="block type-display-logo"><span className="text-overseerr">MonkeySee</span></Link>
         <p className="mt-1 type-caption-default text-ink-muted">What’s new on your services</p>
       </div>
-      <nav className="mt-8 flex-1 space-y-1 px-4">
+      <nav className="mt-7 flex-1 space-y-1 px-4">
         {[...nav, { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') }, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }].map((item) => {
           const on = item.match(pathname);
           const Icon = item.icon;
@@ -89,11 +89,11 @@ function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
-              className={`flex items-center rounded-md px-2 py-2 text-lg font-medium leading-6 text-white transition duration-150 ease-in-out ${
+              className={`flex items-center gap-3 rounded-md p-2 type-nav-sidebar text-ink-primary transition duration-150 ease-in-out ${
                 on ? 'bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500' : 'hover:bg-gray-700'
               }`}
             >
-              <Icon className="mr-3 h-5 w-5" />
+              <Icon className="h-6 w-6" />
               <span className="flex-1">{item.label}</span>
               {item.to === '/downloads' && (meta.data?.downloads?.attention ?? 0) > 0 && (
                 <span className="rounded-full bg-red-500 px-2 text-xs font-bold leading-5 text-white">{meta.data!.downloads!.attention}</span>
@@ -103,9 +103,9 @@ function Sidebar() {
         })}
       </nav>
       {meta.data && (
-        <Link to="/more" className="m-4 rounded-md border border-gray-700 px-3 py-2.5 transition hover:border-gray-500">
-          <div className="text-sm font-semibold text-gray-200">Last sync: {relativeTime(meta.data.lastSyncAt) ?? 'not yet'}</div>
-          <div className="text-xs text-gray-400">
+        <Link to="/more" className="m-4 rounded-md border border-line px-3 py-2.5 transition hover:border-line-strong">
+          <div className="type-caption-strong text-ink-secondary">Last sync: {relativeTime(meta.data.lastSyncAt) ?? 'not yet'}</div>
+          <div className="mt-0.5 type-body-xsmall text-ink-muted">
             {meta.data.eligible.toLocaleString()} titles · {meta.data.newThisWeek.toLocaleString()} new this week
           </div>
         </Link>
@@ -158,10 +158,28 @@ function MobileMenu() {
 
 export { SearchInput };
 
+/**
+ * Figma "Back button": a 50px round button, black at 20% with a white 40% rim, 28px chevron.
+ * Floats over the title page hero; sits in the top bar of Library and Person (phones only:
+ * desktop has a chevron beside the search box).
+ */
+export function BackButton({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  const navigate = useNavigate();
+  return (
+    <button type="button" aria-label="Back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} style={style}
+      className={`flex h-[50px] w-[50px] flex-shrink-0 items-center justify-center rounded-full border border-white/40 bg-black/20 text-ink-primary backdrop-blur-md ${className}`}>
+      <Icons.chevronLeft className="h-7 w-7" />
+    </button>
+  );
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const isDetail = pathname.startsWith('/title/');
+  // Deeper pages get a back button (Figma "Back button"): the title page, Library and Person.
+  const hasBack = isDetail || pathname.startsWith('/person') || pathname.startsWith('/library');
+  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate('/'));
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -223,24 +241,19 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen min-w-0 bg-app">
       <Sidebar />
       <div className="relative mb-28 flex w-0 min-w-0 flex-1 flex-col lg:mb-0 lg:ml-64">
-        {/* Desktop: search across the top. Phones search from the tab bar's round button. */}
-        <div className={`fixed left-64 right-0 top-0 z-20 hidden h-16 items-center px-4 transition duration-300 lg:flex ${scrolled ? 'bg-app/80 backdrop-blur' : ''}`}>
-          {isDetail && (
-            <button type="button" aria-label="Back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} className="mr-3 text-white">
+        {/* Desktop: search across the top (Figma Desktop / Discover: 20px down, content 32px in). Phones search from the tab bar's round button. */}
+        <div className={`fixed left-64 right-0 top-0 z-20 hidden items-center gap-3 px-8 pb-2 pt-5 transition duration-300 lg:flex ${scrolled ? 'bg-app/80 backdrop-blur' : ''}`}>
+          {hasBack && (
+            <button type="button" aria-label="Back" onClick={goBack} className="text-ink-primary">
               <Icons.chevronLeft className="h-6 w-6" />
             </button>
           )}
           <SearchInput />
         </div>
-        {isDetail && (
-          <button type="button" aria-label="Back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}
-            className="glass fixed left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full text-white lg:hidden"
-            style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}>
-            <Icons.chevronLeft className="h-5 w-5" />
-          </button>
-        )}
-        <main className={`relative z-0 focus:outline-none lg:top-16 ${isDetail ? '' : 'pt-[env(safe-area-inset-top)]'}`}>
-          <div className="mx-auto max-w-[96rem] px-4 pb-10">
+        {/* Phones, title page: the back button floats over the hero art. Library and Person put it in their own top bar. */}
+        {isDetail && <BackButton className="fixed left-4 z-30 lg:hidden" style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }} />}
+        <main className={`relative z-0 focus:outline-none lg:top-[88px] ${isDetail ? '' : 'pt-[env(safe-area-inset-top)]'}`}>
+          <div className="mx-auto max-w-[96rem] px-4 pb-10 lg:px-8">
             {!online && (
               <div role="status" className="mt-2 rounded-md border border-yellow-500/60 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-100">
                 <span className="font-semibold">Can’t reach MonkeyServer.</span> You’re offline; titles load again once you’re back on your home network.

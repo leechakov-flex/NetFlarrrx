@@ -12,12 +12,13 @@ module.exports = {
       screens: { '3xl': '1920px' },
       colors: {
         app: v('bg-app'), surface: v('bg-surface'), raised: v('bg-raised'), inverse: v('bg-inverse'),
+        danger: v('bg-danger'), unreleased: v('bg-unreleased'), 'not-found': v('bg-not-found'), warning: v('bg-warning'), success: v('bg-success'), 'accent-subtle': v('bg-accent-subtle'),
         accent: { DEFAULT: v('bg-accent'), strong: v('bg-accent-strong') },
         ink: {
           primary: v('text-primary'), strong: v('text-strong'), secondary: v('text-secondary'), tertiary: v('text-tertiary'),
-          muted: v('text-muted'), inverse: v('text-inverse'), accent: v('text-accent'), 'accent-subtle': v('text-accent-subtle'), digital: v('text-digital'),
+          muted: v('text-muted'), inverse: v('text-inverse'), accent: v('text-accent'), 'on-warning': v('text-on-warning'), 'on-success': v('text-on-success'), 'accent-subtle': v('text-accent-subtle'), digital: v('text-digital'),
         },
-        line: { DEFAULT: v('border-default'), strong: v('border-strong'), muted: v('border-muted'), accent: v('border-accent'), info: v('border-info') },
+        line: { DEFAULT: v('border-default'), strong: v('border-strong'), muted: v('border-muted'), accent: v('border-accent'), info: v('border-info'), warning: v('border-warning'), 'warning-subtle': v('border-warning-subtle') },
         rating: v('icon-rating'),
         tag: { 'digital-bg': v('tag-digital-bg'), 'digital-border': v('tag-digital-border'), 'soon-bg': v('tag-soon-bg'), 'soon-border': v('tag-soon-border') },
         glass: { fill: v('glass-fill'), stroke: v('glass-stroke'), active: v('glass-active'), tint: v('glass-tint'), shadow: v('glass-shadow') },

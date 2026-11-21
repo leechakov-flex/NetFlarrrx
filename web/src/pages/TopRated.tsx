@@ -13,22 +13,23 @@ export function TopRated() {
   return (
     <>
       <PageTitle>Top rated</PageTitle>
-      <div className="mb-3 flex" role="tablist">
-        {(['movie', 'series'] as const).map((k, i) => (
+      {/* Figma "Type toggle": two halves, the chosen one white. */}
+      <div className="mb-4 flex overflow-hidden rounded-md ring-1 ring-inset ring-line-strong sm:inline-flex" role="tablist">
+        {(['movie', 'series'] as const).map((k) => (
           <button
             key={k}
             role="tab"
             aria-selected={kind === k}
             onClick={() => setKind(k)}
-            className={`flex-1 border py-2 text-sm font-medium transition sm:flex-none sm:px-8 ${i === 0 ? 'rounded-l-md' : 'rounded-r-md'} ${
-              kind === k ? 'border-indigo-500 bg-indigo-600/80 text-white' : 'border-gray-600 bg-gray-800/80 text-gray-200 hover:bg-gray-700'
+            className={`flex-1 py-2 type-label-default transition sm:flex-none sm:px-8 ${
+              kind === k ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary hover:bg-raised'
             }`}
           >
             {k === 'movie' ? 'Movies' : 'Series'}
           </button>
         ))}
       </div>
-      <p className="mb-4 text-sm font-medium text-gray-400">
+      <p className="mb-4 type-caption-default text-ink-muted">
         Ranked by TMDB score · at least {top.data?.minVotes.toLocaleString() ?? 200} votes · English-original
       </p>
       {top.isPending ? (
@@ -44,17 +45,17 @@ export function TopRated() {
             return (
               <li key={t.id}>
                 <Link to={`/title/${t.id}`} className="group flex items-center gap-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
-                  <span className="text-overseerr w-7 flex-shrink-0 text-center text-2xl font-bold">{t.rank}</span>
-                  <span className="relative h-[84px] w-14 flex-shrink-0 overflow-hidden rounded-md bg-gray-700 ring-1 ring-gray-700">
+                  <span className="w-[26px] flex-shrink-0 text-center type-heading-section text-ink-primary">{t.rank}</span>
+                  <span className="relative h-[84px] w-14 flex-shrink-0 overflow-hidden rounded-md bg-raised ring-1 ring-line">
                     {poster ? <img src={poster} alt="" loading="lazy" className="h-full w-full object-cover" /> : <FilmIcon className="m-auto mt-7 h-6 w-6 text-gray-500" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="line-clamp-2 block font-bold leading-snug text-white group-hover:underline">{t.title}</span>
-                    <span className="mt-0.5 block text-sm text-gray-300">{[t.year, runtime(t.runtime)].filter(Boolean).join(' · ')}</span>
-                    <span className="mt-0.5 flex items-center gap-1 text-sm">
-                      <StarIcon className="h-4 w-4 text-amber-300" />
-                      <span className="font-semibold text-gray-100">{t.voteAverage?.toFixed(1)}</span>
-                      <span className="text-gray-400">· {t.voteCount?.toLocaleString()} votes</span>
+                    <span className="line-clamp-2 block type-title-item text-ink-primary group-hover:underline">{t.title}</span>
+                    <span className="mt-1 block type-body-small text-ink-tertiary">{[t.year, runtime(t.runtime)].filter(Boolean).join(' · ')}</span>
+                    <span className="mt-1 flex items-center gap-1 type-body-small">
+                      <StarIcon className="h-4 w-4 text-rating" />
+                      <span className="type-caption-strong text-ink-strong">{t.voteAverage?.toFixed(1)}</span>
+                      <span className="text-ink-muted">· {t.voteCount?.toLocaleString()} votes</span>
                     </span>
                   </span>
                   <StatusBadgeMini state={t.seerr} />

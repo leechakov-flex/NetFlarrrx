@@ -7,7 +7,7 @@ import { Slider, SliderPlaceholder } from '../components/Slider';
 import { Credits, Empty, Spinner } from '../components/ui';
 
 const chip = (on: boolean) =>
-  `flex flex-shrink-0 items-center gap-1 rounded-full px-3.5 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-surface text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
+  `flex flex-shrink-0 items-center gap-1 rounded-full px-3 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
 
 /**
  * Discover filter chips (Figma "FilterChip"): All, the services, then any studios or
@@ -23,7 +23,7 @@ function FilterChips({ value, onChange, co, onCo }: { value: ServiceKey[]; onCha
   const none = value.length === 0 && picked.length === 0;
   return (
     <>
-      <div className="scrollbar-none -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 lg:mt-2" role="group" aria-label="Filter Discover">
+      <div className="scrollbar-none -mx-4 lg:-mx-8 mt-4 flex gap-2 overflow-x-auto px-4 lg:mb-1 lg:mt-0 lg:px-8" role="group" aria-label="Filter Discover">
         <button type="button" className={chip(none)} aria-pressed={none} onClick={() => { onChange([]); onCo({}); }}>All</button>
         {services.length > 1 && services.map((s) => (
           <button key={s.key} type="button" className={chip(value.includes(s.key))} aria-pressed={value.includes(s.key)} onClick={() => toggle(s.key)}>{s.name}</button>

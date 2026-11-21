@@ -23,7 +23,7 @@ export function Downloads() {
     <div className="max-w-2xl">
       <PageTitle>Downloads</PageTitle>
       {d.qbit.configured ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <Stat><Icons.arrowDown className="h-4 w-4" />{speed(d.qbit.downSpeed)}</Stat>
           <Stat><Icons.arrowUp className="h-4 w-4" />{speed(d.qbit.upSpeed)}</Stat>
           <Stat>{downloading} downloading</Stat>
@@ -43,22 +43,22 @@ export function Downloads() {
       ))}
 
       {d.attention.length > 0 && (
-        <section className="mt-8">
+        <section className="mt-7">
           <SectionTitle count={d.attention.length}>Needs attention</SectionTitle>
-          <div className="divide-y divide-line rounded-xl border border-yellow-400/80 bg-yellow-400/[0.04] px-3">
+          <div className="divide-y divide-line rounded-xl border border-line-warning-subtle px-3">
             {d.attention.map((it) => <DownloadRow key={it.hash ?? it.name} it={it} attention />)}
           </div>
         </section>
       )}
 
       {(downloading > 0 || d.queued.length > 0) && (
-        <section className="mt-8">
+        <section className="mt-7">
           <SectionTitle count={downloading}>Downloading</SectionTitle>
           <div>{[...d.downloading, ...d.queued].map((it) => <DownloadRow key={it.hash ?? it.name} it={it} />)}</div>
         </section>
       )}
       {d.qbit.connected && d.attention.length === 0 && downloading === 0 && d.queued.length === 0 && (
-        <p className="mt-8 type-body-default text-ink-tertiary">Nothing downloading right now.</p>
+        <p className="mt-7 type-body-default text-ink-tertiary">Nothing downloading right now.</p>
       )}
 
       <Requests items={d.requests} />
@@ -68,15 +68,15 @@ export function Downloads() {
 }
 
 const Stat = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong px-3 py-1.5 type-label-default text-white">{children}</span>
+  <span className="inline-flex items-center gap-1.5 rounded-lg border border-line-strong bg-app px-3 py-1.5 type-caption-strong text-ink-secondary">{children}</span>
 );
 const SectionTitle = ({ children, count }: { children: React.ReactNode; count?: number }) => (
-  <h2 className="mb-3 flex items-baseline gap-2 type-heading-section text-white">{children}{count ? <span className="type-body-default text-ink-muted">{count}</span> : null}</h2>
+  <h2 className="flex h-8 items-baseline gap-2 pb-1 type-heading-section text-ink-secondary">{children}{count ? <span className="type-caption-default text-ink-muted">{count}</span> : null}</h2>
 );
 
 function Poster({ url, titleId }: { url: string | null; titleId: number | null }) {
   const img = url ? <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" /> : <Icons.film className="h-6 w-6 text-ink-muted" />;
-  const cls = 'flex h-[84px] w-14 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-raised ring-1 ring-line';
+  const cls = 'flex h-[66px] w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-raised ring-1 ring-line';
   return titleId ? <Link to={`/title/${titleId}`} className={cls}>{img}</Link> : <div className={cls}>{img}</div>;
 }
 
@@ -102,20 +102,20 @@ function DownloadRow({ it, attention }: { it: DownloadItem; attention?: boolean 
   }
   const bar = it.state !== 'queued' || it.progress > 0;
   return (
-    <div className="flex gap-3 py-3">
+    <div className="flex items-center gap-3 py-3">
       <Poster url={it.posterUrl} titleId={it.titleId} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-2">
-          <div className="min-w-0 flex-1 truncate type-label-strong text-white" title={it.name}>{name}</div>
-          {badge && <span className="flex-shrink-0 rounded-full bg-yellow-400 px-2 type-badge-tag leading-5 text-black">{badge}</span>}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 truncate type-label-strong text-ink-primary" title={it.name}>{name}</div>
+          {badge && <span className="flex-shrink-0 rounded-[10px] bg-warning px-2 py-0.5 type-badge-tag text-ink-inverse">{badge}</span>}
         </div>
-        <div className="mt-0.5 truncate type-body-small text-ink-tertiary">{meta}</div>
+        <div className="truncate type-body-xsmall text-ink-muted">{meta}</div>
         {bar && (
-          <div className="mt-2 h-1 overflow-hidden rounded-full bg-raised">
-            <div className={`h-full rounded-full ${attention ? 'bg-yellow-400' : 'bg-indigo-500'}`} style={{ width: `${Math.max(2, pct)}%` }} />
+          <div className="h-1 overflow-hidden rounded-sm bg-raised">
+            <div className={`h-full rounded-sm ${attention ? 'bg-warning' : 'bg-accent'}`} style={{ width: `${Math.max(2, pct)}%` }} />
           </div>
         )}
-        <div className={`mt-1 type-body-small ${attention ? 'text-yellow-300' : 'text-ink-tertiary'}`}>{line}</div>
+        <div className={`type-body-xsmall ${attention ? 'text-ink-on-warning' : 'text-ink-muted'}`}>{line}</div>
       </div>
     </div>
   );
@@ -124,20 +124,20 @@ function DownloadRow({ it, attention }: { it: DownloadItem; attention?: boolean 
 // "Not found" also lists Seerr failures and declines: everything that needs you to step in.
 const FILTERS = [['all', 'All'], ['missing', 'Not found'], ['unreleased', 'Not out yet'], ['requested', 'Searching'], ['downloading', 'Downloading'], ['available', 'Available']] as const;
 const REQ_BADGE: Record<RequestItem['state'], [string, string]> = {
-  requested: ['bg-gray-600 text-gray-100', 'Searching'], unreleased: ['bg-sky-500/90 text-white', 'Not out yet'],
-  missing: ['bg-orange-500 text-black', 'Not found'], downloading: ['bg-indigo-500 text-white', 'Downloading'],
-  available: ['bg-green-500 text-black', 'Available'], failed: ['bg-red-500 text-white', 'Failed'], declined: ['bg-gray-700 text-gray-300', 'Declined'],
+  requested: ['bg-gray-600 text-ink-primary', 'Searching'], unreleased: ['bg-unreleased text-ink-primary', 'Not out yet'],
+  missing: ['bg-not-found text-ink-inverse', 'Not found'], downloading: ['bg-accent text-ink-primary', 'Downloading'],
+  available: ['bg-success text-ink-inverse', 'Available'], failed: ['bg-danger text-ink-primary', 'Failed'], declined: ['bg-raised text-ink-tertiary', 'Declined'],
 };
 
 function Requests({ items }: { items: RequestItem[] }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number][0]>('all');
   const shown = items.filter((r) => filter === 'all' || r.state === filter || (filter === 'missing' && (r.state === 'failed' || r.state === 'declined')));
   const count = (k: (typeof FILTERS)[number][0]) => (k === 'all' ? items.length : items.filter((r) => r.state === k || (k === 'missing' && (r.state === 'failed' || r.state === 'declined'))).length);
-  const chip = (on: boolean) => `flex-shrink-0 rounded-full px-3.5 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-surface text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
+  const chip = (on: boolean) => `flex-shrink-0 rounded-full px-3 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
   return (
-    <section className="mt-10">
+    <section className="mt-7">
       <SectionTitle>Your requests</SectionTitle>
-      <div className="scrollbar-none -mx-4 mb-2 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Filter requests">
+      <div className="scrollbar-none -mx-4 lg:-mx-8 pb-2 flex gap-2 overflow-x-auto px-4 lg:px-8" role="group" aria-label="Filter requests">
         {FILTERS.filter(([k]) => k === 'all' || count(k) > 0).map(([k, label]) => (
           <button key={k} type="button" className={chip(filter === k)} aria-pressed={filter === k} onClick={() => setFilter(k)}>
             {label}{k !== 'all' && <span className={filter === k ? 'ml-1.5 opacity-60' : 'ml-1.5 text-ink-muted'}>{count(k)}</span>}
@@ -178,16 +178,17 @@ function RequestRow({ r }: { r: RequestItem }) {
   return (
     <div className="flex items-center gap-3 py-3">
       <Poster url={r.posterUrl} titleId={r.titleId} />
+      {/* Figma request row: pill, title 8px under it, then the status line 4px below. */}
       <div className="min-w-0 flex-1">
-        <span className={`inline-block rounded px-1.5 type-badge-tag leading-5 ${badgeCls}`}>{badgeLabel}</span>
-        <div className="mt-1 truncate type-label-strong text-white">{name}</div>
-        <div className="truncate type-body-small text-ink-tertiary">{line}</div>
+        <span className={`inline-block rounded-[10px] px-2 py-0.5 type-badge-tag ${badgeCls}`}>{badgeLabel}</span>
+        <div className="mt-2 truncate type-label-strong text-ink-primary">{name}</div>
+        <div className="mt-1 truncate type-body-xsmall text-ink-muted">{line}</div>
       </div>
       {r.state === 'failed' && (
-        <IconButton label={`Retry ${r.title}`} busy={busy === 'retry'} onClick={() => void act('retry')}><Icons.retry className="h-5 w-5" /></IconButton>
+        <IconButton label={`Retry ${r.title}`} busy={busy === 'retry'} onClick={() => void act('retry')}><Icons.retry className="h-6 w-6" /></IconButton>
       )}
       {(r.state === 'requested' || r.state === 'failed' || r.state === 'missing' || r.state === 'unreleased') && (
-        <IconButton label={`Cancel request for ${r.title}`} busy={busy === 'cancel'} onClick={() => void act('cancel')}><Icons.xmark className="h-5 w-5" /></IconButton>
+        <IconButton label={`Cancel request for ${r.title}`} busy={busy === 'cancel'} onClick={() => void act('cancel')}><Icons.xmark className="h-6 w-6" /></IconButton>
       )}
     </div>
   );

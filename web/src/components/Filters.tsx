@@ -36,29 +36,30 @@ export function ratingLabel(min = 0, max = 10) {
 /** Seerr's Discover header: sort select with an icon box, plus a Filters button showing the active count. */
 export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters, withMatch = false }:
   { sort: SortKey; onSort: (s: SortKey) => void; filterCount: number; onOpenFilters: () => void; withMatch?: boolean }) {
+  // Figma SortFilterBar: sort select with an icon box (42px), then a borderless Filters button with the count.
   return (
-    <div className="mb-4 flex flex-col gap-2 sm:flex-row">
+    <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:gap-4">
       <div className="flex flex-grow sm:flex-grow-0">
-        <span className="inline-flex cursor-default items-center rounded-l-md border border-r-0 border-gray-500 bg-gray-800 px-3 text-gray-100 sm:text-sm">
-          <Icons.sort className="h-5 w-5" />
+        <span className="inline-flex cursor-default items-center rounded-l-md border border-r-0 border-line-muted bg-surface px-3 text-ink-primary">
+          <Icons.sort className="h-6 w-6" />
         </span>
         <select
           aria-label="Sort"
           value={sort}
           onChange={(e) => onSort(e.target.value as SortKey)}
-          className="w-full rounded-r-md border border-gray-500 bg-gray-700 py-2 pl-3 pr-8 text-sm text-white focus:border-indigo-500 focus:outline-none sm:w-56"
+          className="h-[42px] w-full rounded-r-md border border-line-muted bg-app pl-2.5 pr-8 type-body-default text-ink-primary focus:border-indigo-500 focus:outline-none sm:w-56"
         >
           {withMatch && <option value="match">Best match for you</option>}
           {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </div>
-      <Button onClick={onOpenFilters} className="w-full sm:w-auto">
+      <button type="button" onClick={onOpenFilters} className="inline-flex items-center gap-2 self-start py-2.5 type-label-default text-ink-secondary transition hover:text-ink-primary">
         <Icons.filter className="h-5 w-5" />
         <span>Filters</span>
         {filterCount > 0 && (
-          <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white">{filterCount}</span>
+          <span className="flex h-5 min-w-[22px] items-center justify-center rounded-full bg-accent px-[7px] type-badge-default text-ink-primary">{filterCount}</span>
         )}
-      </Button>
+      </button>
     </div>
   );
 }
@@ -98,7 +99,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
       <div className="flex flex-col space-y-6">
         {services.length > 1 && (
           <fieldset>
-            <legend className="mb-2 type-heading-group text-white">Services</legend>
+            <legend className="mb-2.5 type-heading-group text-ink-primary">Services</legend>
             <div className="flex flex-wrap gap-2">
               {services.map((s) => (
                 <Tag key={s.key} selected={draft.services?.includes(s.key)} onClick={() => setDraft({ ...draft, services: toggle<ServiceKey>(draft.services, s.key) })}>{s.name}</Tag>
@@ -108,7 +109,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         )}
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">How to watch</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">How to watch</legend>
           <div className="flex flex-wrap gap-2">
             {HOWS.map((h) => (
               <Tag key={h.value} selected={(draft.how ?? ['sub']).includes(h.value)} onClick={() => {
@@ -120,13 +121,13 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">{kind === 'movie' ? 'Studio' : kind === 'series' ? 'Network' : 'Studio or network'}</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">{kind === 'movie' ? 'Studio' : kind === 'series' ? 'Network' : 'Studio or network'}</legend>
           <CompanyList value={{ studios: draft.studios, networks: draft.networks }} only={kind === 'movie' ? 'studios' : kind === 'series' ? 'networks' : undefined}
             onChange={(c) => setDraft({ ...draft, studios: c.studios, networks: c.networks })} />
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">Added</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">Added</legend>
           <div className="flex flex-wrap gap-2">
             {ADDED.map((a) => (
               <Tag key={a.label} selected={(draft.added ?? null) === a.value} onClick={() => setDraft({ ...draft, added: a.value })}>{a.label}</Tag>
@@ -135,7 +136,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">Genres</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">Genres</legend>
           <div className="flex flex-wrap gap-2">
             {genres.data?.map((g) => (
               <Tag key={g.id} selected={draft.genres?.includes(g.id)} onClick={() => toggleGenre(g.id)}>{g.name}</Tag>
@@ -144,7 +145,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">TMDB rating</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">TMDB rating</legend>
           <RatingRange
             min={draft.minRating ?? 0}
             max={draft.maxRating ?? 10}
@@ -156,7 +157,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">Minimum votes</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">Minimum votes</legend>
           <div className="flex flex-wrap gap-2">
             {VOTES.map((v) => (
               <Tag key={v} selected={(draft.minVotes ?? 0) === v} onClick={() => setDraft({ ...draft, minVotes: v || undefined })}>
@@ -167,7 +168,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 type-heading-group text-white">On MonkeyServer</legend>
+          <legend className="mb-2.5 type-heading-group text-ink-primary">On MonkeyServer</legend>
           <label className="flex cursor-pointer items-center justify-between gap-4">
             <span className="text-sm text-gray-300">Hide titles that are already available or requested</span>
             <Toggle checked={!!draft.hideHave} onChange={(v) => setDraft({ ...draft, hideHave: v || undefined })} label="Hide what I have" />
