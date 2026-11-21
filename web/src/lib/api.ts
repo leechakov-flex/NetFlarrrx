@@ -4,7 +4,7 @@ import type {
 } from '../../../src/api/types';
 
 export type { BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
-export type { TitleCard, HomeRow, SeerrState, SortKey } from '../../../src/api/types';
+export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey } from '../../../src/api/types';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public code?: string) { super(message); }
@@ -61,6 +61,8 @@ export function browseParams(q: BrowseQuery, page?: number): string {
   if (q.hideHave) p.set('hide', 'have');
   if (q.theme) p.set('theme', q.theme);
   if (q.because) p.set('because', q.because);
+  if (q.services?.length) p.set('services', q.services.join(','));
+  if (q.how?.length) p.set('how', q.how.join(','));
   if (page && page > 1) p.set('page', String(page));
   return p.toString();
 }
@@ -70,7 +72,11 @@ export const useMeta = () => useQuery({ queryKey: ['meta'], queryFn: () => getJs
 // (even after a long trailer) returns to a page that's already as long as it was.
 const KEEP_LISTS = 30 * 60_000;
 
-export const useHome = () => useQuery({ queryKey: ['home'], queryFn: () => getJson<HomeResponse>('/api/home'), gcTime: KEEP_LISTS });
+export const useHome = (services: string[] = []) => useQuery({
+  queryKey: ['home', services.join(',')],
+  queryFn: () => getJson<HomeResponse>(`/api/home${services.length ? `?services=${services.join(',')}` : ''}`),
+  gcTime: KEEP_LISTS, placeholderData: (prev) => prev,
+});
 export const useGenres = (kind?: Kind) =>
   useQuery({ queryKey: ['genres', kind ?? 'all'], queryFn: () => getJson<Genre[]>(`/api/genres${kind ? `?kind=${kind}` : ''}`), staleTime: 10 * 60_000 });
 export const useTop = (kind: Kind) => useQuery({ queryKey: ['top', kind], queryFn: () => getJson<TopResponse>(`/api/top?kind=${kind}`) });

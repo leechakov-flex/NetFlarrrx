@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Icons } from './icons';
+const XMarkIcon = Icons.xmark;
 
 /** Seerr Common/SlideOver: dimmed backdrop and a right-hand panel with a gradient title. */
 export function SlideOver({ open, onClose, title, subText, children, footer }:

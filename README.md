@@ -1,6 +1,6 @@
 # MonkeySee
 
-Browse what Netflix added recently, by genre, type, rating and theme, and request titles to MonkeyServer through Seerr. A discovery layer only: Seerr stays the system of record, and Sonarr and Radarr do the fulfillment.
+Browse what your streaming services added recently (Netflix, Prime Video, HBO Max, Hulu, Disney+, Paramount+, Peacock), what's new to rent or buy and what's coming soon, by genre, type, rating and theme, and request titles to MonkeyServer through Seerr. A discovery layer only: Seerr stays the system of record, and Sonarr and Radarr do the fulfillment.
 
 Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (v0.2).
 
@@ -15,12 +15,13 @@ Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (
 | M4: thematic rows | Deployed. Six rule-based rows on Discover (acclaimed, hidden gems, true stories, heists, limited series, short movies), editable in `themes.json`. |
 | M5: polish | Deployed. Nightly verified backups, ntfy alerts, weekly TMDB cross-check, add to home screen. A second streaming service is deferred. |
 | Discover v2 | Built. A long, new-first Discover page with stand-up and comedy up top, recent genre rows, and recommendations from your library. |
+| Multi-service | Built Nov 21. Seven services, new to rent or buy, coming soon; Apple-TV-style title page with where to watch, cast and crew, related; Liquid Glass tab bar with a separate search button; Figma tokens, text styles and SF-style icons. |
 
 ## What runs
 
 One container, one SQLite file in `/data`.
 
-- **Daily sync, 6:23 a.m. Eastern.** Lists all of Netflix US from Watchmode (29 credits) and diffs it against yesterday. New titles get a date added; the first ever sync is the baseline and gets none. A title is removed only after 2 missed syncs; one back within 14 days keeps its date. A failed page makes the run *partial* and nothing changes. A count swing over 10% *holds* the run until you confirm it.
+- **Daily sync, 6:23 a.m. Eastern.** Each service's movies (movies, TV movies, specials, shorts) from Watchmode every day, and its series once a week: Sonarr already follows new episodes of shows you have, so only brand-new series need catching, and a series found a few days late is dated by its premiere. Prime Video comes from TMDB's watch providers (JustWatch data), as do **new to rent or buy** (US digital releases in the last 60 days, dated by their release) and **coming soon** (digital premieres and new series on your services' networks in the next 45 days). TMDB costs nothing; Watchmode runs about 1,400 credits a month for the six services it lists (42 a day for movies, 33 a week for series; the free plan has 2,500) (`cli services` shows the real number). `SERVICES=netflix,hbomax,...` picks which to track; `TRACK_DIGITAL=false` and `TRACK_UPCOMING=false` turn the TMDB lists off. Each list is diffed against its last run. New titles get a date added; the first ever sync is the baseline and gets none. A title is removed only after 2 missed syncs; one back within 14 days keeps its date. A failed page makes the run *partial* and nothing changes. A count swing over 10% *holds* the run until you confirm it.
 - **TMDB enrichment** after each sync: genres, keywords, ratings, posters, original language. Refreshed every 30 days.
 - **Seerr mirror** every 10 minutes: what's available, requested or processing.
 - **On first start** (or if no sync ran in the last 24 hours) it syncs immediately. Restarts don't re-sync.
@@ -176,7 +177,8 @@ On iPhone: open the app in Safari, Share → Add to Home Screen. It opens full s
 
 ```bash
 docker exec monkeysee node dist/cli.js status          # counts, health, last 10 runs
-docker exec monkeysee node dist/cli.js sync            # sync now (29 credits)
+docker exec monkeysee node dist/cli.js sync            # sync every service's movies now (add --series for series too)
+docker exec monkeysee node dist/cli.js services        # titles per service and Watchmode credits a month
 docker exec monkeysee node dist/cli.js confirm <id>    # apply a held run
 docker exec monkeysee node dist/cli.js enrich          # retry TMDB for titles that need it
 docker exec monkeysee node dist/cli.js backup          # take a backup now

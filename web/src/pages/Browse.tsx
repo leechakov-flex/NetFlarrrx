@@ -5,6 +5,11 @@ import { useBrowse, useGenres, useMeta, useThemes } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
 import { Credits, Empty, PageTitle, Spinner, Tag } from '../components/ui';
+import { SearchInput } from '../components/Layout';
+import type { How, ServiceKey } from '../lib/api';
+import { SERVICE_NAMES } from '../lib/format';
+
+const HOW_LABEL: Record<How, string> = { sub: 'Subscription', digital: 'Rent or buy', soon: 'Coming soon' };
 
 const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: string; because?: string } => ({
   theme: p.get('theme') || undefined,
@@ -16,13 +21,16 @@ const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: s
   hideHave: p.get('hide') === 'have' || undefined,
   minVotes: Number(p.get('minVotes')) || undefined,
   sort: (p.get('sort') as SortKey) || undefined,
+  services: (p.get('services')?.split(',').filter((k) => k in SERVICE_NAMES) as ServiceKey[]) || undefined,
+  how: (p.get('how')?.split(',').filter((k) => k in HOW_LABEL) as How[]) || undefined,
 });
 
 export function Browse({ kind, title, search = false }: { kind?: Kind; title: string; search?: boolean }) {
   const [params, setParams] = useSearchParams();
   const q = search ? params.get('q') ?? '' : undefined;
   const f = useMemo(() => parseFilters(params), [params]);
-  const query: BrowseQuery = { kind, q, ...f };
+  // Search with nothing typed shows what's popular on your services.
+  const query: BrowseQuery = search && !q ? { sort: 'popularity' } : { kind, q, ...f };
   const res = useBrowse(query);
   const genres = useGenres(kind);
   const meta = useMeta();
@@ -45,6 +53,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
     if (merged.maxRating !== undefined && merged.maxRating < 10) p.set('maxRating', String(merged.maxRating));
     if (merged.hideHave) p.set('hide', 'have');
     if (merged.minVotes) p.set('minVotes', String(merged.minVotes));
+    if (merged.services?.length) p.set('services', merged.services.join(','));
+    if (merged.how?.length) p.set('how', merged.how.join(','));
     setParams(p, { replace: true });
   };
 
@@ -74,14 +84,19 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   }
   if (f.hideHave) chips.push({ label: 'Hiding what I have', clear: () => update({ hideHave: undefined }) });
   if (f.minVotes) chips.push({ label: `${f.minVotes.toLocaleString()}+ votes`, clear: () => update({ minVotes: undefined }) });
+  for (const k of f.services ?? []) chips.push({ label: SERVICE_NAMES[k], clear: () => update({ services: f.services!.filter((x) => x !== k) }) });
+  for (const h of f.how ?? []) chips.push({ label: HOW_LABEL[h], clear: () => update({ how: f.how!.filter((x) => x !== h) }) });
 
   return (
     <>
       <div className="flex flex-col justify-between lg:flex-row lg:items-end">
         <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme || f.because ? '\u00a0' : title}</PageTitle>
-        <div className="lg:mb-4">
-          <SortFilterBar sort={sort} withMatch={defaultSort === 'match'} onSort={(s) => update({ sort: s })} filterCount={activeFilterCount(f)} onOpenFilters={() => setFiltersOpen(true)} />
-        </div>
+        {search && <div className="mb-4 lg:hidden"><SearchInput placeholder="Movies, series, stand-up…" autoFocus /></div>}
+        {(!search || q) && (
+          <div className="lg:mb-4">
+            <SortFilterBar sort={sort} withMatch={defaultSort === 'match'} onSort={(s) => update({ sort: s })} filterCount={activeFilterCount(f)} onOpenFilters={() => setFiltersOpen(true)} />
+          </div>
+        )}
       </div>
 
       {chips.length > 0 && (
@@ -89,8 +104,10 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
           {chips.map((c) => <Tag key={c.label} removable onClick={c.clear}>{c.label}</Tag>)}
         </div>
       )}
-      {total !== undefined && (
-        <p className="mb-4 text-sm font-medium text-gray-400">
+      {search && !q ? (
+        <p className="mb-4 type-caption-default text-ink-muted">Popular on your services</p>
+      ) : total !== undefined && (
+        <p className="mb-4 type-caption-default text-ink-muted">
           {total.toLocaleString()} {total === 1 ? noun.replace(/s$/, '') : noun}
           {meta.data?.languageRule === 'en' ? ' · English-original only' : ''}
         </p>
@@ -117,8 +134,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         q={q}
         theme={f.theme}
         because={f.because}
-        value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave }}
-        onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave })}
+        value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave, services: f.services, how: f.how }}
+        onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave, services: next.services, how: next.how })}
       />
     </>
   );

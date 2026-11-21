@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { BellIcon, CheckIcon, ClockIcon, MinusSmallIcon } from '@heroicons/react/20/solid';
+import { Icons } from './icons';
+const BellIcon = Icons.bell, CheckIcon = Icons.check, ClockIcon = Icons.clock, MinusSmallIcon = Icons.minus;
 import type { SeerrState } from '../lib/api';
 
 // Seerr Common/Badge
@@ -20,6 +21,8 @@ export function Badge({ type = 'default', children, className = '' }: { type?: k
 
 // Seerr Common/Button (md and lg sizes)
 const buttonTypes = {
+  // Figma "Button / Primary": the white button on the title page.
+  inverse: 'text-ink-inverse border-inverse bg-inverse hover:bg-white active:bg-gray-200',
   primary: 'text-white border border-indigo-500 bg-indigo-600/80 hover:bg-indigo-600 active:bg-indigo-700',
   default: 'text-gray-200 bg-gray-800/80 border-gray-600 hover:text-white hover:bg-gray-700',
   ghost: 'text-white bg-transparent border-gray-600 hover:border-gray-200',
@@ -51,7 +54,7 @@ export function StatusBadgeMini({ state }: { state: SeerrState }) {
   if (!state) return null;
   const [cls, icon, label] = statusStyle[state];
   return (
-    <span title={label} aria-label={label} className={`flex h-5 w-5 items-center justify-center rounded-full border shadow-md [&>svg]:h-3.5 [&>svg]:w-3.5 ${cls}`}>
+    <span title={label} aria-label={label} className={`flex h-5 w-5 items-center justify-center rounded-full border shadow-md [&>svg]:h-3 [&>svg]:w-3 ${cls}`}>
       {icon}
     </span>
   );
@@ -98,6 +101,7 @@ export function Credits() {
     <p className="mt-10 text-xs text-gray-500">
       Data from <a className="underline hover:text-gray-300" href="https://www.watchmode.com" target="_blank" rel="noreferrer">Watchmode</a> and{' '}
       <a className="underline hover:text-gray-300" href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a>.
+      {' '}Prime Video, rent or buy and coming soon from <a className="underline hover:text-gray-300" href="https://www.justwatch.com" target="_blank" rel="noreferrer">JustWatch</a> via TMDB.
       {' '}This product uses the TMDB API but is not endorsed or certified by TMDB.
     </p>
   );

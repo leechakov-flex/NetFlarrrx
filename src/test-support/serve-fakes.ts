@@ -52,13 +52,34 @@ const tmdbFetch: FetchFn = varied
       ];
       if ('keywords' in body) body.keywords = { keywords: kws, results: kws };
       body.number_of_seasons = 1 + (id % 4);
+      body.credits = { cast: [{ name: 'Morgan Reyes', character: 'Ada', profile_path: null }, { name: 'Sam Okafor', character: 'Theo', profile_path: null }, { name: 'Lena Brandt', character: 'Captain Vos', profile_path: null }], crew: [{ name: 'Iris Kalnins', job: 'Director' }] };
+      body['watch/providers'] = { results: { US: { flatrate: [{ provider_id: 8, provider_name: 'Netflix' }], rent: [{ provider_id: 2, provider_name: 'Apple TV' }], buy: [{ provider_id: 2, provider_name: 'Apple TV' }, { provider_id: 10, provider_name: 'Amazon Video' }, { provider_id: 7, provider_name: 'Fandango at Home' }] } } };
       body.overview = 'A lighthouse keeper on a remote island starts receiving radio messages from a ship that sank forty years ago. As the storms close in, she has to decide whether to answer.';
       return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json' } });
     }
   : tmdb.fetch;
 
+// Other services: HBO Max and Hulu from Watchmode (slices of the real catalog), Prime
+// Video, rent or buy and coming soon from TMDB discover.
+const wm = new FakeWatchmode();
+wm.otherSources.set(387, wm.catalog.filter((_, i) => i % 9 === 1));
+wm.otherSources.set(157, wm.catalog.filter((_, i) => i % 11 === 2));
+{
+  const films = wm.catalog.filter((t) => t.tmdb_id && t.tmdb_type === 'movie');
+  const shows = wm.catalog.filter((t) => t.tmdb_id && t.tmdb_type === 'tv');
+  const day = (d: number) => new Date(Date.now() + d * 86_400_000).toISOString().slice(0, 10);
+  tmdb.discoverBy = (type, p) => {
+    if (p.get('with_watch_providers') === '9') return (type === 'movie' ? films : shows).filter((_, i) => i % 7 === 3).map((t) => ({ id: t.tmdb_id!, title: t.title }));
+    if (p.get('with_watch_providers')) return undefined;     // the cross-check's Netflix list
+    if (type === 'movie' && p.get('with_release_type') === '4' && (p.get('release_date.gte') ?? '') > day(0))
+      return films.filter((_, i) => i % 97 === 5).slice(0, 8).map((t, i) => ({ id: t.tmdb_id!, title: t.title, date: day(2 + i * 3) }));
+    if (type === 'movie' && p.get('with_release_type') === '4') return films.filter((_, i) => i % 89 === 4).slice(0, 10).map((t) => ({ id: t.tmdb_id!, title: t.title }));
+    if (type === 'tv' && p.get('with_networks')?.startsWith('213')) return shows.filter((_, i) => i % 151 === 9).slice(0, 4).map((t, i) => ({ id: t.tmdb_id!, title: t.title, date: day(4 + i * 5) }));
+    return [];
+  };
+}
 const base = Number(process.env.FAKE_PORT_BASE ?? 18000);
-serve(base + 1, new FakeWatchmode().fetch);
+serve(base + 1, wm.fetch);
 serve(base + 2, tmdbFetch);
 // A small library (Seerr "available") whose TMDB recommendations point at Netflix titles.
 const fakeSeerr = new FakeSeerr();

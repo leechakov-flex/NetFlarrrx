@@ -54,7 +54,10 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
       },
     });
   });
-  api.get('/home', (c) => c.json(home(db, cfg)));
+  api.get('/home', (c) => {
+    const only = (c.req.query('services') ?? '').split(',').filter((k) => SERVICE_KEYS.has(k)) as ServiceKey[];
+    return c.json(home(db, cfg, new Date(), only));
+  });
 
   api.get('/titles', (c) => {
     const p = BrowseParams.safeParse(c.req.query());

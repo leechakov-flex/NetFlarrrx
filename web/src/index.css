@@ -1,4 +1,5 @@
 @import '@fontsource-variable/inter';
+@import './tokens.css';
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +7,7 @@
 
 /* Ported from Seerr's src/styles/globals.css so the app reads as part of the same family. */
 @layer base {
-  html, body { @apply bg-gray-900; }
+  html, body { @apply bg-app; }
   body { -webkit-tap-highlight-color: transparent; }
 }
 
@@ -14,9 +15,8 @@
   .text-overseerr { @apply bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text text-transparent; }
 
   .slider-header { @apply relative mb-4 mt-6 flex items-center; }
-  .slider-title { @apply inline-flex items-center text-xl font-bold leading-7 text-gray-300 sm:truncate sm:text-2xl sm:leading-9; }
+  .slider-title { @apply inline-flex items-center text-xl font-bold leading-7 text-ink-secondary sm:truncate sm:text-2xl sm:leading-9; }
   a.slider-title { @apply transition duration-300 hover:text-white; }
-  a.slider-title svg { @apply ml-2 h-6 w-6; }
 
   ul.cards-vertical { @apply grid gap-4; grid-template-columns: repeat(auto-fill, minmax(9.375rem, 1fr)); }
 
@@ -41,6 +41,16 @@
 
   .scrollbar-none { scrollbar-width: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
+  /* Liquid Glass (iOS 26 style) for the tab bar and floating buttons. Safari can't
+     bend the content behind it, so it's a strong blur with boosted colour, a tinted
+     base, a bright rim and a soft shadow. */
+  .glass {
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-stroke);
+    box-shadow: 0 8px 24px var(--glass-shadow), inset 0 1px 1px rgba(255, 255, 255, 0.22);
+  }
   .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
 }
 

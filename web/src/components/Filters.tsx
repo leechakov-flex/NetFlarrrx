@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { BarsArrowDownIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import type { BrowseQuery, Kind, SortKey } from '../lib/api';
-import { useBrowseCount, useGenres } from '../lib/api';
+import type { BrowseQuery, How, Kind, ServiceKey, SortKey } from '../lib/api';
+import { useBrowseCount, useGenres, useMeta } from '../lib/api';
+import { Icons } from './icons';
 import { Button, Tag } from './ui';
 import { SlideOver } from './SlideOver';
 
@@ -17,10 +17,13 @@ const ADDED: { value: BrowseQuery['added']; label: string }[] = [
 ];
 const VOTES = [0, 50, 200, 1000];
 
-export type Filters = Pick<BrowseQuery, 'genres' | 'added' | 'minRating' | 'maxRating' | 'minVotes' | 'hideHave'>;
+export type Filters = Pick<BrowseQuery, 'genres' | 'added' | 'minRating' | 'maxRating' | 'minVotes' | 'hideHave' | 'services' | 'how'>;
 const ratingSet = (f: Filters) => !!f.minRating || (f.maxRating !== undefined && f.maxRating < 10);
 export const activeFilterCount = (f: Filters) =>
-  (f.genres?.length ? 1 : 0) + (f.added ? 1 : 0) + (ratingSet(f) ? 1 : 0) + (f.minVotes ? 1 : 0) + (f.hideHave ? 1 : 0);
+  (f.genres?.length ? 1 : 0) + (f.added ? 1 : 0) + (ratingSet(f) ? 1 : 0) + (f.minVotes ? 1 : 0) + (f.hideHave ? 1 : 0) +
+  (f.services?.length ?? 0) + (f.how?.length ?? 0);
+const HOWS: { value: How; label: string }[] = [{ value: 'sub', label: 'Subscription' }, { value: 'digital', label: 'Rent or buy' }, { value: 'soon', label: 'Coming soon' }];
+const toggle = <T,>(list: T[] | undefined, v: T) => { const s = new Set(list ?? []); if (s.has(v)) s.delete(v); else s.add(v); return s.size ? [...s] : undefined; };
 
 export function ratingLabel(min = 0, max = 10) {
   if (!min && max >= 10) return 'Any rating';
@@ -36,7 +39,7 @@ export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters, withMa
     <div className="mb-4 flex flex-col gap-2 sm:flex-row">
       <div className="flex flex-grow sm:flex-grow-0">
         <span className="inline-flex cursor-default items-center rounded-l-md border border-r-0 border-gray-500 bg-gray-800 px-3 text-gray-100 sm:text-sm">
-          <BarsArrowDownIcon className="h-6 w-6" />
+          <Icons.sort className="h-5 w-5" />
         </span>
         <select
           aria-label="Sort"
@@ -49,7 +52,7 @@ export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters, withMa
         </select>
       </div>
       <Button onClick={onOpenFilters} className="w-full sm:w-auto">
-        <FunnelIcon className="h-5 w-5" />
+        <Icons.filter className="h-5 w-5" />
         <span>Filters</span>
         {filterCount > 0 && (
           <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-indigo-500 px-1.5 text-xs font-semibold text-white">{filterCount}</span>
@@ -74,6 +77,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
     setDraft({ ...draft, genres: [...set] });
   };
   const n = activeFilterCount(draft);
+  const services = useMeta().data?.services ?? [];
 
   return (
     <SlideOver
@@ -91,8 +95,31 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
       }
     >
       <div className="flex flex-col space-y-6">
+        {services.length > 1 && (
+          <fieldset>
+            <legend className="mb-2 type-heading-group text-white">Services</legend>
+            <div className="flex flex-wrap gap-2">
+              {services.map((s) => (
+                <Tag key={s.key} selected={draft.services?.includes(s.key)} onClick={() => setDraft({ ...draft, services: toggle<ServiceKey>(draft.services, s.key) })}>{s.name}</Tag>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
         <fieldset>
-          <legend className="mb-2 text-lg font-semibold text-white">Added to Netflix</legend>
+          <legend className="mb-2 type-heading-group text-white">How to watch</legend>
+          <div className="flex flex-wrap gap-2">
+            {HOWS.map((h) => (
+              <Tag key={h.value} selected={(draft.how ?? ['sub']).includes(h.value)} onClick={() => {
+                const next = toggle<How>(draft.how ?? ['sub'], h.value);
+                setDraft({ ...draft, how: !next || (next.length === 1 && next[0] === 'sub') ? undefined : next });
+              }}>{h.label}</Tag>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-2 type-heading-group text-white">Added</legend>
           <div className="flex flex-wrap gap-2">
             {ADDED.map((a) => (
               <Tag key={a.label} selected={(draft.added ?? null) === a.value} onClick={() => setDraft({ ...draft, added: a.value })}>{a.label}</Tag>
@@ -101,7 +128,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-lg font-semibold text-white">Genres</legend>
+          <legend className="mb-2 type-heading-group text-white">Genres</legend>
           <div className="flex flex-wrap gap-2">
             {genres.data?.map((g) => (
               <Tag key={g.id} selected={draft.genres?.includes(g.id)} onClick={() => toggleGenre(g.id)}>{g.name}</Tag>
@@ -110,7 +137,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-lg font-semibold text-white">TMDB rating</legend>
+          <legend className="mb-2 type-heading-group text-white">TMDB rating</legend>
           <RatingRange
             min={draft.minRating ?? 0}
             max={draft.maxRating ?? 10}
@@ -122,7 +149,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-lg font-semibold text-white">Minimum votes</legend>
+          <legend className="mb-2 type-heading-group text-white">Minimum votes</legend>
           <div className="flex flex-wrap gap-2">
             {VOTES.map((v) => (
               <Tag key={v} selected={(draft.minVotes ?? 0) === v} onClick={() => setDraft({ ...draft, minVotes: v || undefined })}>
@@ -133,7 +160,7 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-lg font-semibold text-white">On MonkeyServer</legend>
+          <legend className="mb-2 type-heading-group text-white">On MonkeyServer</legend>
           <label className="flex cursor-pointer items-center justify-between gap-4">
             <span className="text-sm text-gray-300">Hide titles that are already available or requested</span>
             <Toggle checked={!!draft.hideHave} onChange={(v) => setDraft({ ...draft, hideHave: v || undefined })} label="Hide what I have" />

@@ -1,0 +1,61 @@
+/* Generated from the Figma file's Tokens collection and text styles (Nov 21, 2026).
+   Change them in Figma first, then here. */
+:root {
+  --bg-app: #000000;
+  --bg-surface: #1f2937;
+  --bg-raised: #374151;
+  --bg-inverse: #f3f4f6;
+  --bg-accent: #6366f1;
+  --bg-accent-strong: #4f46e5;
+  --bg-success: #22c55e;
+  --bg-warning: #eab308;
+  --text-primary: #ffffff;
+  --text-strong: #f3f4f6;
+  --text-secondary: #e5e7eb;
+  --text-tertiary: #d1d5db;
+  --text-muted: #9ca3af;
+  --text-inverse: #111827;
+  --text-accent: #6366f1;
+  --text-accent-subtle: #a5b4fc;
+  --text-digital: #fcd34d;
+  --border-default: #374151;
+  --border-strong: #4b5563;
+  --border-muted: #6b7280;
+  --border-accent: #6366f1;
+  --border-info: #818cf8;
+  --icon-rating: #fcd34d;
+  --tag-digital-bg: #78350f;
+  --tag-digital-border: #f59e0b;
+  --tag-soon-bg: #4f46e5;
+  --tag-soon-border: #818cf8;
+  --glass-fill: #1f29378c;
+  --glass-stroke: #ffffff33;
+  --glass-active: #ffffff24;
+  --glass-tint: #818cf8;
+  --glass-shadow: #00000059;
+}
+
+@layer components {
+  .type-display-logo { font-size: 28px; line-height: 36px; font-weight: 700; }
+  .type-heading-page { font-size: 24px; line-height: 32px; font-weight: 700; }
+  .type-heading-page-suffix { font-size: 20px; line-height: 32px; font-weight: 400; }
+  .type-heading-rank { font-size: 22px; line-height: 28px; font-weight: 700; }
+  .type-heading-section { font-size: 20px; line-height: 28px; font-weight: 700; }
+  .type-heading-group { font-size: 18px; line-height: 28px; font-weight: 600; }
+  .type-title-card { font-size: 18px; line-height: 115%; font-weight: 700; }
+  .type-title-item { font-size: 16px; line-height: 22px; font-weight: 700; }
+  .type-body-lead { font-size: 15px; line-height: 20px; font-weight: 400; }
+  .type-body-default { font-size: 14px; line-height: 20px; font-weight: 400; }
+  .type-body-small { font-size: 13px; line-height: 18px; font-weight: 400; }
+  .type-body-xsmall { font-size: 12px; line-height: 16px; font-weight: 400; }
+  .type-label-default { font-size: 14px; line-height: 20px; font-weight: 500; }
+  .type-label-strong { font-size: 14px; line-height: 20px; font-weight: 600; }
+  .type-label-bold { font-size: 14px; line-height: 20px; font-weight: 700; }
+  .type-caption-default { font-size: 13px; line-height: 18px; font-weight: 500; }
+  .type-caption-strong { font-size: 13px; line-height: 18px; font-weight: 600; }
+  .type-nav-sidebar { font-size: 18px; line-height: 24px; font-weight: 500; }
+  .type-nav-tab { font-size: 10px; line-height: 14px; font-weight: 500; }
+  .type-nav-tab-active { font-size: 10px; line-height: 14px; font-weight: 600; }
+  .type-badge-default { font-size: 12px; line-height: 20px; font-weight: 600; }
+  .type-badge-tag { font-size: 10px; line-height: 14px; font-weight: 600; }
+}

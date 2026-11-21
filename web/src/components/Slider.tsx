@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { recallScroll, rememberScroll } from '../lib/scrollMemory';
-import { ChevronRightIcon } from '@heroicons/react/24/outline';
+import { Icons } from './icons';
 import type { HomeRow } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from './TitleCard';
 
@@ -27,19 +27,19 @@ export function Slider({ row }: { row: HomeRow }) {
         {row.link ? (
           <Link to={row.link} className="slider-title min-w-0 pr-4">
             <span className="truncate">{row.title}</span>
-            <ChevronRightIcon />
+            <Icons.chevronRight className="ml-2 h-4 w-4 text-ink-muted" />
           </Link>
         ) : (
           <div className="slider-title"><span className="truncate">{row.title}</span></div>
         )}
-        {row.total > 0 && row.slug.startsWith('new') && (
-          <span className="ml-auto flex-shrink-0 text-sm font-medium text-gray-400">{row.total.toLocaleString()} {row.total === 1 ? 'title' : 'titles'}</span>
+        {row.total > 0 && (row.slug.startsWith('new') || row.slug === 'for-you') && (
+          <span className="ml-auto flex-shrink-0 type-caption-default text-ink-muted">{row.total.toLocaleString()} {row.total === 1 ? 'title' : 'titles'}</span>
         )}
       </div>
       <div ref={strip} onScroll={onScroll} className="scrollbar-none -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-4 pt-1 md:gap-4">
         {row.items.map((card) => (
           <div key={card.id} className="snap-start">
-            <TitleCard card={card} />
+            <TitleCard card={card} art={row.art} />
           </div>
         ))}
       </div>

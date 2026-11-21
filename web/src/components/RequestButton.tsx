@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowDownTrayIcon, BellIcon, CheckIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { Icons } from './icons';
+const ArrowDownTrayIcon = Icons.plus, BellIcon = Icons.bell, CheckIcon = Icons.check, ClockIcon = Icons.clock;
 import { ApiError, postJson, savedPasscode, useMeta, useSeasons, type RequestResult, type SeasonInfo, type TitleDetail } from '../lib/api';
 import { Button, Spinner, statusBadge } from './ui';
 import { SlideOver } from './SlideOver';
@@ -69,7 +70,7 @@ export function RequestButton({ d }: { d: TitleDetail }) {
   }
 
   if (!d.tmdbId) {
-    return <Button buttonType="primary" disabled title="No TMDB match, so Seerr can’t request it"><ArrowDownTrayIcon className="h-5 w-5" /><span>Request</span></Button>;
+    return <Button buttonType="inverse" disabled title="No TMDB match, so Seerr can’t request it"><ArrowDownTrayIcon className="h-5 w-5" /><span>Request</span></Button>;
   }
 
   if (d.kind === 'movie') {
@@ -77,7 +78,7 @@ export function RequestButton({ d }: { d: TitleDetail }) {
     if (d.seerr === 'processing') return <Button buttonType="primary" disabled className="!opacity-100"><ClockIcon className="h-5 w-5" /><span>Processing</span></Button>;
     if (d.seerr === 'requested') return <Button buttonType="warning" disabled className="!opacity-100"><BellIcon className="h-5 w-5" /><span>Requested</span></Button>;
     return (
-      <Button buttonType="primary" disabled={busy} onClick={() => void send()}>
+      <Button buttonType="inverse" disabled={busy} onClick={() => void send()}>
         {busy ? <Spinner className="h-5 w-5 text-white" /> : <ArrowDownTrayIcon className="h-5 w-5" />}
         <span>{busy ? 'Requesting…' : 'Request'}</span>
       </Button>
@@ -97,7 +98,7 @@ export function RequestButton({ d }: { d: TitleDetail }) {
     button = <Button buttonType={type} onClick={() => setPickerOpen(true)}><Icon className="h-5 w-5" /><span>{label}</span></Button>;
   } else {
     button = (
-      <Button buttonType="primary" onClick={() => setPickerOpen(true)}>
+      <Button buttonType="inverse" onClick={() => setPickerOpen(true)}>
         <ArrowDownTrayIcon className="h-5 w-5" />
         <span>{anyInSeerr ? 'Request more' : 'Request'}</span>
       </Button>

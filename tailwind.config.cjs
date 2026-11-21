@@ -1,7 +1,8 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
 
-// Tailwind 3 to match Seerr: same default palette (gray-900 #111827, indigo-600 #4F46E5, ...)
-// and the same Inter Variable font.
+// Tailwind 3 with Seerr's palette (gray-900 #111827, indigo-600 #4F46E5, ...) and Inter Variable,
+// plus MonkeySee's design tokens from Figma (web/src/tokens.css): use these names in new code.
+const v = (name) => `var(--${name})`;
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./web/index.html', './web/src/**/*.{ts,tsx}'],
@@ -9,6 +10,18 @@ module.exports = {
     extend: {
       fontFamily: { sans: ['Inter Variable', ...defaultTheme.fontFamily.sans] },
       screens: { '3xl': '1920px' },
+      colors: {
+        app: v('bg-app'), surface: v('bg-surface'), raised: v('bg-raised'), inverse: v('bg-inverse'),
+        accent: { DEFAULT: v('bg-accent'), strong: v('bg-accent-strong') },
+        ink: {
+          primary: v('text-primary'), strong: v('text-strong'), secondary: v('text-secondary'), tertiary: v('text-tertiary'),
+          muted: v('text-muted'), inverse: v('text-inverse'), accent: v('text-accent'), 'accent-subtle': v('text-accent-subtle'), digital: v('text-digital'),
+        },
+        line: { DEFAULT: v('border-default'), strong: v('border-strong'), muted: v('border-muted'), accent: v('border-accent'), info: v('border-info') },
+        rating: v('icon-rating'),
+        tag: { 'digital-bg': v('tag-digital-bg'), 'digital-border': v('tag-digital-border'), 'soon-bg': v('tag-soon-bg'), 'soon-border': v('tag-soon-border') },
+        glass: { fill: v('glass-fill'), stroke: v('glass-stroke'), active: v('glass-active'), tint: v('glass-tint'), shadow: v('glass-shadow') },
+      },
     },
   },
   plugins: [],

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Icons } from './icons';
+const XMarkIcon = Icons.xmark;
 
 /** Full-screen trailer overlay. The YouTube embed only loads once the person taps Play. */
 export function TrailerModal({ videoKey, title, onClose }: { videoKey: string; title: string; onClose: () => void }) {

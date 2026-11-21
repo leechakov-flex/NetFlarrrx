@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FilmIcon } from '@heroicons/react/24/outline';
-import { StarIcon } from '@heroicons/react/20/solid';
+import { Icons } from '../components/icons';
+const FilmIcon = Icons.film, StarIcon = Icons.star;
 import type { Kind } from '../lib/api';
 import { useTop } from '../lib/api';
 import { runtime, tmdbImage } from '../lib/format';

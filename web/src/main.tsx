@@ -32,7 +32,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<Discover />} />
             <Route path="/movies" element={<Browse key="movie" kind="movie" title="Movies" />} />
             <Route path="/series" element={<Browse key="series" kind="series" title="Series" />} />
-            <Route path="/browse" element={<Browse key="all" title="Netflix" />} />
+            <Route path="/browse" element={<Browse key="all" title="All titles" />} />
             <Route path="/search" element={<Browse key="search" title="Search" search />} />
             <Route path="/top" element={<TopRated />} />
             <Route path="/title/:id" element={<TitleDetail />} />

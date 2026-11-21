@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ChevronRightIcon } from '@heroicons/react/20/solid';
+import { Icons } from '../components/icons';
+const ChevronRightIcon = Icons.chevronRight;
 import { useMeta, useThemes } from '../lib/api';
 import { longDate, relativeTime } from '../lib/format';
 import { Badge, Credits, PageTitle, Spinner } from '../components/ui';
@@ -62,7 +63,7 @@ export function More() {
         </div>
       )}
       <p className="mt-6 max-w-xl text-sm text-gray-400">
-        MonkeySee checks Netflix’s catalog once a day at 6:23 a.m. A title’s date added is the first day it appeared after tracking began.
+        MonkeySee checks your services’ movies every morning at 6:23 and their series once a week. A title’s date added is the first day it appeared after tracking began (for a new series, its premiere). Prime Video, rent or buy and coming soon come from JustWatch via TMDB.
         Every Sunday it compares the list with TMDB’s, which comes from JustWatch.
       </p>
       <Credits />

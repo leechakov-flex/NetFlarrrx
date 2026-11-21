@@ -18,9 +18,34 @@ const CARD_COLUMNS = `
   a.added_at, a.back_on_service, tk.vote_average, tk.vote_count, sm.status AS seerr_status,
   a.providers, a.soon_date, a.soon_service, tk.digital_note, tk.netflix_original, tk.logo_path, tk.textless_poster_path`;
 
+/**
+ * While Discover is built, each scope's `a` table is computed once into a temp
+ * table instead of in every one of its ~70 queries.
+ */
+let materialized: { db: Db; tables: Map<string, string> } | null = null;
+function withScopes<T>(db: Db, fn: () => T): T {
+  if (materialized) return fn();
+  materialized = { db, tables: new Map() };
+  try { return fn(); } finally {
+    for (const t of materialized.tables.values()) db.exec(`DROP TABLE IF EXISTS temp.${t}`);
+    materialized = null;
+  }
+}
+
 /** FROM clause over the scope's availability (`a`), titles (`tk`) and Seerr (`sm`). */
 function fromFor(cfg: Config, scope: Scope, now: Date) {
-  const s = scopeFrom(cfg, scope, now);
+  let s = scopeFrom(cfg, scope, now);
+  if (materialized) {
+    const key = JSON.stringify([scope.services ?? null, scope.how ?? null]);
+    let name = materialized.tables.get(key);
+    if (!name) {
+      name = `scope_${materialized.tables.size + 1}`;
+      materialized.db.prepare(`CREATE TEMP TABLE ${name} AS SELECT * FROM ${s.sql}`).run(...s.params);
+      materialized.db.exec(`CREATE INDEX temp.${name}_id ON ${name} (title_id)`);
+      materialized.tables.set(key, name);
+    }
+    s = { sql: `temp.${name} a`, params: [] };
+  }
   return {
     sql: `FROM ${s.sql}
   JOIN title_kinds tk ON tk.id = a.title_id
@@ -178,14 +203,22 @@ function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: Bro
   return { row: { slug, title, total, link, items, art: rowArt(items) }, left: left !== null && left < total ? left : null };
 }
 
+const linkSuffix = (only: ServiceKey[]) => (only.length ? `&services=${only.join(',')}` : '');
+
 export function trackingSince(db: Db, cfg: Config): string | null {
   return get<{ t: string }>(db, `SELECT min(started_at) t FROM sync_runs WHERE provider_id = ? AND region = ? AND applied = 1`,
     [cfg.NETFLIX_SOURCE_ID, cfg.REGION])?.t ?? null;
 }
 
-export function home(db: Db, cfg: Config, now = new Date()): HomeResponse {
+/** Discover. `only` (the service chips) narrows every row to those services; rows for other services drop out. */
+export function home(db: Db, cfg: Config, now = new Date(), only: ServiceKey[] = []): HomeResponse {
+  return withScopes(db, () => buildHome(db, cfg, now, only));
+}
+
+function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResponse {
   const since = trackingSince(db, cfg);
-  const onHome = themesFor(cfg).filter((t) => t.home);
+  const onHome = themesFor(cfg).filter((t) => t.home && (!only.length || !t.services || t.services.some((x) => only.includes(x))));
+  const narrow = only.length ? { services: only } : {};
   const hasLibrary = libraryCount(db) > 0;
   const seedFilter = filters(cfg, { ...REC_FLOOR }, now);
   const seeds = hasLibrary ? becauseSeeds(db, { sql: `${seedFilter.sql} AND ${REC_RECENT}`, params: seedFilter.params }, seedFilter.from, onHome.filter((t) => t.special === 'because').length) : [];
@@ -210,10 +243,10 @@ export function home(db: Db, cfg: Config, now = new Date()): HomeResponse {
       const seed = seedFor[i];
       if (seed) {
         const because = `${seed.media_type}:${seed.tmdb_id}`;
-        make = (skip) => row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because }, `/browse?because=${because}`, skip);
+        make = (skip) => row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because, ...narrow }, `/browse?because=${because}${linkSuffix(only)}`, skip);
       }
     } else if (!(t.special === 'for-you' && !hasLibrary)) {
-      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort }, `/browse?theme=${t.slug}`, skip);
+      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort, ...(only.length ? { services: t.services ? t.services.filter((x) => only.includes(x)) : only } : {}) }, `/browse?theme=${t.slug}${linkSuffix(only)}`, skip);
     }
     if (!make) continue;
     const r = make([...shown].filter(([, n]) => n >= cap).map(([id]) => id));

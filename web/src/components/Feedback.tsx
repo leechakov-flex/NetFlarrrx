@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircleIcon, ExclamationTriangleIcon, LockClosedIcon, XCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Icons } from './icons';
+const CheckCircleIcon = Icons.checkCircle, ExclamationTriangleIcon = Icons.warning, LockClosedIcon = Icons.lock, XCircleIcon = Icons.xmarkCircle, XMarkIcon = Icons.xmark;
 import { Button } from './ui';
 
 // ---------- Toasts (Seerr's top-right toasts) ----------

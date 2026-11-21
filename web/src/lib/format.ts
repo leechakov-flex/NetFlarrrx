@@ -50,9 +50,36 @@ export function relativeTime(iso: string | null, now = new Date()): string | nul
   return `${monthDay.format(d)}, ${time}`;
 }
 
+/** "Nov 25" for a YYYY-MM-DD date (or "Nov 25, 2027" in another year). */
+export function shortDate(day: string | null, now = new Date()): string | null {
+  if (!day) return null;
+  const d = new Date(`${day.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.getFullYear() === now.getFullYear() ? monthDay.format(d) : monthDayYear.format(d);
+}
+
+export const SERVICE_NAMES = {
+  netflix: 'Netflix', prime: 'Prime Video', hbomax: 'HBO Max', hulu: 'Hulu', disney: 'Disney+', paramount: 'Paramount+', peacock: 'Peacock',
+} as const;
+export type ServiceKey = keyof typeof SERVICE_NAMES;
+
+/** The line under a poster: which service, rent or buy, or when it's coming. */
+export function serviceLine(c: { services: ServiceKey[]; digital: boolean; soon: { date: string; service: ServiceKey | null } | null }):
+  { text: string; tone: 'service' | 'digital' | 'soon' } | null {
+  if (c.soon) return { text: `${shortDate(c.soon.date)} · ${c.soon.service ? SERVICE_NAMES[c.soon.service] : 'Rent or buy'}`, tone: 'soon' };
+  if (c.services.length) return { text: SERVICE_NAMES[c.services[0]!] + (c.services.length > 1 ? ` +${c.services.length - 1}` : ''), tone: 'service' };
+  if (c.digital) return { text: 'Rent or buy', tone: 'digital' };
+  return null;
+}
+
 export const tmdbImage = {
   // Same sizes Seerr requests.
   poster: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w300_and_h450_face${path}` : null),
+  /** Textless poster and title logo for Apple-TV-style cards and the title page hero. */
+  textless: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w342${path}` : null),
+  textlessLarge: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w780${path}` : null),
+  logo: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w500${path}` : null),
+  profile: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w185${path}` : null),
   posterLarge: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w600_and_h900_bestv2${path}` : null),
   backdrop: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${path}` : null),
 };
