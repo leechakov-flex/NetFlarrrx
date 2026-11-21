@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Link, NavLink, useLocation, useNavigate, useNavigationType, useSearchParams } from 'react-router-dom';
+import { recallScroll, rememberScroll } from '../lib/scrollMemory';
 import {
   ArrowLeftIcon, EllipsisHorizontalIcon, FilmIcon, MagnifyingGlassIcon, SparklesIcon, TrophyIcon, TvIcon, XCircleIcon,
 } from '@heroicons/react/24/outline';
@@ -149,7 +150,38 @@ export function Layout({ children }: { children: ReactNode }) {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  // Back/forward returns to where you were on that page; anything else starts at the top
+  // (but filter and sort changes on the same page keep your place).
+  const location = useLocation();
+  const navType = useNavigationType();
+  const lastPath = useRef(pathname);
+  useEffect(() => {
+    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch { /* ignore */ }
+  }, []);
+  // A layout effect, so the old page's listener is gone before the browser clamps
+  // the scroll position for the new, shorter page (that would overwrite the saved spot).
+  useLayoutEffect(() => {
+    const key = `${location.key}:page`;
+    const target = navType === 'POP' ? recallScroll(key) : undefined;
+    let raf = 0;
+    if (target) {
+      // Rows may still be rendering: keep trying for about a second and a half.
+      let tries = 0;
+      const attempt = () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo(0, Math.min(target, max));
+        if (max < target && ++tries < 90) raf = requestAnimationFrame(attempt);
+      };
+      attempt();
+    } else if (lastPath.current !== pathname) {
+      window.scrollTo(0, 0);
+    }
+    lastPath.current = pathname;
+    let pending = 0;
+    const save = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(() => rememberScroll(key, window.scrollY)); };
+    window.addEventListener('scroll', save, { passive: true });
+    return () => { cancelAnimationFrame(raf); cancelAnimationFrame(pending); window.removeEventListener('scroll', save); };
+  }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
   const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {
     const on = () => setOnline(true);
