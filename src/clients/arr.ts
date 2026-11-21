@@ -27,7 +27,7 @@ const SonarrSeries = z.object({
 export interface ArrItem {
   title: string; tmdbId: number | null; tvdbId?: number | null; added: string | null;
   /** Series: the highest season with files, and the seasons Sonarr is set to download. */
-  haveSeason?: number | null; monitoredSeasons?: number[];
+  haveSeason?: number | null; haveSeasons?: number[]; monitoredSeasons?: number[];
 }
 
 /** One download Radarr or Sonarr is tracking (GET /api/v3/queue). */
@@ -86,7 +86,7 @@ export class ArrClient {
       const real = s.data.seasons.filter((x) => x.seasonNumber > 0);
       const have = real.filter((x) => (x.statistics?.episodeFileCount ?? 0) > 0).map((x) => x.seasonNumber);
       return [{ title: s.data.title, tmdbId: s.data.tmdbId || null, tvdbId: s.data.tvdbId ?? null, added: s.data.added ?? null,
-        haveSeason: have.length ? Math.max(...have) : null, monitoredSeasons: real.filter((x) => x.monitored).map((x) => x.seasonNumber) }];
+        haveSeason: have.length ? Math.max(...have) : null, haveSeasons: have, monitoredSeasons: real.filter((x) => x.monitored).map((x) => x.seasonNumber) }];
     });
   }
 

@@ -173,11 +173,12 @@ export interface RequestItem {
   requestedAt: string | null;
   updatedAt: string | null;
   seasons: number[];
+  detail: string | null;           // the line under the title, e.g. "Sonarr is looking for a release"
 }
 
 export interface DownloadsResponse {
   at: string;
-  qbit: { configured: boolean; connected: boolean; error: string | null; downSpeed: number; upSpeed: number; seeding: number; vpn: string | null };
+  qbit: { configured: boolean; connected: boolean; error: string | null; downSpeed: number; upSpeed: number; seeding: number; vpn: string | null; states: Record<string, number> };
   attention: DownloadItem[];
   downloading: DownloadItem[];
   queued: DownloadItem[];

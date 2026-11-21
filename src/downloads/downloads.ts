@@ -50,8 +50,27 @@ function titleIndex(db: Db, pairs: { type: 'movie' | 'tv'; id: number }[]) {
 const poster = (path: string | null) => (path ? `https://image.tmdb.org/t/p/w185${path}` : null);
 
 let cache: { at: number; value: DownloadsResponse } | null = null;
+
+// What Radarr and Sonarr have on disk, for request states. Seerr only marks a request
+// available after Jellyfin scans it in, which can lag hours behind the download.
+const HAVE_MS = 2 * 60_000;
+let haveCache: { at: number; movies: Set<number>; shows: Map<number, number[]> } | null = null;
+async function onDisk(d: DownloadDeps, now: number) {
+  if (haveCache && now - haveCache.at < HAVE_MS) return haveCache;
+  const [movies, shows] = await Promise.all([
+    d.radarr ? d.radarr.movies().catch(() => null) : null,
+    d.sonarr ? d.sonarr.series().catch(() => null) : null,
+  ]);
+  const next = {
+    at: now,
+    movies: movies ? new Set(movies.flatMap((m) => (m.tmdbId ? [m.tmdbId] : []))) : haveCache?.movies ?? new Set<number>(),
+    shows: shows ? new Map(shows.flatMap((s) => (s.tmdbId ? [[s.tmdbId, s.haveSeasons ?? []] as [number, number[]]] : []))) : haveCache?.shows ?? new Map<number, number[]>(),
+  };
+  haveCache = next;
+  return next;
+}
 const tmdbNames = new Map<string, { title: string; year: number | null; posterPath: string | null } | null>();
-export const resetDownloadsCache = () => { cache = null; };
+export const resetDownloadsCache = () => { cache = null; haveCache = null; };
 
 export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Promise<DownloadsResponse> {
   if (cache && now.getTime() - cache.at < CACHE_MS) return cache.value;
@@ -60,12 +79,13 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
     if (!p) return fallback;
     try { return await p; } catch (err) { if (!errors.includes(name)) log.warn(`downloads: ${name} unreachable`, { error: (err as Error).message, ...(typeof (err as { body?: unknown }).body === 'string' && (err as { body: string }).body ? { detail: (err as { body: string }).body.slice(0, 200) } : {}) }); errors.push(name); return fallback; }
   };
-  const [torrents, transfer, rq, sq, reqs] = await Promise.all([
+  const [torrents, transfer, rq, sq, reqs, have] = await Promise.all([
     soft('qBittorrent', d.qbit?.torrents(), [] as QbitTorrent[]),
     soft('qBittorrent', d.qbit?.transfer(), null),
     soft('Radarr', d.radarr?.queue(), [] as QueueItem[]),
     soft('Sonarr', d.sonarr?.queue(), [] as QueueItem[]),
     soft('Seerr', d.seerr.requests(50), [] as SeerrRequest[]),
+    onDisk(d, now.getTime()),
   ]);
   const queue = [...rq, ...sq];
   const byHash = new Map(queue.filter((q) => q.downloadId).map((q) => [q.downloadId!, q]));
@@ -123,11 +143,31 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
       tmdbNames.set(key, name);
     }
     const dl = byTmdb.get(key);
-    const state: RequestState = r.status === 3 ? 'declined' : r.status === 4 ? 'failed'
-      : r.media.status === 5 || r.media.status === 4 ? 'available' : dl ? 'downloading' : 'requested';
+    const arr = r.media.mediaType === 'movie' ? 'Radarr' : 'Sonarr';
+    const wanted = r.seasons.map((x) => x.seasonNumber);
+    const haveSeasons = r.media.mediaType === 'tv' ? have.shows.get(r.media.tmdbId) ?? [] : [];
+    const gotSeasons = wanted.filter((n) => haveSeasons.includes(n));
+    const onDiskNow = r.media.mediaType === 'movie' ? have.movies.has(r.media.tmdbId)
+      : wanted.length ? gotSeasons.length === wanted.length : haveSeasons.length > 0;
+    let state: RequestState;
+    let detail: string | null = null;
+    if (r.status === 3) { state = 'declined'; detail = 'Declined in Seerr'; }
+    else if (r.media.status === 5 || r.media.status === 4 || onDiskNow) {
+      state = 'available';
+      detail = r.media.status === 5 || r.media.status === 4 ? null : `Downloaded · Jellyfin may still be adding it`;
+    } else if (dl) {
+      state = 'downloading';
+    } else if (r.status === 4) {
+      state = 'failed'; detail = `${arr} couldn’t take it. Retry sends it again.`;
+    } else {
+      state = 'requested';
+      detail = r.status === 1 ? 'Waiting for approval in Seerr'
+        : gotSeasons.length ? `Have season${gotSeasons.length === 1 ? ` ${gotSeasons[0]}` : `s ${gotSeasons.join(', ')}`} · ${arr} is looking for the rest`
+        : `${arr} is looking for a release`;
+    }
     requests.push({
       id: r.id, tmdbType: r.media.mediaType, tmdbId: r.media.tmdbId, title: name?.title ?? `TMDB ${r.media.tmdbId}`, year: name?.year ?? null,
-      titleId: tk?.id ?? null, posterUrl: poster(name?.posterPath ?? null), state, progress: dl ? dl.progress : null,
+      titleId: tk?.id ?? null, posterUrl: poster(name?.posterPath ?? null), state, progress: dl ? dl.progress : null, detail,
       requestedAt: r.createdAt ?? null, updatedAt: r.updatedAt ?? null, seasons: r.seasons.map((s) => s.seasonNumber),
     });
   }
@@ -138,6 +178,7 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
       configured: !!d.qbit, connected: !!d.qbit && !errors.includes('qBittorrent'), error: errors.includes('qBittorrent') ? d.qbit?.loginProblem ?? 'Can’t reach qBittorrent' : null,
       downSpeed: transfer?.dl_info_speed ?? 0, upSpeed: transfer?.up_info_speed ?? 0, seeding: torrents.filter(isSeeding).length,
       vpn: transfer ? transfer.connection_status : null,
+      states: torrents.reduce<Record<string, number>>((m, t) => { m[t.state] = (m[t.state] ?? 0) + 1; return m; }, {}),
     },
     attention: attention.sort((a, b) => (a.since ?? '').localeCompare(b.since ?? '')),
     downloading: rest.filter((i) => i.state === 'downloading' || i.state === 'importing').sort((a, b) => b.progress - a.progress),

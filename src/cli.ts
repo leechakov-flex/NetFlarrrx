@@ -71,7 +71,7 @@ async function main() {
         const d = await app.downloads();
         console.table([...d.attention, ...d.downloading, ...d.queued].map((i) => ({ state: i.state, title: i.subtitle ? `${i.title} ${i.subtitle}` : i.title,
           pct: Math.round(i.progress * 100), source: i.source ?? '-', since: i.since?.slice(0, 16) ?? '' })));
-        console.log(JSON.stringify({ qbit: d.qbit, seeding: d.qbit.seeding, requests: d.requests.length, errors: d.errors }, null, 2));
+        console.log(JSON.stringify({ qbit: d.qbit, requests: d.requests.reduce<Record<string, number>>((m, r) => { m[r.state] = (m[r.state] ?? 0) + 1; return m; }, {}), errors: d.errors }, null, 2));
         break;
       }
       case 'enrich': console.log(JSON.stringify(await app.enrich(), null, 2)); break;

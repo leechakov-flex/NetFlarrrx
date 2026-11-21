@@ -238,9 +238,11 @@ export class FakeQbit {
 /** Radarr or Sonarr GET /api/v3/queue (and the library endpoints, empty). */
 export class FakeArrQueue {
   records: Record<string, unknown>[] = [];
+  /** What GET /api/v3/movie or /series answers. */
+  library: Record<string, unknown>[] = [];
   fetch: FetchFn = async (input) => {
     const url = new URL(String(input));
     if (url.pathname === '/api/v3/queue') return json(200, { page: 1, totalRecords: this.records.length, records: this.records });
-    return json(200, []);
+    return json(200, this.library);
   };
 }

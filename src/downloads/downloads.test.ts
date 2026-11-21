@@ -71,6 +71,17 @@ describe('downloads', () => {
     expect(qbit.logins).toBe(1);   // torrents and transfer share one login
   });
 
+  it('marks a request available once Radarr or Sonarr has the files, before Seerr catches up', async () => {
+    radarr.library = [{ title: 'Got It', tmdbId: movie.tmdb_id + 1, hasFile: true, added: '2026-11-21T00:00:00Z' }];
+    sonarr.library = [{ title: 'Show', tmdbId: 778, tvdbId: 1, statistics: { episodeFileCount: 10 }, seasons: [{ seasonNumber: 1, monitored: true, statistics: { episodeFileCount: 10 } }] }];
+    seerr.requestList.push({ id: 14, status: 2, createdAt: '2026-11-18T10:00:00Z', type: 'tv', seasons: [{ seasonNumber: 1 }, { seasonNumber: 2 }], media: { tmdbId: 778, mediaType: 'tv', status: 3 } });
+    seerr.requestList[1]!.status = 2;   // 12: approved, not failed
+    const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;
+    expect(d.requests.find((r) => r.id === 12)).toMatchObject({ state: 'available', detail: expect.stringMatching(/Downloaded/) });
+    expect(d.requests.find((r) => r.id === 14)).toMatchObject({ state: 'requested', detail: 'Have season 1 · Sonarr is looking for the rest' });
+    expect(d.qbit.states).toEqual({ stalledDL: 1, downloading: 1, uploading: 1, queuedDL: 1 });
+  });
+
   it('still shows requests when qBittorrent is down', async () => {
     qbit.down = true;
     const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;

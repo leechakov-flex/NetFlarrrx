@@ -151,10 +151,8 @@ function RequestRow({ r }: { r: RequestItem }) {
   const [badgeCls, badgeLabel] = REQ_BADGE[r.state];
   const name = `${r.title}${r.year ? ` (${r.year})` : ''}${r.tmdbType === 'tv' && r.seasons.length ? ` · ${r.seasons.length === 1 ? `Season ${r.seasons[0]}` : `${r.seasons.length} seasons`}` : ''}`;
   const line = r.state === 'downloading' ? `Requested ${ago(r.requestedAt)}${r.progress !== null ? ` · ${Math.floor(r.progress * 100)}%` : ''}`
-    : r.state === 'available' ? `Available${r.updatedAt ? ` since ${ago(r.updatedAt)}` : ''}`
-    : r.state === 'failed' ? 'Radarr or Sonarr couldn’t take it. Retry sends it again.'
-    : r.state === 'declined' ? 'Declined in Seerr'
-    : `Requested ${ago(r.requestedAt) ?? ''} · waiting for a release`;
+    : r.state === 'requested' ? `Requested ${ago(r.requestedAt) ?? ''}${r.detail ? ` · ${r.detail}` : ''}`
+    : r.detail ?? (r.state === 'available' ? `Available${r.updatedAt ? ` since ${ago(r.updatedAt)}` : ''}` : '');
 
   async function act(action: 'cancel' | 'retry') {
     setBusy(action);
