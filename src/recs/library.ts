@@ -111,7 +111,7 @@ export async function refreshLibrary(db: Db, cfg: Config, tmdb: TmdbClient, src:
           for (const rec of r.recs) ins.run(item.media_type, item.tmdb_id, item.media_type, rec.id, rec.rank);
         }
         run(db, 'UPDATE library_items SET title = COALESCE(title, ?), recs_at = ?, recs_status = ?, category = ? WHERE media_type = ? AND tmdb_id = ?',
-          [r?.title ?? null, iso, r ? 'ok' : 'missing', r ? categorize(item.media_type, { ...r, special: isWatchmodeSpecial(db, item.media_type, item.tmdb_id) }) : null, item.media_type, item.tmdb_id]);
+          [r?.title ?? null, iso, r ? 'ok' : 'missing', r ? refineByRecs(db, item.media_type, item.tmdb_id, r, categorize(item.media_type, { ...r, special: isWatchmodeSpecial(db, item.media_type, item.tmdb_id) })) : null, item.media_type, item.tmdb_id]);
       });
       result.fetched += 1;
     } catch (err) {
@@ -143,6 +143,26 @@ export const REC_RECENT = `(min(COALESCE(tk.last_air_date, tk.release_date, '000
 
 const isWatchmodeSpecial = (db: Db, type: string, id: number) =>
   !!get<{ n: number }>(db, `SELECT 1 n FROM titles WHERE tmdb_type = ? AND tmdb_id = ? AND watchmode_type = 'tv_special' LIMIT 1`, [type, id]);
+
+/**
+ * TMDB recommends specials alongside specials. Among a movie's recommendations
+ * that are on Netflix, 60%+ specials makes it a stand-up special, under 30%
+ * makes a title-pattern guess a regular movie. Keyword matches are kept as they are.
+ */
+function refineByRecs(db: Db, type: 'movie' | 'tv', id: number, r: { keywords: string[] }, guess: 'standup' | 'movie' | 'series') {
+  if (type !== 'movie') return guess;
+  const kws = new Set(r.keywords.map((k) => k.toLowerCase()));
+  if (STANDUP.some((k) => kws.has(k))) return guess;
+  const m = get<{ n: number; specials: number }>(db, `
+    SELECT count(*) n, coalesce(sum(t.watchmode_type = 'tv_special'), 0) specials
+    FROM library_recs lr JOIN titles t ON t.tmdb_type = lr.rec_type AND t.tmdb_id = lr.rec_id
+    WHERE lr.seed_type = 'movie' AND lr.seed_id = ?`, [id])!;
+  if (m.n < 4) return guess;
+  const share = m.specials / m.n;
+  if (share >= 0.6) return 'standup';
+  if (guess === 'standup' && share < 0.3) return 'movie';
+  return guess;
+}
 
 /** Stand-up specials, other movies and series, so "Because you have" rows can be mixed. */
 function categorize(type: 'movie' | 'tv', r: { title: string | null; genres: string[]; keywords: string[]; runtime: number | null; special?: boolean }): 'standup' | 'movie' | 'series' {

@@ -239,4 +239,9 @@ UPDATE library_items SET recs_at = NULL;              -- re-fetch once to learn 
     name: 'library_categories_again',
     sql: `UPDATE library_items SET recs_at = NULL;   -- re-sort library titles with the wider stand-up check`,
   },
+  {
+    version: 7,
+    name: 'library_categories_by_recs',
+    sql: `UPDATE library_items SET recs_at = NULL;   -- re-sort library titles using what TMDB recommends alongside them`,
+  },
 ];

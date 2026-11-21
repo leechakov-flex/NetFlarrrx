@@ -238,3 +238,22 @@ describe('stand-up detection', () => {
       .toEqual({ 'An Evening Out': 'standup', 'Russell Brand: Open Secret': 'standup', 'Cunk on Cinema': 'movie' });
   });
 });
+
+describe('stand-up detection from recommendations', () => {
+  it('a movie recommended alongside specials is a special; a "Name: Title" comedy recommended with films is not', async () => {
+    const ids = netflix.slice(0, 10);
+    run(app.db, `UPDATE titles SET watchmode_type = 'tv_special' WHERE id IN (${ids.slice(0, 5).map((t) => t.id).join(',')})`);
+    seerr.media = [
+      { id: 1, mediaType: 'movie', tmdbId: LIB(1), status: 5, seasons: [] },
+      { id: 2, mediaType: 'movie', tmdbId: LIB(2), status: 5, seasons: [] },
+    ];
+    tmdb.overrides.set(`movie:${LIB(1)}`, { title: 'Russell Brand: Open Secret', genres: [{ id: 99, name: 'Documentary' }], runtime: 112, keywords: { keywords: [] } });
+    tmdb.recs.set(`movie:${LIB(1)}`, ids.slice(0, 5).map((t) => t.tmdb_id));          // all specials
+    tmdb.overrides.set(`movie:${LIB(2)}`, { title: 'Between Two Ferns: The Movie', genres: [{ id: 35, name: 'Comedy' }], runtime: 82, keywords: { keywords: [] } });
+    tmdb.recs.set(`movie:${LIB(2)}`, ids.slice(5, 10).map((t) => t.tmdb_id));         // all films
+    await app.mirror();
+    await app.library();
+    expect(Object.fromEntries(all<{ title: string; category: string }>(app.db, 'SELECT title, category FROM library_items').map((r) => [r.title, r.category])))
+      .toEqual({ 'Russell Brand: Open Secret': 'standup', 'Between Two Ferns: The Movie': 'movie' });
+  });
+});
