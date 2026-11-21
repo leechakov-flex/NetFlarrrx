@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./*.env)",
+      "Read(./**/*.env)",
+      "Read(./**/.env)",
+      "Read(~/server/config/**/config.xml)",
+      "Bash(cat *.env)",
+      "Bash(cat ./*.env)",
+      "Bash(docker compose down*)",
+      "Bash(docker system prune*)"
+    ]
+  }
+}
