@@ -2,15 +2,18 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { App } from '../app.js';
 import type { MiddlewareHandler } from 'hono';
-import { browse, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
+import { browse, companies, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
+import { inJellyfin, lastJellyfin, libraryPage } from '../library/jellyfin.js';
 import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
 import type { How, ServiceKey } from './types.js';
 
 const SERVICE_KEYS = new Set<string>(SERVICES.map((s) => s.key));
+// Studio and network keys: "a24", "20th-century". At most 20 at once.
+const keyList = (v: string) => v.split(',').filter((k) => /^[a-z0-9-]{1,80}$/.test(k)).slice(0, 20);
 
 const kind = z.enum(['movie', 'series']);
 const intList = z.string().transform((s) => s.split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0));
@@ -30,6 +33,8 @@ const BrowseParams = z.object({
   q: z.string().max(100).optional(),
   hide: z.enum(['have']).optional(),
   theme: z.string().regex(/^[a-z0-9-]{1,60}$/).optional(),
+  studios: z.string().transform(keyList).optional(),
+  networks: z.string().transform(keyList).optional(),
 });
 
 const RequestBody = z.object({ seasons: z.array(z.number().int().min(0).max(1000)).max(200).optional() }).strict();
@@ -41,7 +46,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   api.use('*', async (c, next) => {
     await next();
-    c.header('Cache-Control', 'no-store');
+    if (!c.res.headers.has('Cache-Control')) c.header('Cache-Control', 'no-store');   // posters set their own
   });
 
   api.get('/meta', (c) => {
@@ -54,6 +59,10 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
         crosscheck: h.crosscheck ? { at: h.crosscheck.at, ok: h.crosscheck.ok, coveragePct: h.crosscheck.coverage_pct } : null,
         alerts: app.notifier.enabled,
       },
+      library: (() => {
+        const j = lastJellyfin(db);
+        return { configured: Boolean(cfg.JELLYFIN_API_KEY), movies: j?.movies ?? 0, series: j?.series ?? 0 };
+      })(),
       downloads: (() => {
         const d = lastDownloads(db);
         return { configured: Boolean(cfg.QBIT_PASSWORD), attention: d?.attention.length ?? 0, downloading: d?.downloading ?? 0 };
@@ -62,7 +71,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
   });
   api.get('/home', (c) => {
     const only = (c.req.query('services') ?? '').split(',').filter((k) => SERVICE_KEYS.has(k)) as ServiceKey[];
-    return c.json(home(db, cfg, new Date(), only));
+    return c.json(home(db, cfg, new Date(), only, { studios: keyList(c.req.query('studios') ?? ''), networks: keyList(c.req.query('networks') ?? '') }));
   });
 
   api.get('/titles', (c) => {
@@ -78,6 +87,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
     const t = titleDetail(db, cfg, id);
     if (!t) return c.json({ error: 'not found' }, 404);
+    t.inLibrary = inJellyfin(db, t.tmdbType, t.tmdbId);
     // Download progress for the Request button, only when something of it is requested.
     if (t.seerr === 'requested' || t.seerr === 'processing' || t.seerr === 'partial') {
       const snap = await app.downloads().catch(() => null);
@@ -86,6 +96,27 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
       t.request = req ? { state: req.state, detail: req.detail } : null;
     }
     return c.json(t);
+  });
+
+  const LibraryParams = z.object({
+    type: z.enum(['movie', 'tv']).optional(), q: z.string().max(100).optional(),
+    sort: z.enum(['added', 'title', 'year']).optional(), page: z.coerce.number().int().min(1).max(10_000).optional(),
+  });
+  api.get('/library', (c) => {
+    const p = LibraryParams.safeParse(c.req.query());
+    if (!p.success) return c.json({ error: 'bad query' }, 400);
+    return c.json(libraryPage(db, cfg, p.data));
+  });
+  // Jellyfin's poster, passed through (Jellyfin is only reachable inside Docker). Cached a day by the browser.
+  api.get('/library/:id/poster', async (c) => {
+    const id = c.req.param('id');
+    if (!app.jellyfin || !/^[a-f0-9]{32}$/i.test(id)) return c.body(null, 404);
+    try {
+      const res = await app.jellyfin.poster(id);
+      return new Response(res.body, { headers: { 'Content-Type': res.headers.get('content-type') ?? 'image/jpeg', 'Cache-Control': 'private, max-age=86400' } });
+    } catch {
+      return c.body(null, 404);
+    }
   });
 
   api.get('/downloads', async (c) => c.json(await app.downloads()));
@@ -143,6 +174,8 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   // Lets the UI check a passcode before saving it on the device.
   api.post('/passcode/check', requirePasscode, (c) => c.json({ ok: true }));
+
+  api.get('/companies', (c) => c.json(companies(db, cfg)));
 
   api.get('/themes', (c) => c.json(themes(db, cfg)));
 

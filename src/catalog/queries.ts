@@ -3,6 +3,7 @@ import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere, providerKeys, scopeFrom, soonService, type Scope } from './rules.js';
 import { enabledServices, serviceByKey } from '../services.js';
 import { NEW_SEASON_CANDIDATES, newSeason, newSeasonSince } from './newSeasons.js';
+import { companyCounts, companyWhere } from './companies.js';
 import { HOME_REPEAT_DEFAULT, MIN_THINNED_ROW, loadThemes, themeWhere, type ThemeRule } from './themes.js';
 import { becauseSeeds, libraryReport, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
@@ -129,6 +130,8 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
   if (q.maxRating !== undefined && q.maxRating < 10) { where.push('tk.vote_average <= ?'); params.push(q.maxRating); }
   if (q.minVotes) { where.push('tk.vote_count >= ?'); params.push(q.minVotes); }
   if (q.hideHave) where.push(NOT_MINE);
+  const co = companyWhere(q.studios, q.networks);
+  if (co) { where.push(co.sql); params.push(...co.params); }
   if (q.genres?.length) {
     where.push(`EXISTS (SELECT 1 FROM title_genres tg WHERE tg.title_id = tk.id AND tg.genre_id IN (${q.genres.map(() => '?').join(',')}))`);
     params.push(...q.genres);
@@ -207,7 +210,8 @@ function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: Bro
   return { row: { slug, title, total, link, items, art: rowArt(items) }, left: left !== null && left < total ? left : null };
 }
 
-const linkSuffix = (only: ServiceKey[]) => (only.length ? `&services=${only.join(',')}` : '');
+export interface CompanyPick { studios?: string[]; networks?: string[] }
+const linkSuffix = (only: ServiceKey[], co: CompanyPick = {}) => `${only.length ? `&services=${only.join(',')}` : ''}${co.studios?.length ? `&studios=${co.studios.join(',')}` : ''}${co.networks?.length ? `&networks=${co.networks.join(',')}` : ''}`;
 
 export function trackingSince(db: Db, cfg: Config): string | null {
   return get<{ t: string }>(db, `SELECT min(started_at) t FROM sync_runs WHERE provider_id = ? AND region = ? AND applied = 1`,
@@ -215,14 +219,14 @@ export function trackingSince(db: Db, cfg: Config): string | null {
 }
 
 /** Discover. `only` (the service chips) narrows every row to those services; rows for other services drop out. */
-export function home(db: Db, cfg: Config, now = new Date(), only: ServiceKey[] = []): HomeResponse {
-  return withScopes(db, () => buildHome(db, cfg, now, only));
+export function home(db: Db, cfg: Config, now = new Date(), only: ServiceKey[] = [], co: CompanyPick = {}): HomeResponse {
+  return withScopes(db, () => buildHome(db, cfg, now, only, co));
 }
 
-function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResponse {
+function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[], co: CompanyPick): HomeResponse {
   const since = trackingSince(db, cfg);
   const onHome = themesFor(cfg).filter((t) => t.home && (!only.length || !t.services || t.services.some((x) => only.includes(x))));
-  const narrow = only.length ? { services: only } : {};
+  const narrow = { ...(only.length ? { services: only } : {}), ...co };
   const hasLibrary = libraryCount(db) > 0;
   const seedFilter = filters(cfg, { ...REC_FLOOR }, now);
   const seeds = hasLibrary ? becauseSeeds(db, { sql: `${seedFilter.sql} AND ${REC_RECENT}`, params: seedFilter.params }, seedFilter.from, onHome.filter((t) => t.special === 'because').length) : [];
@@ -247,13 +251,13 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResp
       const seed = seedFor[i];
       if (seed) {
         const because = `${seed.media_type}:${seed.tmdb_id}`;
-        make = (skip) => row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because, ...narrow }, `/browse?because=${because}${linkSuffix(only)}`, skip);
+        make = (skip) => row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because, ...narrow }, `/browse?because=${because}${linkSuffix(only, co)}`, skip);
       }
     } else if (!(t.special === 'for-you' && !hasLibrary)) {
       // Discover only shows what's new to you: titles you have, are getting or requested drop
       // out of every row but Coming soon (where seeing your requested premieres is useful).
       const hideHave = t.slug !== 'coming-soon';
-      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort, hideHave, ...(only.length ? { services: t.services ? t.services.filter((x) => only.includes(x)) : only } : {}) }, `/browse?theme=${t.slug}${hideHave ? '&hide=have' : ''}${linkSuffix(only)}`, skip);
+      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort, hideHave, ...co, ...(only.length ? { services: t.services ? t.services.filter((x) => only.includes(x)) : only } : {}) }, `/browse?theme=${t.slug}${hideHave ? '&hide=have' : ''}${linkSuffix(only, co)}`, skip);
     }
     if (!make) continue;
     const r = make([...shown].filter(([, n]) => n >= cap).map(([id]) => id));
@@ -263,7 +267,7 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResp
   }
   const rows = built.filter((r): r is HomeRow => r !== undefined);
   // Shows you follow in Sonarr that have a new season out (Figma screen 9). Second, after "Just released".
-  const seasonsRow = newSeasonsRow(db, cfg, now, only);
+  const seasonsRow = co.studios?.length || co.networks?.length ? null : newSeasonsRow(db, cfg, now, only);
   if (seasonsRow) rows.splice(Math.min(1, rows.length), 0, seasonsRow);
   return {
     trackingSince: since,
@@ -422,4 +426,16 @@ export function keywordSearch(db: Db, cfg: Config, text: string, limit = 40, now
 export function libraryOverview(db: Db, cfg: Config, now = new Date()) {
   const f = filters(cfg, { ...REC_FLOOR }, now);
   return libraryReport(db, { sql: `${f.sql} AND ${REC_RECENT}`, params: f.params }, f.from);
+}
+
+/** Studios and networks to pick from: those with titles on your services (or rent or buy), most first. Cached 10 minutes. */
+let companiesCache: { at: number; value: import('../api/types.js').CompaniesResponse } | null = null;
+export const resetCompaniesCache = () => { companiesCache = null; };
+export function companies(db: Db, cfg: Config, now = new Date()) {
+  if (companiesCache && now.getTime() - companiesCache.at < 10 * 60_000) return companiesCache.value;
+  const f = filters(cfg, { how: ['sub', 'digital'] }, now);
+  const eligible = { from: f.from, sql: f.sql, params: f.params };
+  const value = { studios: companyCounts(db, 'studio', eligible), networks: companyCounts(db, 'network', eligible) };
+  companiesCache = { at: now.getTime(), value };
+  return value;
 }

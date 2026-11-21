@@ -20,6 +20,9 @@ export function startScheduler(app: App) {
     new Cron(cfg.DOWNLOADS_CRON, { timezone: cfg.TZ, protect: true, name: 'downloads-watch' }, async () => {
       await app.watchDownloads().catch(() => undefined);
     }),
+    new Cron(cfg.JELLYFIN_CRON, { timezone: cfg.TZ, protect: true, name: 'jellyfin' }, async () => {
+      await app.syncJellyfin().catch(() => undefined);
+    }),
     // Catches what no job reports, like a sync that never ran.
     new Cron(cfg.ALERT_CHECK_CRON, { timezone: cfg.TZ, protect: true, name: 'alert-check' }, async () => {
       await app.checkAlerts().catch(() => undefined);

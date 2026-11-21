@@ -320,4 +320,48 @@ CREATE TABLE arr_titles (
 );
 `,
   },
+  {
+    version: 12,
+    name: 'companies',
+    sql: `
+-- Movie studios (TMDB production companies) and TV networks, for the studio and network filters.
+CREATE TABLE companies (
+  kind       TEXT NOT NULL CHECK (kind IN ('studio', 'network')),
+  id         INTEGER NOT NULL,          -- TMDB company or network ID
+  name       TEXT NOT NULL,
+  group_name TEXT NOT NULL,             -- one name for studios TMDB lists under several (20th Century Fox/Studios)
+  group_key  TEXT NOT NULL,             -- URL key of group_name
+  PRIMARY KEY (kind, id)
+);
+CREATE INDEX companies_group ON companies (kind, group_key);
+CREATE TABLE title_companies (
+  title_id   INTEGER NOT NULL REFERENCES titles (id) ON DELETE CASCADE,
+  kind       TEXT NOT NULL,
+  company_id INTEGER NOT NULL,
+  PRIMARY KEY (title_id, kind, company_id)
+);
+CREATE INDEX title_companies_company ON title_companies (kind, company_id);
+
+-- Re-fetch everything once for studios and networks (free; runs in the background).
+UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
+`,
+  },
+  {
+    version: 13,
+    name: 'jellyfin_items',
+    sql: `
+-- What's in Jellyfin (movies and series), refreshed every 15 minutes, for the Library page.
+CREATE TABLE jellyfin_items (
+  jellyfin_id TEXT PRIMARY KEY,
+  media_type  TEXT NOT NULL CHECK (media_type IN ('movie', 'tv')),
+  tmdb_id     INTEGER,
+  name        TEXT NOT NULL,
+  year        INTEGER,
+  added_at    TEXT,
+  has_poster  INTEGER NOT NULL DEFAULT 0,
+  seasons     INTEGER
+);
+CREATE INDEX jellyfin_items_tmdb ON jellyfin_items (media_type, tmdb_id);
+`,
+  },
 ];

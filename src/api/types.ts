@@ -61,7 +61,13 @@ export interface BrowseQuery {
   because?: string;                // "movie:123": titles TMDB recommends for that library title
   services?: ServiceKey[];         // only these services (default: all tracked)
   how?: How[];                     // subscription, rent or buy, coming soon (default: subscription)
+  studios?: string[];              // movie studio group keys ("a24", "20th-century")
+  networks?: string[];             // TV network group keys ("nbc", "fx"); with studios: either matches
 }
+
+/** A studio or network you can filter by, with how many titles on your services it has. */
+export interface CompanyOption { key: string; name: string; count: number }
+export interface CompaniesResponse { studios: CompanyOption[]; networks: CompanyOption[] }
 
 export interface BrowseResponse {
   total: number;
@@ -100,6 +106,8 @@ export interface TitleDetail extends TitleCard {
   tmdbType: 'movie' | 'tv' | null;
   seerrSeasons: { seasonNumber: number; status: number }[];
   download?: TitleDownload | null;
+  /** In Jellyfin already. */
+  inLibrary?: boolean;
   /** Where your request stands (from Radarr/Sonarr), when it's requested but not downloaded. */
   request?: { state: RequestState; detail: string | null } | null;
   /** A series you have whose newest season you don't, and Sonarr isn't set to get. */
@@ -115,6 +123,7 @@ export interface MetaResponse {
   languageRule: 'en' | 'all';
   passcodeRequired: boolean;       // requests need APP_PASSCODE
   downloads?: { configured: boolean; attention: number; downloading: number };
+  library?: { configured: boolean; movies: number; series: number };
   services: ServiceInfo[];         // tracked services, in display order
   ops?: {
     lastBackupAt: string | null;   // null with backups on = none yet; undefined section = backups off
@@ -192,3 +201,24 @@ export interface DownloadsResponse {
 
 /** Download state for one title, shown on its Request button. */
 export interface TitleDownload { state: DownloadState; progress: number; etaSeconds: number | null }
+
+/** Library page: what's in Jellyfin. */
+export interface LibraryItem {
+  id: string;                      // Jellyfin item ID
+  type: 'movie' | 'tv';
+  title: string;
+  year: number | null;
+  addedAt: string | null;
+  tmdbId: number | null;
+  titleId: number | null;          // MonkeySee title, when it's on one of your services
+  posterUrl: string | null;
+  seasons: number | null;
+}
+export interface LibraryResponse {
+  configured: boolean;
+  syncedAt: string | null;
+  error: string | null;
+  counts: { movie: number; tv: number };
+  total: number; page: number; pageSize: number;
+  items: LibraryItem[];
+}

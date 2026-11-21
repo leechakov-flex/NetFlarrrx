@@ -98,6 +98,8 @@ export interface TmdbDetails {
   keywords: { id: number; name: string }[];
   lastAirDate: string | null;
   netflixOriginal: boolean;
+  /** Movies: production companies (studios). Series: networks. */
+  companies: { id: number; name: string }[];
   logoPath: string | null;
   textlessPosterPath: string | null;
   credits: Person[];
@@ -286,6 +288,7 @@ export class TmdbClient {
       keywords: d.keywords?.keywords ?? d.keywords?.results ?? [],
       lastAirDate: type === 'tv' ? (d.last_air_date || null) : null,
       // Series: Netflix is the network. Films and specials: a Netflix studio made it.
+      companies: (type === 'tv' ? d.networks : d.production_companies).map((c) => ({ id: c.id, name: c.name })),
       netflixOriginal: type === 'tv'
         ? d.networks.some((n) => n.name === 'Netflix')
         : d.production_companies.some((c) => /^Netflix\b/.test(c.name)),

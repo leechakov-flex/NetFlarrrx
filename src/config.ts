@@ -85,6 +85,12 @@ const schema = z.object({
   DOWNLOADS_CRON: z.preprocess(clean, z.string().default('*/5 * * * *')),
   STALL_ALERT_HOURS: num(2),        // push an alert when a download has been stuck this long
 
+  // Jellyfin (read only), for the Library page and to leave what you have out of Discover.
+  // Create a key in Jellyfin: Dashboard -> API Keys. Unset = no library view.
+  JELLYFIN_URL: z.preprocess(clean, z.url().default('http://jellyfin:8096')),
+  JELLYFIN_API_KEY: optStr(),
+  JELLYFIN_CRON: z.preprocess(clean, z.string().default('*/15 * * * *')),
+
   WATCHMODE_MIN_INTERVAL_MS: num(600),
   TMDB_CONCURRENCY: num(8),
   LOG_LEVEL: z.preprocess(clean, z.enum(['debug', 'info', 'warn', 'error']).default('info')),

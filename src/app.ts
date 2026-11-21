@@ -16,10 +16,12 @@ import { Notifier, reconcileAlerts, type Problem } from './ops/alerts.js';
 import { refreshLibrary, libraryCount, type LibraryResult } from './recs/library.js';
 import { ArrClient } from './clients/arr.js';
 import { QbitClient } from './clients/qbittorrent.js';
+import { JellyfinClient } from './clients/jellyfin.js';
+import { syncJellyfin, type JellyfinSync } from './library/jellyfin.js';
 import { downloadsSnapshot, lastDownloads, watchDownloads, type DownloadDeps } from './downloads/downloads.js';
 import type { DownloadsResponse } from './api/types.js';
 
-export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn; qbit?: FetchFn }
+export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn; qbit?: FetchFn; jellyfin?: FetchFn }
 
 export interface App {
   cfg: Config;
@@ -41,6 +43,9 @@ export interface App {
   downloads(now?: Date): Promise<DownloadsResponse>;
   /** Every few minutes: note what's stuck and alert on downloads stuck for STALL_ALERT_HOURS. */
   watchDownloads(now?: Date): Promise<void>;
+  /** Jellyfin, when JELLYFIN_API_KEY is set: the Library page. */
+  jellyfin?: JellyfinClient;
+  syncJellyfin(): Promise<JellyfinSync | null>;
   /** Work out what needs attention and alert on changes (ntfy or Discord). */
   checkAlerts(now?: Date): Promise<{ open: string[]; sent: string[] }>;
   problems(now?: Date): Problem[];
@@ -74,6 +79,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   const sonarr = cfg.SONARR_API_KEY ? new ArrClient(cfg.SONARR_URL, cfg.SONARR_API_KEY, fetchers.sonarr, 'sonarr') : undefined;
   const qbit = cfg.QBIT_PASSWORD ? new QbitClient(cfg.QBIT_URL, cfg.QBIT_USERNAME ?? 'admin', cfg.QBIT_PASSWORD, fetchers.qbit) : undefined;
   const dl: DownloadDeps = { db, cfg, qbit, radarr, sonarr, seerr, tmdb };
+  const jellyfin = cfg.JELLYFIN_API_KEY ? new JellyfinClient(cfg.JELLYFIN_URL, cfg.JELLYFIN_API_KEY, fetchers.jellyfin) : undefined;
   const startedAt = new Date();
   const notifier = new Notifier(cfg, fetchers.alerts);
   let running = false;
@@ -108,6 +114,8 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     library: () => refreshLibrary(db, cfg, tmdb, { radarr, sonarr }),
 
     downloads: (now = new Date()) => downloadsSnapshot(dl, now),
+    jellyfin,
+    syncJellyfin: async () => (jellyfin ? syncJellyfin(db, jellyfin) : null),
     async watchDownloads(now = new Date()) {
       await watchDownloads(dl, now);
       await safely('alerts', app.checkAlerts(now));
@@ -230,5 +238,6 @@ export async function startupTasks(app: App) {
   if (!lastCrossCheck(app.db)) await app.crosscheck();
   if (libraryCount(app.db) === 0) await app.library().catch(() => undefined);
   if (app.cfg.QBIT_PASSWORD) await app.watchDownloads().catch(() => undefined);
+  await app.syncJellyfin().catch(() => undefined);
   await app.checkAlerts().catch(() => undefined);
 }

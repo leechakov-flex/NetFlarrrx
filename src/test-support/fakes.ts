@@ -246,3 +246,20 @@ export class FakeArrQueue {
     return json(200, this.library);
   };
 }
+
+/** Jellyfin GET /Items (movies and series) and posters. */
+export class FakeJellyfin {
+  items: Record<string, unknown>[] = [];
+  key = 'jf-key';
+  fetch: FetchFn = async (input, init) => {
+    const url = new URL(String(input));
+    const auth = Object.entries((init?.headers ?? {}) as Record<string, string>).find(([k]) => k.toLowerCase() === 'authorization')?.[1];
+    if (auth !== `MediaBrowser Token="${this.key}"`) return json(401, {});
+    if (url.pathname === '/Items') {
+      const start = Number(url.searchParams.get('StartIndex') ?? 0), limit = Number(url.searchParams.get('Limit') ?? 100);
+      return json(200, { Items: this.items.slice(start, start + limit), TotalRecordCount: this.items.length });
+    }
+    if (/^\/Items\/[a-f0-9]{32}\/Images\/Primary$/.test(url.pathname)) return new Response(new Uint8Array([0xff, 0xd8, 0xff]), { status: 200, headers: { 'content-type': 'image/jpeg' } });
+    return json(404, {});
+  };
+}

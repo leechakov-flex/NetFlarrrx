@@ -1,3 +1,4 @@
+import { saveCompanies } from '../catalog/companies.js';
 import type { Config } from '../config.js';
 import { all, run, tx, type Db } from '../db/db.js';
 import { HttpError, mapLimit } from '../clients/http.js';
@@ -39,7 +40,7 @@ export async function enrichTitles(db: Db, cfg: Config, tmdb: TmdbClient, opts: 
         run(db, `UPDATE titles SET tmdb_status = 'missing', tmdb_fetched_at = ?, tmdb_error = NULL WHERE id = ?`, [at, t.id]);
         result.missing += 1;
       } else {
-        saveDetails(db, t.id, d, at);
+        saveDetails(db, t.id, t.tmdb_type, d, at);
         result.ok += 1;
       }
     } catch (err) {
@@ -84,7 +85,7 @@ export function settleAddedDates(db: Db) {
            WHERE added_window_start IS NOT NULL AND title_id IN (SELECT id FROM titles WHERE tmdb_status IN ('ok', 'missing', 'no_tmdb_id'))`);
 }
 
-function saveDetails(db: Db, titleId: number, d: TmdbDetails, at: string) {
+function saveDetails(db: Db, titleId: number, kind: 'movie' | 'tv', d: TmdbDetails, at: string) {
   tx(db, () => {
     run(db, `UPDATE titles SET tmdb_status = 'ok', tmdb_fetched_at = ?, tmdb_error = NULL,
                tmdb_title = ?, original_language = ?, overview = ?, poster_path = ?, backdrop_path = ?, release_date = ?,
@@ -107,5 +108,7 @@ function saveDetails(db: Db, titleId: number, d: TmdbDetails, at: string) {
     const k = db.prepare('INSERT INTO keywords (id, name) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name');
     const tk = db.prepare('INSERT OR IGNORE INTO title_keywords (title_id, keyword_id) VALUES (?, ?)');
     for (const kw of d.keywords) { k.run(kw.id, kw.name); tk.run(titleId, kw.id); }
+
+    saveCompanies(db, titleId, kind === 'tv' ? 'network' : 'studio', d.companies);
   });
 }

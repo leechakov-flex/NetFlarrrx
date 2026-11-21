@@ -179,9 +179,10 @@ function categorize(type: 'movie' | 'tv', r: { title: string | null; genres: str
 }
 
 /** Recommended and not already yours (in the library, requested or on its way). Expects tk and sm. */
-/** Not in your library, not in Radarr or Sonarr (even without files), not requested in Seerr. */
+/** Not in your library or Jellyfin, not in Radarr or Sonarr (even without files), not requested in Seerr. */
 export const NOT_MINE = `NOT EXISTS (SELECT 1 FROM library_items li WHERE li.media_type = tk.tmdb_type AND li.tmdb_id = tk.tmdb_id)
   AND NOT EXISTS (SELECT 1 FROM arr_titles at WHERE at.media_type = tk.tmdb_type AND at.tmdb_id = tk.tmdb_id)
+  AND NOT EXISTS (SELECT 1 FROM jellyfin_items ji WHERE ji.media_type = tk.tmdb_type AND ji.tmdb_id = tk.tmdb_id)
   AND (sm.status IS NULL OR sm.status NOT IN (2, 3, 4, 5))`;
 export const RECOMMENDED = `EXISTS (SELECT 1 FROM library_recs r WHERE r.rec_type = tk.tmdb_type AND r.rec_id = tk.tmdb_id) AND ${NOT_MINE}`;
 
