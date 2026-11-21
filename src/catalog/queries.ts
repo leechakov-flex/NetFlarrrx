@@ -37,7 +37,7 @@ function withScopes<T>(db: Db, fn: () => T): T {
 function fromFor(cfg: Config, scope: Scope, now: Date) {
   let s = scopeFrom(cfg, scope, now);
   if (materialized) {
-    const key = JSON.stringify([scope.services ?? null, scope.how ?? null]);
+    const key = JSON.stringify([scope.services ?? null, scope.how ?? null, !!scope.servicesOnly]);
     let name = materialized.tables.get(key);
     if (!name) {
       name = `scope_${materialized.tables.size + 1}`;
@@ -105,7 +105,8 @@ const seedParts = (because: string) => { const [type, id] = because.split(':'); 
 /** Builds the FROM and WHERE for browse-style filters on top of the eligibility rule. `params` covers both, in order. */
 function filters(cfg: Config, q: BrowseQuery, now: Date) {
   const theme = findTheme(cfg, q.theme);
-  const from = fromFor(cfg, { services: q.services?.length ? q.services : theme?.services, how: q.how?.length ? q.how : theme?.how }, now);
+  // Service chips (q.services) without an explicit "how" mean just those services: no rent or buy.
+  const from = fromFor(cfg, { services: q.services?.length ? q.services : theme?.services, how: q.how?.length ? q.how : theme?.how, servicesOnly: !!q.services?.length && !q.how?.length }, now);
   const base = eligibleWhere(cfg);
   const where = [base.sql];
   const params: (string | number)[] = [...from.params, ...base.params];
@@ -127,7 +128,7 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
   if (q.minRating) { where.push('tk.vote_average >= ?'); params.push(q.minRating); }
   if (q.maxRating !== undefined && q.maxRating < 10) { where.push('tk.vote_average <= ?'); params.push(q.maxRating); }
   if (q.minVotes) { where.push('tk.vote_count >= ?'); params.push(q.minVotes); }
-  if (q.hideHave) where.push('(sm.status IS NULL OR sm.status NOT IN (2, 3, 4, 5))');
+  if (q.hideHave) where.push(NOT_MINE);
   if (q.genres?.length) {
     where.push(`EXISTS (SELECT 1 FROM title_genres tg WHERE tg.title_id = tk.id AND tg.genre_id IN (${q.genres.map(() => '?').join(',')}))`);
     params.push(...q.genres);
@@ -247,7 +248,10 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResp
         make = (skip) => row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because, ...narrow }, `/browse?because=${because}${linkSuffix(only)}`, skip);
       }
     } else if (!(t.special === 'for-you' && !hasLibrary)) {
-      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort, ...(only.length ? { services: t.services ? t.services.filter((x) => only.includes(x)) : only } : {}) }, `/browse?theme=${t.slug}${linkSuffix(only)}`, skip);
+      // Discover only shows what's new to you: titles you have, are getting or requested drop
+      // out of every row but Coming soon (where seeing your requested premieres is useful).
+      const hideHave = t.slug !== 'coming-soon';
+      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort, hideHave, ...(only.length ? { services: t.services ? t.services.filter((x) => only.includes(x)) : only } : {}) }, `/browse?theme=${t.slug}${hideHave ? '&hide=have' : ''}${linkSuffix(only)}`, skip);
     }
     if (!make) continue;
     const r = make([...shown].filter(([, n]) => n >= cap).map(([id]) => id));
@@ -268,7 +272,7 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResp
 }
 
 function newSeasonsRow(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeRow | null {
-  const from = fromFor(cfg, { how: ['sub', 'digital', 'soon'], ...(only.length ? { services: only } : {}) }, now);
+  const from = fromFor(cfg, { how: ['sub', 'digital', 'soon'], ...(only.length ? { services: only, servicesOnly: true } : {}) }, now);
   const rows = all<CardRow & { seasons: number | null; last_air_date: string | null; have_season: number | null; monitored_json: string | null; seasons_json: string | null }>(db, `
     SELECT ${CARD_COLUMNS}, tk.seasons, tk.last_air_date, li.have_season, li.monitored_json, sm.seasons_json
     ${from.sql} ${NEW_SEASON_CANDIDATES}
@@ -346,7 +350,7 @@ function related(db: Db, cfg: Config, recsJson: string | null, selfId: number, n
   const f = filters(cfg, { how: ['sub', 'digital'] }, now);
   const pairs = recs.map(() => '(tk.tmdb_type = ? AND tk.tmdb_id = ?)').join(' OR ');
   const rows = all<CardRow & { tmdb_type: string; tmdb_id: number }>(db,
-    `SELECT ${CARD_COLUMNS}, tk.tmdb_type, tk.tmdb_id ${f.from} WHERE ${f.sql} AND tk.id <> ? AND (${pairs})`,
+    `SELECT ${CARD_COLUMNS}, tk.tmdb_type, tk.tmdb_id ${f.from} WHERE ${f.sql} AND ${NOT_MINE} AND tk.id <> ? AND (${pairs})`,
     [...f.params, selfId, ...recs.flatMap((x) => [x.type, x.id])]);
   const rank = new Map(recs.map((x, i) => [`${x.type}:${x.id}`, i]));
   const seen = new Set<string>();

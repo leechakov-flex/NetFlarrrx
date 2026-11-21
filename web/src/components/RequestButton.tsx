@@ -76,8 +76,13 @@ export function RequestButton({ d }: { d: TitleDetail }) {
   }
 
   if (d.download) return <DownloadButton dl={d.download} />;
+  const st = requestLook(d);
 
   if (d.kind === 'movie') {
+    if (st && d.seerr !== 'available') {
+      const [type, Icon, label] = st;
+      return <Button buttonType={type} disabled className="!opacity-100" title={d.request?.detail ?? undefined}><Icon className="h-5 w-5" /><span>{label}</span></Button>;
+    }
     if (d.seerr === 'available') return <Button buttonType="success" disabled className="!opacity-100"><CheckIcon className="h-5 w-5" /><span>Available</span></Button>;
     if (d.seerr === 'processing') return <Button buttonType="primary" disabled className="!opacity-100"><ClockIcon className="h-5 w-5" /><span>Processing</span></Button>;
     if (d.seerr === 'requested') return <Button buttonType="warning" disabled className="!opacity-100"><BellIcon className="h-5 w-5" /><span>Requested</span></Button>;
@@ -94,7 +99,8 @@ export function RequestButton({ d }: { d: TitleDetail }) {
   const anyInSeerr = d.seerr !== null;
   let button;
   if (anyInSeerr && open === 0) {
-    const [type, Icon, label] = d.seerr === 'available' ? (['success', CheckIcon, 'Available'] as const)
+    const [type, Icon, label] = st && d.seerr !== 'available' && d.seerr !== 'partial' ? st
+      : d.seerr === 'available' ? (['success', CheckIcon, 'Available'] as const)
       : d.seerr === 'processing' ? (['primary', ClockIcon, 'Processing'] as const)
       : d.seerr === 'partial' ? (['success', CheckIcon, 'Partially available'] as const)
       : (['warning', BellIcon, 'Requested'] as const);
@@ -213,6 +219,21 @@ function SeasonPicker({ open, onClose, d, busy, onRequest }:
       )}
     </SlideOver>
   );
+}
+
+/**
+ * What a requested title is waiting on, from Radarr/Sonarr (Seerr only says "processing"
+ * from the moment it's requested until Jellyfin has it).
+ */
+function requestLook(d: TitleDetail) {
+  switch (d.request?.state) {
+    case 'unreleased': return ['default', BellIcon, 'Requested'] as const;
+    case 'requested': return ['default', ClockIcon, 'Searching'] as const;
+    case 'missing': return ['warning', Icons.warning, 'Not found'] as const;
+    case 'failed': return ['warning', Icons.warning, 'Request failed'] as const;
+    case 'available': return ['success', CheckIcon, 'Downloaded'] as const;
+    default: return null;
+  }
 }
 
 /** Figma "Request states": downloading fills with progress; stuck shows yellow. Opens Downloads. */

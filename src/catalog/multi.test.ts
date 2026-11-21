@@ -75,6 +75,16 @@ describe('cards across services', () => {
     expect(h.rows.find((r) => r.slug === 'new-week')!.items.map((i) => i.id)).toContain(idOf('movie', 810001));
     expect(h.rows.find((r) => r.slug === 'new-prime')!.items.map((i) => i.id)).toEqual([idOf('movie', 810001)]);
   });
+
+  it('a service chip shows only that service: rent or buy and its coming soon drop out', async () => {
+    const h = await j<HomeResponse>('/api/home?services=netflix');
+    const slugs = h.rows.map((r) => r.slug);
+    expect(slugs).not.toContain('new-digital');
+    expect(slugs).not.toContain('new-prime');
+    expect((await j<BrowseResponse>('/api/titles?theme=coming-soon&services=netflix')).items.map((i) => i.id)).toEqual([idOf('movie', 810003)]);
+    // Browse with an explicit "how" still mixes them.
+    expect((await j<BrowseResponse>('/api/titles?services=netflix&how=soon')).total).toBe(2);
+  });
 });
 
 describe('title detail', () => {

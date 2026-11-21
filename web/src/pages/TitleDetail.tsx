@@ -51,6 +51,11 @@ export function TitleDetail() {
             </Button>
           )}
         </div>
+        {d.request?.detail && !d.download && (
+          <p className={`mt-3 type-body-small ${d.request.state === 'missing' || d.request.state === 'failed' ? 'text-yellow-200' : 'text-ink-tertiary'}`}>
+            {d.request.state === 'unreleased' ? `Not out yet · ${d.request.detail}` : d.request.detail}
+          </p>
+        )}
       </Hero>
 
       <div className="px-4 lg:grid lg:grid-cols-[1fr_20rem] lg:gap-8">

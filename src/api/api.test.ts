@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createApp, type App } from '../app.js';
 import { createServer } from '../server.js';
 import { testConfig } from '../config.js';
-import { all, run } from '../db/db.js';
+import { all, get, run } from '../db/db.js';
 import { FakeSeerr, FakeTmdb, FakeWatchmode, realCatalog } from '../test-support/fakes.js';
 import type { BrowseResponse, Genre, HomeResponse, MetaResponse, TitleDetail, TopResponse } from './types.js';
 
@@ -40,6 +40,17 @@ describe('read API', () => {
     expect(body.eligible).toBeGreaterThan(100);
   });
 
+  it('Discover leaves out titles in Radarr or Sonarr, even without files', async () => {
+    const before = (await j<HomeResponse>('/api/home')).body.rows[0]!;
+    const first = before.items[0]!;
+    const t = get<{ tmdb_type: string; tmdb_id: number }>(app.db, 'SELECT tmdb_type, tmdb_id FROM titles WHERE id = ?', [first.id])!;
+    run(app.db, 'INSERT INTO arr_titles (media_type, tmdb_id) VALUES (?, ?)', [t.tmdb_type, t.tmdb_id]);
+    const after = (await j<HomeResponse>('/api/home')).body.rows[0]!;
+    expect(after.items.map((i) => i.id)).not.toContain(first.id);
+    expect(after.total).toBe(before.total - 1);
+    run(app.db, 'DELETE FROM arr_titles');
+  });
+
   it('/api/home returns the fixed rows, newest first, then theme rows', async () => {
     const { body } = await j<HomeResponse>('/api/home');
     expect(body.showTrackingNotice).toBe(true);
@@ -47,10 +58,12 @@ describe('read API', () => {
     expect(body.rows.every((r) => r.link?.startsWith('/browse?theme='))).toBe(true);
     expect(body.rows.map((r) => r.slug).at(-1)).toBe('popular');            // all-time popular sits at the bottom now
     const week = body.rows[0]!;
-    expect(week.total).toBe(10);
+    // 10 new this week, less one that's requested in Seerr: Discover only shows what's new to you.
+    expect(week.total).toBe(9);
+    expect(body.rows.filter((r) => r.slug !== 'coming-soon').every((r) => r.link?.includes('hide=have'))).toBe(true);
     const dates = week.items.map((i) => i.addedAt!);
     expect([...dates].sort().reverse()).toEqual(dates);
-    expect(body.rows[1]!.total).toBe(20);
+    expect(body.rows[1]!.total).toBe(19);
     expect(body.rows.find((r) => r.slug === 'acclaimed')!.items.every((i) => i.voteAverage! >= 7.5 && i.voteCount! >= 1000)).toBe(true);
   });
 

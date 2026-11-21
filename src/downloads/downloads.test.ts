@@ -120,6 +120,16 @@ describe('downloads', () => {
     expect(t.download).toMatchObject({ state: 'stalled', progress: 0.41 });
   });
 
+  it('title page says what a request is waiting on instead of “Processing”', async () => {
+    qbit.torrents = []; radarr.records = [];
+    radarr.library = [{ title: 'Soon', tmdbId: movie.tmdb_id, hasFile: false, isAvailable: false, digitalRelease: '2099-01-05T00:00:00Z' }];
+    run(app.db, `INSERT INTO seerr_media (media_type, tmdb_id, seerr_id, status, updated_at, mirrored_at) VALUES ('movie', ?, 1, 3, '', '')`, [movie.tmdb_id]);
+    const t = (await (await http.request(`/api/titles/${movie.id}`)).json()) as TitleDetail;
+    expect(t.download).toBeNull();
+    expect(t.request).toEqual({ state: 'unreleased', detail: 'Out Jan 5' });
+    expect(get(app.db, 'SELECT count(*) n FROM arr_titles')).toEqual({ n: 1 });   // and Discover now hides it
+  });
+
   it('alerts on a download stuck past STALL_ALERT_HOURS, not before', async () => {
     await app.watchDownloads(new Date(now));
     expect(app.problems(new Date(now)).map((p) => p.key)).toContain('download:AAA');

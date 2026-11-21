@@ -8,7 +8,7 @@ import { recentRuns, type SyncRunRow, type Trigger } from './sync/catalog.js';
 import { syncServices, type ServicesResult } from './sync/services.js';
 import { enrichTitles, type EnrichResult } from './enrich/tmdb.js';
 import { mirrorSeerrMedia, type MirrorResult } from './seerr/mirror.js';
-import { catalogStats } from './catalog/rules.js';
+import { catalogStats, resolveUpcomingServices } from './catalog/rules.js';
 import { log } from './log.js';
 import { backupDir, lastBackup, runBackup, type BackupState } from './ops/backup.js';
 import { lastCrossCheck, runCrossCheck, type CrossCheckState } from './ops/crosscheck.js';
@@ -89,6 +89,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         const services = await syncServices({ db, cfg, watchmode, tmdb }, trigger, opts);
         const sync = services.runs.find((r) => r.provider_id === cfg.NETFLIX_SOURCE_ID && r.slice === 'movies') ?? services.runs[0]!;
         const enrich = await enrichTitles(db, cfg, tmdb);   // also catches up on titles a failed run left pending
+        resolveUpcomingServices(db, cfg);
         const mirror = await mirrorSeerrMedia(db, seerr);
         await safely('library', app.library());
         await safely('alerts', app.checkAlerts());
@@ -101,7 +102,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
       }
     },
 
-    enrich: () => enrichTitles(db, cfg, tmdb),
+    enrich: async () => { const r = await enrichTitles(db, cfg, tmdb); resolveUpcomingServices(db, cfg); return r; },
     mirror: () => mirrorSeerrMedia(db, seerr),
 
     library: () => refreshLibrary(db, cfg, tmdb, { radarr, sonarr }),

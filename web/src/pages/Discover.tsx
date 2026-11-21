@@ -2,7 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useHome, useMeta, type ServiceKey } from '../lib/api';
 import { longDate } from '../lib/format';
 import { Slider, SliderPlaceholder } from '../components/Slider';
-import { Credits, Empty } from '../components/ui';
+import { Credits, Empty, Spinner } from '../components/ui';
 
 /** Service chips (Figma "FilterChip"): All, or one or more services. Kept in the URL so Back returns to them. */
 function ServiceChips({ value, onChange }: { value: ServiceKey[]; onChange: (v: ServiceKey[]) => void }) {
@@ -30,6 +30,7 @@ export function Discover() {
   return (
     <>
       <ServiceChips value={only} onChange={setOnly} />
+      {home.isPlaceholderData && <div className="mt-3 flex items-center gap-2 type-body-small text-ink-tertiary"><Spinner className="h-4 w-4" /> Updating rows…</div>}
       {home.data?.showTrackingNotice && (
         <div className="mt-4 rounded-md border border-indigo-500 bg-indigo-500/10 px-3 py-2.5 text-indigo-100">
           <p className="type-label-strong">
@@ -40,7 +41,7 @@ export function Discover() {
       )}
       {home.isPending
         ? ['New on your services', 'New to rent or buy', 'Coming soon', 'Stand-up specials'].map((t) => <SliderPlaceholder key={t} title={t} />)
-        : home.data.rows.map((row) => <Slider key={row.slug} row={row} />)}
+        : <div className={`transition-opacity ${home.isPlaceholderData ? 'pointer-events-none opacity-40' : ''}`}>{home.data.rows.map((row) => <Slider key={row.slug} row={row} />)}</div>}
       {home.data && home.data.rows.length === 0 && <Empty>No titles yet. The first sync is still running.</Empty>}
       <Credits />
     </>

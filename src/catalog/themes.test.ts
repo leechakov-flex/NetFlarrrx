@@ -153,7 +153,7 @@ describe('theme API and home', () => {
     set(movies[1]!, 'runtime = 80');
     const { body } = await j<HomeResponse>('/api/home');
     const slugs = body.rows.map((r) => r.slug);
-    expect(body.rows.find((r) => r.slug === 'heists')).toMatchObject({ title: 'Heists and cons', total: 1, link: '/browse?theme=heists' });
+    expect(body.rows.find((r) => r.slug === 'heists')).toMatchObject({ title: 'Heists and cons', total: 1, link: '/browse?theme=heists&hide=have' });
     expect(slugs).toContain('short-movies');
     expect(slugs).not.toContain('true-stories');        // nothing matches: dropped
     expect(slugs).not.toContain('for-you');             // no library yet

@@ -82,6 +82,8 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     if (t.seerr === 'requested' || t.seerr === 'processing' || t.seerr === 'partial') {
       const snap = await app.downloads().catch(() => null);
       t.download = snap ? titleDownload(snap, t.tmdbType, t.tmdbId, id) : null;
+      const req = snap?.requests.find((r) => r.tmdbType === t.tmdbType && r.tmdbId === t.tmdbId && r.state !== 'declined');
+      t.request = req ? { state: req.state, detail: req.detail } : null;
     }
     return c.json(t);
   });

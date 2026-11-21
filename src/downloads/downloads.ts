@@ -2,7 +2,7 @@
 // Radarr or Sonarr is getting with them, plus your Seerr requests. Read only,
 // except cancelling and retrying requests (which go through Seerr).
 import type { Config } from '../config.js';
-import { all, getJobState, setJobState, type Db } from '../db/db.js';
+import { all, getJobState, run, setJobState, tx, type Db } from '../db/db.js';
 import type { QbitClient, QbitTorrent } from '../clients/qbittorrent.js';
 import type { ArrClient, MovieStatus, QueueItem, SeasonStatus } from '../clients/arr.js';
 import type { SeerrClient, SeerrRequest } from '../clients/seerr.js';
@@ -63,6 +63,15 @@ async function arrStatus(d: DownloadDeps, now: number) {
     d.sonarr ? d.sonarr.seasonStatus().catch(() => null) : null,
   ]);
   arrCache = { at: now, movies: movies ?? arrCache?.movies ?? new Map(), shows: shows ?? arrCache?.shows ?? new Map() };
+  // Only replace a list that was fetched, so an outage doesn't empty it.
+  tx(d.db, () => {
+    for (const [type, list] of [['movie', movies], ['tv', shows]] as const) {
+      if (!list) continue;
+      run(d.db, 'DELETE FROM arr_titles WHERE media_type = ?', [type]);
+      const ins = d.db.prepare('INSERT OR IGNORE INTO arr_titles (media_type, tmdb_id) VALUES (?, ?)');
+      for (const id of list.keys()) ins.run(type, id);
+    }
+  });
   return arrCache;
 }
 

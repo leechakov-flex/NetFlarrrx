@@ -307,4 +307,17 @@ ALTER TABLE library_items ADD COLUMN have_season INTEGER;
 ALTER TABLE library_items ADD COLUMN monitored_json TEXT;
 `,
   },
+  {
+    version: 11,
+    name: 'arr_titles',
+    sql: `
+-- Every movie in Radarr and series in Sonarr, with or without files, so Discover and
+-- Related can leave out what you already have or are getting. Refreshed every few minutes.
+CREATE TABLE arr_titles (
+  media_type TEXT NOT NULL CHECK (media_type IN ('movie', 'tv')),
+  tmdb_id    INTEGER NOT NULL,
+  PRIMARY KEY (media_type, tmdb_id)
+);
+`,
+  },
 ];

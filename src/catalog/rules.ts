@@ -1,12 +1,13 @@
 import type { Config } from '../config.js';
-import { all, get, type Db } from '../db/db.js';
+import { all, get, run, type Db } from '../db/db.js';
 import { DIGITAL_ID, enabledServices, serviceByKey, type ServiceKey } from '../services.js';
 
 /** Where a title can be watched, for the "how to watch" filter. */
 export type How = 'sub' | 'digital' | 'soon';
 
 /** Which availability a query looks at: some services, rent or buy, coming soon. */
-export interface Scope { services?: ServiceKey[]; how?: How[] }
+/** `servicesOnly`: picked services mean only those, so rent or buy (no service) drops out. */
+export interface Scope { services?: ServiceKey[]; how?: How[]; servicesOnly?: boolean }
 
 /**
  * The `a` table every catalog query reads: one row per title, across the
@@ -20,7 +21,8 @@ export function scopeFrom(cfg: Config, scope: Scope = {}, now = new Date()): { s
   const chosen = scope.services?.length ? enabled.filter((s) => scope.services!.includes(s.key)) : enabled;
   const providers: number[] = [];
   if (how.has('sub')) providers.push(...chosen.map((s) => s.id));
-  if (how.has('digital')) providers.push(DIGITAL_ID);
+  const strict = !!(scope.servicesOnly && scope.services?.length);
+  if (how.has('digital') && !strict) providers.push(DIGITAL_ID);
   const parts: string[] = [];
   const params: (string | number)[] = [];
   if (providers.length) {
@@ -32,7 +34,7 @@ export function scopeFrom(cfg: Config, scope: Scope = {}, now = new Date()): { s
     // Series premieres name their service; movies are matched to one later, from TMDB's note.
     const keys = chosen.map((s) => s.key);
     parts.push(`SELECT u.title_id, NULL AS added_at, 0 AS back_on_service, NULL AS first_seen_at, NULL AS provider_id, u.date AS soon_date, u.service AS soon_service FROM upcoming u
-      WHERE u.date > ? AND (u.service IS NULL OR u.service IN (${keys.map(() => '?').join(',')}))`);
+      WHERE u.date > ? AND (${strict ? '' : 'u.service IS NULL OR '}u.service IN (${keys.map(() => '?').join(',')}))`);
     params.push(now.toISOString().slice(0, 10), ...keys);
   }
   if (!parts.length) return { sql: `(SELECT NULL AS title_id, NULL AS added_at, 0 AS back_on_service, NULL AS first_seen_at, NULL AS providers, NULL AS soon_date, NULL AS soon_service WHERE 0) a`, params: [] };
@@ -113,4 +115,19 @@ export function catalogStats(db: Db, cfg: Config, now = new Date()): CatalogStat
     digital: by.get(DIGITAL_ID)?.n ?? 0,
     upcoming: get<{ n: number }>(db, 'SELECT count(*) n FROM upcoming WHERE date > ?', [now.toISOString().slice(0, 10)])!.n,
   };
+}
+
+/**
+ * Fills in the service for coming-soon movies once TMDB's release note is in, so a
+ * service chip can tell a Netflix premiere from a rent-or-buy one. Runs after enrich.
+ */
+export function resolveUpcomingServices(db: Db, cfg: Config): number {
+  const rows = all<{ title_id: number; digital_note: string | null; netflix_original: number }>(db,
+    'SELECT u.title_id, t.digital_note, t.netflix_original FROM upcoming u JOIN titles t ON t.id = u.title_id WHERE u.service IS NULL');
+  let n = 0;
+  for (const r of rows) {
+    const key = soonService(cfg, null, r.digital_note, r.netflix_original);
+    if (key) { run(db, 'UPDATE upcoming SET service = ? WHERE title_id = ?', [key, r.title_id]); n++; }
+  }
+  return n;
 }

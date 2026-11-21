@@ -100,6 +100,8 @@ export interface TitleDetail extends TitleCard {
   tmdbType: 'movie' | 'tv' | null;
   seerrSeasons: { seasonNumber: number; status: number }[];
   download?: TitleDownload | null;
+  /** Where your request stands (from Radarr/Sonarr), when it's requested but not downloaded. */
+  request?: { state: RequestState; detail: string | null } | null;
   /** A series you have whose newest season you don't, and Sonarr isn't set to get. */
   newSeason?: { season: number; haveThrough: number } | null;
 }

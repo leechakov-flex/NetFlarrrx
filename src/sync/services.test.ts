@@ -131,8 +131,9 @@ describe('rent or buy and coming soon', () => {
     expect(rent.map((r) => r.added_at.slice(0, 10))).toEqual(['2026-11-17']);
     const soon = all<{ tmdb_id: number; date: string; service: string | null; digital_note: string | null }>(a.db,
       'SELECT t.tmdb_id, u.date, u.service, t.digital_note FROM upcoming u JOIN titles t ON t.id = u.title_id ORDER BY u.date');
+    // The movie premiere gets its service from TMDB's release note after enrich.
     expect(soon).toEqual([
-      { tmdb_id: 700002, date: '2030-01-05', service: null, digital_note: 'Netflix' },
+      { tmdb_id: 700002, date: '2030-01-05', service: 'netflix', digital_note: 'Netflix' },
       { tmdb_id: 700003, date: '2030-01-07', service: 'netflix', digital_note: null },
     ]);
   });
