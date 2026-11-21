@@ -17,6 +17,9 @@ export function startScheduler(app: App) {
     new Cron(cfg.CROSSCHECK_CRON, { timezone: cfg.TZ, protect: true, name: 'tmdb-crosscheck' }, async () => {
       await app.crosscheck().catch(() => undefined);
     }),
+    new Cron(cfg.DOWNLOADS_CRON, { timezone: cfg.TZ, protect: true, name: 'downloads-watch' }, async () => {
+      await app.watchDownloads().catch(() => undefined);
+    }),
     // Catches what no job reports, like a sync that never ran.
     new Cron(cfg.ALERT_CHECK_CRON, { timezone: cfg.TZ, protect: true, name: 'alert-check' }, async () => {
       await app.checkAlerts().catch(() => undefined);

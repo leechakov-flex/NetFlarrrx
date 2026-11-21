@@ -16,6 +16,7 @@ export function More() {
   return (
     <>
       <PageTitle>More</PageTitle>
+      {m?.downloads?.configured !== false && <DownloadsLink d={m?.downloads} />}
       {themes.data && themes.data.length > 0 && (
         <section className="mb-8 max-w-xl">
           <h2 className="mb-3 text-xl font-bold text-gray-200">Collections</h2>
@@ -68,5 +69,21 @@ export function More() {
       </p>
       <Credits />
     </>
+  );
+}
+
+/** Figma "More page" first row: Downloads, with the same red count as the More tab. */
+function DownloadsLink({ d }: { d?: { attention: number; downloading: number } }) {
+  const line = d ? [d.downloading ? `${d.downloading} downloading` : null, d.attention ? `${d.attention} need${d.attention === 1 ? 's' : ''} attention` : null].filter(Boolean).join(' · ') || 'Nothing downloading' : 'Torrents and your requests';
+  return (
+    <Link to="/downloads" className="mb-8 flex max-w-xl items-center gap-4 rounded-xl border border-line-strong bg-surface px-4 py-3.5 transition hover:bg-raised">
+      <Icons.download className="h-6 w-6 flex-shrink-0 text-white" />
+      <span className="min-w-0 flex-1">
+        <span className="block type-label-strong text-white">Downloads</span>
+        <span className={`block truncate type-body-small ${d?.attention ? 'text-yellow-300' : 'text-ink-tertiary'}`}>{line}</span>
+      </span>
+      {d?.attention ? <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 type-badge-tag text-white">{d.attention}</span> : null}
+      <ChevronRightIcon className="h-5 w-5 flex-shrink-0 text-ink-muted" />
+    </Link>
   );
 }

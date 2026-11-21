@@ -82,7 +82,7 @@ function Sidebar() {
         <p className="mt-1 type-caption-default text-ink-muted">What’s new on your services</p>
       </div>
       <nav className="mt-8 flex-1 space-y-1 px-4">
-        {nav.map((item) => {
+        {[...nav, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }].map((item) => {
           const on = item.match(pathname);
           const Icon = item.icon;
           return (
@@ -94,7 +94,10 @@ function Sidebar() {
               }`}
             >
               <Icon className="mr-3 h-5 w-5" />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.to === '/downloads' && (meta.data?.downloads?.attention ?? 0) > 0 && (
+                <span className="rounded-full bg-red-500 px-2 text-xs font-bold leading-5 text-white">{meta.data!.downloads!.attention}</span>
+              )}
             </NavLink>
           );
         })}
@@ -118,7 +121,8 @@ function Sidebar() {
  */
 function MobileMenu() {
   const { pathname } = useLocation();
-  const items = [...nav, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') }];
+  const items = [...nav, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') || p.startsWith('/downloads') }];
+  const attention = useMeta().data?.downloads?.attention ?? 0;
   const onSearch = pathname.startsWith('/search');
   return (
     <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 lg:hidden" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 12px)' }}>
@@ -130,7 +134,12 @@ function MobileMenu() {
             return (
               <NavLink key={item.to} to={item.to} aria-current={on ? 'page' : undefined}
                 className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-full pb-1.5 pt-2 transition ${on ? 'bg-glass-active text-glass-tint' : 'text-ink-secondary'}`}>
-                <Icon className="h-[22px] w-[22px]" />
+                <span className="relative">
+                  <Icon className="h-[22px] w-[22px]" />
+                  {item.to === '/more' && attention > 0 && (
+                    <span aria-label={`${attention} downloads need attention`} className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">{attention}</span>
+                  )}
+                </span>
                 <span className={`max-w-full truncate px-1 ${on ? 'type-nav-tab-active' : 'type-nav-tab'}`}>{item.label}</span>
               </NavLink>
             );

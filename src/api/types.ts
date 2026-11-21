@@ -99,6 +99,9 @@ export interface TitleDetail extends TitleCard {
   tmdbId: number | null;
   tmdbType: 'movie' | 'tv' | null;
   seerrSeasons: { seasonNumber: number; status: number }[];
+  download?: TitleDownload | null;
+  /** A series you have whose newest season you don't, and Sonarr isn't set to get. */
+  newSeason?: { season: number; haveThrough: number } | null;
 }
 
 export interface MetaResponse {
@@ -109,6 +112,7 @@ export interface MetaResponse {
   newThisWeek: number;
   languageRule: 'en' | 'all';
   passcodeRequired: boolean;       // requests need APP_PASSCODE
+  downloads?: { configured: boolean; attention: number; downloading: number };
   services: ServiceInfo[];         // tracked services, in display order
   ops?: {
     lastBackupAt: string | null;   // null with backups on = none yet; undefined section = backups off
@@ -130,3 +134,56 @@ export interface RequestBody { seasons?: number[] }
 export interface RequestResult { ok: true; state: 'requested'; seasons: number[] | null; message: string }
 
 export interface ApiError { error: string; code?: string }
+
+/** Downloads page (qBittorrent, Radarr/Sonarr queues and Seerr requests). */
+export type DownloadState = 'downloading' | 'stalled' | 'metadata' | 'error' | 'queued' | 'paused' | 'importing';
+
+export interface DownloadItem {
+  hash: string | null;
+  name: string;                    // torrent name
+  title: string;                   // movie or series it's for (the torrent name when unknown)
+  subtitle: string | null;         // "S7 E3 · Joan Is Awful", or null for movies
+  year: number | null;
+  source: 'radarr' | 'sonarr' | null;
+  titleId: number | null;          // MonkeySee title, for the link
+  posterUrl: string | null;
+  state: DownloadState;
+  progress: number;                // 0..1
+  size: number;                    // bytes
+  speed: number;                   // bytes/s down
+  etaSeconds: number | null;
+  seeds: number;
+  peers: number;
+  since: string | null;            // when it got stuck (ISO), for attention items
+  message: string | null;          // Radarr/Sonarr's warning, if any
+}
+
+export type RequestState = 'requested' | 'downloading' | 'available' | 'failed' | 'declined';
+
+export interface RequestItem {
+  id: number;
+  tmdbType: 'movie' | 'tv';
+  tmdbId: number;
+  title: string;
+  year: number | null;
+  titleId: number | null;
+  posterUrl: string | null;
+  state: RequestState;
+  progress: number | null;
+  requestedAt: string | null;
+  updatedAt: string | null;
+  seasons: number[];
+}
+
+export interface DownloadsResponse {
+  at: string;
+  qbit: { configured: boolean; connected: boolean; error: string | null; downSpeed: number; upSpeed: number; seeding: number; vpn: string | null };
+  attention: DownloadItem[];
+  downloading: DownloadItem[];
+  queued: DownloadItem[];
+  requests: RequestItem[];
+  errors: string[];                // sources that couldn't be reached
+}
+
+/** Download state for one title, shown on its Request button. */
+export interface TitleDownload { state: DownloadState; progress: number; etaSeconds: number | null }

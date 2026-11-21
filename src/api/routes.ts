@@ -5,6 +5,8 @@ import type { MiddlewareHandler } from 'hono';
 import { browse, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
+import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
+import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
 import type { How, ServiceKey } from './types.js';
 
@@ -52,6 +54,10 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
         crosscheck: h.crosscheck ? { at: h.crosscheck.at, ok: h.crosscheck.ok, coveragePct: h.crosscheck.coverage_pct } : null,
         alerts: app.notifier.enabled,
       },
+      downloads: (() => {
+        const d = lastDownloads(db);
+        return { configured: Boolean(cfg.QBIT_PASSWORD), attention: d?.attention.length ?? 0, downloading: d?.downloading ?? 0 };
+      })(),
     });
   });
   api.get('/home', (c) => {
@@ -67,12 +73,39 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     return c.json(browse(db, cfg, { ...(q as Parameters<typeof browse>[2]), hideHave: hide === 'have' }));
   });
 
-  api.get('/titles/:id', (c) => {
+  api.get('/titles/:id', async (c) => {
     const id = Number(c.req.param('id'));
     if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
     const t = titleDetail(db, cfg, id);
-    return t ? c.json(t) : c.json({ error: 'not found' }, 404);
+    if (!t) return c.json({ error: 'not found' }, 404);
+    // Download progress for the Request button, only when something of it is requested.
+    if (t.seerr === 'requested' || t.seerr === 'processing' || t.seerr === 'partial') {
+      const snap = await app.downloads().catch(() => null);
+      t.download = snap ? titleDownload(snap, t.tmdbType, t.tmdbId, id) : null;
+    }
+    return c.json(t);
   });
+
+  api.get('/downloads', async (c) => c.json(await app.downloads()));
+
+  // Cancel (delete) or retry a Seerr request. Single-user app, so no approve/decline.
+  for (const action of ['cancel', 'retry'] as const) {
+    api.post(`/requests/:id/${action}`, requirePasscode, async (c) => {
+      const id = Number(c.req.param('id'));
+      if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+      try {
+        if (action === 'cancel') await app.seerr.deleteRequest(id); else await app.seerr.retryRequest(id);
+      } catch (err) {
+        if (err instanceof HttpError && err.status === 404) return c.json({ error: 'Seerr doesn’t have that request any more.', code: 'not_found' }, 404);
+        log.warn(`requests: ${action} failed`, { id, error: (err as Error).message });
+        return c.json({ error: 'Couldn’t reach Seerr. Try again in a moment.', code: 'seerr_unreachable' }, 502);
+      }
+      log.info(`requests: ${action}`, { id });
+      resetDownloadsCache();
+      void app.mirror().catch(() => undefined);
+      return c.json({ ok: true });
+    });
+  }
 
   // Per-season state for the season picker. Live from Seerr, so always current.
   api.get('/titles/:id/seasons', async (c) => {

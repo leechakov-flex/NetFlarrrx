@@ -57,6 +57,21 @@ export const MEDIA_STATUS = {
 // Seerr request status values.
 export const REQUEST_STATUS = { PENDING: 1, APPROVED: 2, DECLINED: 3, FAILED: 4, COMPLETED: 5 } as const;
 
+const RequestRow = z.object({
+  id: z.number().int(),
+  status: z.number().int(),                // 1 pending approval, 2 approved, 3 declined, 4 failed, 5 completed
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  type: z.enum(['movie', 'tv']).optional(),
+  seasons: z.array(z.object({ seasonNumber: z.number().int() }).passthrough()).optional().default([]),
+  media: z.object({
+    tmdbId: z.number().int(),
+    mediaType: z.enum(['movie', 'tv']),
+    status: z.number().int(),              // 1 unknown, 2 pending, 3 processing, 4 partial, 5 available
+  }).passthrough(),
+}).passthrough();
+export type SeerrRequest = z.infer<typeof RequestRow>;
+
 export interface CreateRequest { mediaType: 'movie' | 'tv'; mediaId: number; seasons?: number[] }
 
 export class SeerrClient {
@@ -103,6 +118,24 @@ export class SeerrClient {
     return TvDetail.parse(await requestJson<unknown>(this.fetchFn, 'seerr', this.url(`/api/v1/tv/${tmdbId}`), {
       headers: { 'X-Api-Key': this.apiKey }, retries: 1,
     }));
+  }
+
+  /** Recent requests, newest first. */
+  async requests(take = 50): Promise<SeerrRequest[]> {
+    const q = new URLSearchParams({ take: String(take), skip: '0', filter: 'all', sort: 'added' });
+    const body = z.object({ results: z.array(z.unknown()) }).passthrough().parse(
+      await requestJson<unknown>(this.fetchFn, 'seerr', this.url(`/api/v1/request?${q}`), { headers: { 'X-Api-Key': this.apiKey }, retries: 1 }));
+    return body.results.flatMap((r) => { const x = RequestRow.safeParse(r); return x.success ? [x.data] : []; });
+  }
+
+  /** Cancels (deletes) a request. Never retried. */
+  async deleteRequest(id: number) {
+    return requestJson<unknown>(this.fetchFn, 'seerr', this.url(`/api/v1/request/${id}`), { method: 'DELETE', headers: this.headers(), retries: 0 });
+  }
+
+  /** Sends a failed request to Radarr or Sonarr again. Never retried. */
+  async retryRequest(id: number) {
+    return requestJson<unknown>(this.fetchFn, 'seerr', this.url(`/api/v1/request/${id}/retry`), { method: 'POST', headers: this.headers(), retries: 0, timeoutMs: 30_000 });
   }
 
   /**

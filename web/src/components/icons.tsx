@@ -3,6 +3,9 @@
 // stand in. Each import is one file, so only the icons used end up in the build.
 // The components size to 1em; pass className="h-6 w-6" (or a text size) as usual.
 import type { ReactElement, SVGProps } from 'react';
+import ArrowClockwise from 'framework7-icons/react/esm/ArrowClockwise.js';
+import ArrowDown from 'framework7-icons/react/esm/ArrowDown.js';
+import ArrowUp from 'framework7-icons/react/esm/ArrowUp.js';
 import ArrowDownToLine from 'framework7-icons/react/esm/ArrowDownToLine.js';
 import ArrowUpArrowDown from 'framework7-icons/react/esm/ArrowUpArrowDown.js';
 import Bell from 'framework7-icons/react/esm/Bell.js';
@@ -38,4 +41,5 @@ export const Icons = {
   clock: icon(Clock), bell: icon(Bell), minus: icon(Minus), xmark: icon(Xmark), xmarkCircle: icon(XmarkCircleFill),
   download: icon(ArrowDownToLine), ellipsis: icon(Ellipsis), star: icon(StarFill), trailer: icon(PlayRectangle), plus: icon(Plus),
   warning: icon(ExclamationmarkTriangle), lock: icon(Lock),
+  retry: icon(ArrowClockwise), arrowDown: icon(ArrowDown), arrowUp: icon(ArrowUp),
 };

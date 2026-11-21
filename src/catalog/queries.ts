@@ -2,6 +2,7 @@ import type { Config } from '../config.js';
 import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere, providerKeys, scopeFrom, soonService, type Scope } from './rules.js';
 import { enabledServices, serviceByKey } from '../services.js';
+import { NEW_SEASON_CANDIDATES, newSeason, newSeasonSince } from './newSeasons.js';
 import { HOME_REPEAT_DEFAULT, MIN_THINNED_ROW, loadThemes, themeWhere, type ThemeRule } from './themes.js';
 import { becauseSeeds, libraryReport, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
@@ -255,12 +256,27 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeResp
     built[i] = r.row;
   }
   const rows = built.filter((r): r is HomeRow => r !== undefined);
+  // Shows you follow in Sonarr that have a new season out (Figma screen 9). Second, after "New on your services".
+  const seasonsRow = newSeasonsRow(db, cfg, now, only);
+  if (seasonsRow) rows.splice(Math.min(1, rows.length), 0, seasonsRow);
   return {
     trackingSince: since,
     showTrackingNotice: !since || now.getTime() - Date.parse(since) < 7 * DAY,
     // Empty "new" rows are dropped; the notice explains them during the first week.
     rows: rows.filter((r) => r.items.length > 0),
   };
+}
+
+function newSeasonsRow(db: Db, cfg: Config, now: Date, only: ServiceKey[]): HomeRow | null {
+  const from = fromFor(cfg, { how: ['sub', 'digital', 'soon'], ...(only.length ? { services: only } : {}) }, now);
+  const rows = all<CardRow & { seasons: number | null; last_air_date: string | null; have_season: number | null; monitored_json: string | null; seasons_json: string | null }>(db, `
+    SELECT ${CARD_COLUMNS}, tk.seasons, tk.last_air_date, li.have_season, li.monitored_json, sm.seasons_json
+    ${from.sql} ${NEW_SEASON_CANDIDATES}
+    ORDER BY tk.last_air_date DESC LIMIT 40`, [...from.params, newSeasonSince(now)]);
+  const items = rows.filter((r) => newSeason({ haveSeason: r.have_season, monitoredJson: r.monitored_json, seasons: r.seasons,
+    lastAirDate: r.last_air_date, seerrSeasonsJson: r.seasons_json }, now)).map(cardFor(cfg));
+  if (!items.length) return null;
+  return { slug: 'new-seasons', title: 'New seasons of your shows', total: items.length, link: null, items, art: rowArt(items) };
 }
 
 export function top(db: Db, cfg: Config, kind: Kind, limit = 50, minVotes = TOP_MIN_VOTES): TopResponse {
@@ -290,11 +306,13 @@ export function titleDetail(db: Db, cfg: Config, id: number, now = new Date()): 
     certification: string | null; original_language: string | null; trailer_key: string | null; trailer_name: string | null;
     first_seen_at: string | null; tmdb_id: number | null; tmdb_type: 'movie' | 'tv' | null; seasons_json: string | null;
     credits_json: string | null; watch_json: string | null; recs_json: string | null;
+    last_air_date: string | null; have_season: number | null; monitored_json: string | null;
   }>(db, `
     SELECT ${CARD_COLUMNS}, tk.overview, tk.backdrop_path, tk.release_date, tk.runtime, tk.seasons, tk.certification,
            tk.original_language, tk.trailer_key, tk.trailer_name, a.first_seen_at, tk.tmdb_id, tk.tmdb_type, sm.seasons_json,
-           tk.credits_json, tk.watch_json, tk.recs_json
+           tk.credits_json, tk.watch_json, tk.recs_json, tk.last_air_date, li.have_season, li.monitored_json
     ${from.sql}
+    LEFT JOIN library_items li ON li.media_type = tk.tmdb_type AND li.tmdb_id = tk.tmdb_id
     WHERE tk.id = ?`, [...from.params, id]);
   if (!r || r.kind === null) return null;
   const g = all<{ id: number; name: string }>(db,
@@ -310,6 +328,8 @@ export function titleDetail(db: Db, cfg: Config, id: number, now = new Date()): 
     seerrSeasons: r.seasons_json ? JSON.parse(r.seasons_json) : [],
     cast: r.credits_json ? JSON.parse(r.credits_json) : [],
     related: related(db, cfg, r.recs_json, id, now),
+    newSeason: r.tmdb_type === 'tv' ? newSeason({ haveSeason: r.have_season, monitoredJson: r.monitored_json, seasons: r.seasons,
+      lastAirDate: r.last_air_date, seerrSeasonsJson: r.seasons_json }, now) : null,
     watch: {
       services: card.services.map((k) => ({ key: k, name: serviceByKey(k)!.name })),
       stores: watch ? [...new Set([...watch.rent, ...watch.buy])].slice(0, 6) : [],

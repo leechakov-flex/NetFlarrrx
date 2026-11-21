@@ -116,6 +116,18 @@ To update later: `docker compose pull monkeysee && docker compose up -d monkeyse
 
 Requests go to Seerr with its API key, so they're made as the Seerr admin and approved automatically; Sonarr or Radarr picks them up from there. Set `APP_PASSCODE` in `monkeysee.env` so only people with the passcode can request: each phone or browser asks once and remembers it. Ten wrong tries from one device pause it for 15 minutes. To make requests as a different Seerr user (so they wait for approval), add `SEERR_USER_ID=<their Seerr user ID>`.
 
+### Downloads
+
+More → Downloads (or Downloads in the sidebar) replaces Seerr's requests page and a look at qBittorrent:
+
+- **Needs attention**: torrents that are stalled, stuck fetching metadata, or in error, plus anything Radarr or Sonarr flagged. Each one shows how long it's been stuck. Once one has been stuck for `STALL_ALERT_HOURS` (default 2), you get an alert, and the More tab shows a red count.
+- **Downloading**: progress, speed and time left. Each torrent is matched to the movie or episode Radarr or Sonarr grabbed it for.
+- **Your requests**: every Seerr request with its status. Cancel one that's still waiting, or retry one that failed.
+
+qBittorrent is only ever read: nothing pauses, resumes or deletes torrents. It runs behind gluetun, so MonkeySee reaches it at `http://gluetun:8080`. Put `QBIT_USERNAME` and `QBIT_PASSWORD` in `monkeysee.env`, and change `QBIT_URL` if yours differs. Torrent progress also shows on a title's Request button.
+
+If Sonarr has a series and a newer season comes out that Sonarr isn't set to grab (and you haven't requested it), the series page shows *Season N is out* with a Request button, and Discover gets a *New seasons of your shows* row. This needs `SONARR_API_KEY`.
+
 ## Discover
 
 Discover is a deliberately long page of about 30 rows, newest first:
@@ -184,6 +196,7 @@ docker exec monkeysee node dist/cli.js enrich          # retry TMDB for titles t
 docker exec monkeysee node dist/cli.js backup          # take a backup now
 docker exec monkeysee node dist/cli.js crosscheck      # compare with TMDB's Netflix list
 docker exec monkeysee node dist/cli.js alerts          # what would alert right now
+docker exec monkeysee node dist/cli.js downloads       # check qBittorrent, the Radarr/Sonarr queues and Seerr requests
 ```
 
 The date-added history can't be rebuilt, so keep the nightly backups somewhere other than the main disk too (see above). Your rsync of `~/server/config/` to the Mac also covers it.
@@ -194,7 +207,7 @@ The date-added history can't be rebuilt, so keep the nightly backups somewhere o
 npm ci
 npm test                 # unit tests on real (scrubbed) M0 data, plus the spike's tests
 npm run typecheck
-npx tsx src/test-support/serve-fakes.ts   # fake Watchmode/TMDB/Seerr on ports 18001-18003
+npx tsx src/test-support/serve-fakes.ts   # fake Watchmode/TMDB/Seerr/qBittorrent/Radarr/Sonarr on ports 18001-18006
 ```
 
 Point the app at the fakes with `WATCHMODE_BASE=http://127.0.0.1:18001/v1 TMDB_BASE=http://127.0.0.1:18002/3 SEERR_URL=http://127.0.0.1:18003 DATA_DIR=./data`, any keys, and `npm run dev` (API on :8484). Add `FAKE_VARIED=1` to the fakes for varied titles and ratings.

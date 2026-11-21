@@ -15,8 +15,11 @@ import { lastCrossCheck, runCrossCheck, type CrossCheckState } from './ops/cross
 import { Notifier, reconcileAlerts, type Problem } from './ops/alerts.js';
 import { refreshLibrary, libraryCount, type LibraryResult } from './recs/library.js';
 import { ArrClient } from './clients/arr.js';
+import { QbitClient } from './clients/qbittorrent.js';
+import { downloadsSnapshot, lastDownloads, watchDownloads, type DownloadDeps } from './downloads/downloads.js';
+import type { DownloadsResponse } from './api/types.js';
 
-export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn }
+export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn; qbit?: FetchFn }
 
 export interface App {
   cfg: Config;
@@ -34,6 +37,10 @@ export interface App {
   /** Library from Seerr plus TMDB recommendations, for "Recommended for you". */
   library(): Promise<LibraryResult>;
   crosscheck(): Promise<CrossCheckState>;
+  /** The Downloads page: qBittorrent + Radarr/Sonarr queues + Seerr requests (cached a few seconds). */
+  downloads(now?: Date): Promise<DownloadsResponse>;
+  /** Every few minutes: note what's stuck and alert on downloads stuck for STALL_ALERT_HOURS. */
+  watchDownloads(now?: Date): Promise<void>;
   /** Work out what needs attention and alert on changes (ntfy or Discord). */
   checkAlerts(now?: Date): Promise<{ open: string[]; sent: string[] }>;
   problems(now?: Date): Problem[];
@@ -63,6 +70,10 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   const watchmode = new WatchmodeClient(cfg.WATCHMODE_BASE, cfg.WATCHMODE_API_KEY, fetchers.watchmode, cfg.WATCHMODE_MIN_INTERVAL_MS);
   const tmdb = new TmdbClient(cfg.TMDB_BASE, cfg.TMDB_READ_TOKEN, fetchers.tmdb);
   const seerr = new SeerrClient(cfg.SEERR_URL, cfg.SEERR_API_KEY, fetchers.seerr, cfg.SEERR_USER_ID);
+  const radarr = cfg.RADARR_API_KEY ? new ArrClient(cfg.RADARR_URL, cfg.RADARR_API_KEY, fetchers.radarr, 'radarr') : undefined;
+  const sonarr = cfg.SONARR_API_KEY ? new ArrClient(cfg.SONARR_URL, cfg.SONARR_API_KEY, fetchers.sonarr, 'sonarr') : undefined;
+  const qbit = cfg.QBIT_PASSWORD ? new QbitClient(cfg.QBIT_URL, cfg.QBIT_USERNAME ?? 'admin', cfg.QBIT_PASSWORD, fetchers.qbit) : undefined;
+  const dl: DownloadDeps = { db, cfg, qbit, radarr, sonarr, seerr, tmdb };
   const startedAt = new Date();
   const notifier = new Notifier(cfg, fetchers.alerts);
   let running = false;
@@ -93,10 +104,13 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     enrich: () => enrichTitles(db, cfg, tmdb),
     mirror: () => mirrorSeerrMedia(db, seerr),
 
-    library: () => refreshLibrary(db, cfg, tmdb, {
-      radarr: cfg.RADARR_API_KEY ? new ArrClient(cfg.RADARR_URL, cfg.RADARR_API_KEY, fetchers.radarr, 'radarr') : undefined,
-      sonarr: cfg.SONARR_API_KEY ? new ArrClient(cfg.SONARR_URL, cfg.SONARR_API_KEY, fetchers.sonarr, 'sonarr') : undefined,
-    }),
+    library: () => refreshLibrary(db, cfg, tmdb, { radarr, sonarr }),
+
+    downloads: (now = new Date()) => downloadsSnapshot(dl, now),
+    async watchDownloads(now = new Date()) {
+      await watchDownloads(dl, now);
+      await safely('alerts', app.checkAlerts(now));
+    },
 
     async backup() {
       const r = runBackup(db, cfg);
@@ -142,6 +156,20 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         if (x.coveragePct >= cfg.CROSSCHECK_MIN_PCT && x.previousCoveragePct != null && x.previousCoveragePct - x.coveragePct > cfg.CROSSCHECK_MAX_DROP) {
           out.push({ key: 'crosscheck:drop', title: 'Netflix list changed sharply',
             message: `Match with TMDB fell from ${x.previousCoveragePct}% to ${x.coveragePct}% since last week.\nDetails: docker exec monkeysee node dist/cli.js crosscheck` });
+        }
+      }
+
+      // Downloads stuck long enough to be worth a push (the page shows them sooner).
+      const d = lastDownloads(db);
+      if (d && Date.parse(d.at) > now.getTime() - 30 * 60_000) {
+        for (const a of d.attention) {
+          const since = a.since ? Date.parse(a.since) : null;
+          if (since !== null && now.getTime() - since < cfg.STALL_ALERT_HOURS * 3600_000) continue;
+          if (since === null && !a.message) continue;
+          const what = a.state === 'stalled' ? 'stalled' : a.state === 'metadata' ? 'stuck finding peers' : 'failed';
+          const hours = since !== null ? Math.round((now.getTime() - since) / 3600_000) : null;
+          out.push({ key: `download:${a.key}`, title: `Download ${what}: ${a.title}`,
+            message: `${a.message ?? (hours !== null ? `No progress for ${hours} hours.` : 'Radarr or Sonarr flagged it.')}${cfg.APP_URL ? `\n${cfg.APP_URL}/downloads` : ''}` });
         }
       }
       return out;
@@ -200,5 +228,6 @@ export async function startupTasks(app: App) {
   if (backupDir(app.cfg) && (!b?.lastOkAt || Date.now() - Date.parse(b.lastOkAt) > 24 * 3600_000)) await app.backup();
   if (!lastCrossCheck(app.db)) await app.crosscheck();
   if (libraryCount(app.db) === 0) await app.library().catch(() => undefined);
+  if (app.cfg.QBIT_PASSWORD) await app.watchDownloads().catch(() => undefined);
   await app.checkAlerts().catch(() => undefined);
 }

@@ -24,7 +24,7 @@ export interface LibraryResult {
 
 export interface LibrarySources { radarr?: ArrClient; sonarr?: ArrClient }
 
-interface Wanted { media_type: 'movie' | 'tv'; tmdb_id: number; title: string | null; added_at: string | null; source: 'radarr' | 'sonarr' | 'seerr' }
+interface Wanted { media_type: 'movie' | 'tv'; tmdb_id: number; title: string | null; added_at: string | null; source: 'radarr' | 'sonarr' | 'seerr'; have_season?: number | null; monitored?: number[] }
 
 /** Everything you have, from each source. A source that fails is reported and its old rows kept. */
 async function collect(db: Db, tmdb: TmdbClient, src: LibrarySources) {
@@ -50,7 +50,7 @@ async function collect(db: Db, tmdb: TmdbClient, src: LibrarySources) {
       await mapLimit(series, 4, async (s) => {
         let id = s.tmdbId ?? known.get(s.title) ?? null;
         if (!id && s.tvdbId) id = await tmdb.tvByTvdb(s.tvdbId).catch(() => null);
-        if (id) add({ media_type: 'tv', tmdb_id: id, title: s.title, added_at: s.added, source: 'sonarr' });
+        if (id) add({ media_type: 'tv', tmdb_id: id, title: s.title, added_at: s.added, source: 'sonarr', have_season: s.haveSeason ?? null, monitored: s.monitoredSeasons ?? [] });
       });
       sources.sonarr = series.length;
     } catch (err) {
@@ -83,11 +83,13 @@ export async function refreshLibrary(db: Db, cfg: Config, tmdb: TmdbClient, src:
     const have = new Set(existing.map((e) => `${e.media_type}:${e.tmdb_id}`));
     for (const [k, w] of wanted) {
       if (!have.has(k)) added++;
-      run(db, `INSERT INTO library_items (media_type, tmdb_id, title, added_at, source) VALUES (?, ?, ?, ?, ?)
+      const sonarr = w.source === 'sonarr';
+      run(db, `INSERT INTO library_items (media_type, tmdb_id, title, added_at, source, have_season, monitored_json) VALUES (?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT (media_type, tmdb_id) DO UPDATE SET
                  title = COALESCE(excluded.title, library_items.title),
-                 added_at = COALESCE(excluded.added_at, library_items.added_at), source = excluded.source`,
-      [w.media_type, w.tmdb_id, w.title, w.added_at, w.source]);
+                 added_at = COALESCE(excluded.added_at, library_items.added_at), source = excluded.source,
+                 have_season = excluded.have_season, monitored_json = excluded.monitored_json`,
+      [w.media_type, w.tmdb_id, w.title, w.added_at, w.source, sonarr ? w.have_season ?? null : null, sonarr ? JSON.stringify(w.monitored ?? []) : null]);
     }
     return { added, removed };
   });

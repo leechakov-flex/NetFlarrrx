@@ -153,6 +153,20 @@ const DiscoverPage = z.object({
 export class TmdbClient {
   constructor(private base: string, private token: string, private fetchFn: FetchFn = fetch) {}
 
+  /** Just a title's name, year and poster, for requests of titles outside the catalog. */
+  async basic(type: 'movie' | 'tv', id: number): Promise<{ title: string; year: number | null; posterPath: string | null } | null> {
+    try {
+      const d = z.object({ title: z.string().optional(), name: z.string().optional(), release_date: z.string().nullable().optional(),
+        first_air_date: z.string().nullable().optional(), poster_path: z.string().nullable().optional() }).passthrough().parse(
+        await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/${type}/${id}?language=en-US`, { headers: { Authorization: `Bearer ${this.token}` }, retries: 1 }));
+      const date = d.release_date || d.first_air_date || '';
+      return { title: d.title ?? d.name ?? `#${id}`, year: date ? Number(date.slice(0, 4)) || null : null, posterPath: d.poster_path ?? null };
+    } catch (err) {
+      if (err instanceof HttpError && err.isNotFound) return null;
+      throw err;
+    }
+  }
+
   /** TMDB series ID for a TVDB ID (Sonarr v3 lists only TVDB IDs). */
   async tvByTvdb(tvdbId: number): Promise<number | null> {
     const d = z.object({ tv_results: z.array(z.object({ id: z.number().int() }).passthrough()).optional().default([]) }).parse(

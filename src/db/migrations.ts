@@ -297,4 +297,14 @@ FROM titles t;
 UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
 `,
   },
+  {
+    version: 10,
+    name: 'library_seasons',
+    sql: `
+-- From Sonarr: the highest season you have episodes of, and the seasons it's set to grab.
+-- Used for "Season N is out" on a series page and the "New seasons of your shows" row.
+ALTER TABLE library_items ADD COLUMN have_season INTEGER;
+ALTER TABLE library_items ADD COLUMN monitored_json TEXT;
+`,
+  },
 ];

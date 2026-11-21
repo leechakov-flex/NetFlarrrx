@@ -3,7 +3,7 @@
 // FAKE_VARIED=1 makes TMDB answers differ per title (language, ratings, runtime),
 // keeps Watchmode's real titles, and drops image paths so nothing loads remotely.
 import { createServer } from 'node:http';
-import { FakeSeerr, FakeTmdb, FakeWatchmode } from './fakes.js';
+import { FakeArrQueue, FakeQbit, FakeSeerr, FakeTmdb, FakeWatchmode } from './fakes.js';
 import type { FetchFn } from '../clients/http.js';
 
 function serve(port: number, fetchFn: FetchFn) {
@@ -93,5 +93,35 @@ const fakeSeerr = new FakeSeerr();
     tmdb.recs.set(`movie:${id}`, films.filter((_, k) => (k * 7 + i * 13) % 61 === 0).slice(0, 20).map((t) => t.tmdb_id!));
   });
 }
+// Downloads page: qBittorrent (password qbit-pass) and Radarr/Sonarr queues, plus a few requests.
+const qbit = new FakeQbit(), radarrQ = new FakeArrQueue(), sonarrQ = new FakeArrQueue();
+{
+  const films = new FakeWatchmode().catalog.filter((t) => t.tmdb_id && t.tmdb_type === 'movie').filter((_, i) => i % 50 === 0);
+  const shows = new FakeWatchmode().catalog.filter((t) => t.tmdb_id && t.tmdb_type === 'tv').filter((_, i) => i % 50 === 0);
+  const ago = (h: number) => Math.round(Date.now() / 1000 - h * 3600);
+  const t = (hash: string, state: string, progress: number, extra: Record<string, unknown> = {}) =>
+    ({ hash, name: `${hash}.2160p.mkv`, state, progress, dlspeed: state === 'downloading' ? 11_200_000 : 0, eta: 420, size: 6.1e9, num_seeds: 48, num_leechs: 3, added_on: ago(4), last_activity: ago(0), ...extra });
+  qbit.torrents = [
+    t('a1', 'stalledDL', 0.41, { last_activity: ago(3.2), num_seeds: 0, size: 2.4e9 }),
+    t('a2', 'metaDL', 0, { added_on: ago(0.9), size: 0 }),
+    t('b1', 'downloading', 0.72), t('b2', 'downloading', 0.38, { dlspeed: 6e6, eta: 240, size: 1.8e9, num_seeds: 112 }),
+    t('b3', 'queuedDL', 0, { size: 9.7e9 }),
+    ...Array.from({ length: 24 }, (_, i) => t(`s${i}`, 'stalledUP', 1)),
+  ];
+  const movie = (id: string, f: (typeof films)[number]) => ({ downloadId: id.toUpperCase(), status: 'downloading', trackedDownloadStatus: 'ok', size: 6e9, sizeleft: 2e9, movie: { title: f.title, year: f.year, tmdbId: f.tmdb_id, images: [] } });
+  radarrQ.records = [movie('a1', films[0]!), movie('a2', films[1]!), movie('b1', films[2]!), movie('b3', films[3]!)];
+  sonarrQ.records = [{ downloadId: 'B2', status: 'downloading', trackedDownloadStatus: 'ok', size: 1.8e9, sizeleft: 1e9,
+    series: { title: shows[0]!.title, year: shows[0]!.year, tmdbId: shows[0]!.tmdb_id, images: [] }, episode: { seasonNumber: 7, episodeNumber: 3, title: 'Joan Is Awful' } }];
+  const hrs = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  fakeSeerr.requestList = [
+    { id: 41, status: 2, createdAt: hrs(2), type: 'movie', seasons: [], media: { tmdbId: films[4]!.tmdb_id, mediaType: 'movie', status: 2 } },
+    { id: 42, status: 2, createdAt: hrs(5), type: 'movie', seasons: [], media: { tmdbId: films[2]!.tmdb_id, mediaType: 'movie', status: 3 } },
+    { id: 43, status: 5, createdAt: hrs(50), updatedAt: hrs(40), type: 'movie', seasons: [], media: { tmdbId: films[5]!.tmdb_id, mediaType: 'movie', status: 5 } },
+    { id: 44, status: 4, createdAt: hrs(30), type: 'movie', seasons: [], media: { tmdbId: films[6]!.tmdb_id, mediaType: 'movie', status: 2 } },
+  ];
+}
 serve(base + 3, fakeSeerr.fetch);
-console.log(`fakes on ${base + 1} (watchmode) ${base + 2} (tmdb) ${base + 3} (seerr)${varied ? ' [varied]' : ''}`);
+serve(base + 4, qbit.fetch);
+serve(base + 5, radarrQ.fetch);
+serve(base + 6, sonarrQ.fetch);
+console.log(`fakes on ${base + 1} (watchmode) ${base + 2} (tmdb) ${base + 3} (seerr) ${base + 4} (qbit) ${base + 5}/${base + 6} (radarr/sonarr queue)${varied ? ' [varied]' : ''}`);

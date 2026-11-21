@@ -83,3 +83,31 @@ export const tmdbImage = {
   posterLarge: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w600_and_h900_bestv2${path}` : null),
   backdrop: (path: string | null) => (path ? `https://image.tmdb.org/t/p/w1920_and_h800_multi_faces${path}` : null),
 };
+
+/** "4.4 GB", "812 MB". */
+export function bytes(n: number): string {
+  if (n >= 1e12) return `${(n / 1e12).toFixed(1)} TB`;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)} GB`;
+  if (n >= 1e6) return `${Math.round(n / 1e6)} MB`;
+  return `${Math.max(0, Math.round(n / 1e3))} KB`;
+}
+/** "11.2 MB/s". */
+export const speed = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB/s` : `${Math.round(n / 1e3)} KB/s`);
+/** "7 min", "3h 12m", "2 days". */
+export function duration(seconds: number): string {
+  const m = Math.max(1, Math.round(seconds / 60));
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h ${m % 60}m`;
+  return `${Math.round(h / 24)} days`;
+}
+/** "55 min ago", "3 hours ago", "2 days ago". */
+export function ago(iso: string | null, now = new Date()): string | null {
+  if (!iso) return null;
+  const m = Math.round((now.getTime() - Date.parse(iso)) / 60_000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 36) return `${h} hour${h === 1 ? '' : 's'} ago`;
+  return `${Math.round(h / 24)} days ago`;
+}

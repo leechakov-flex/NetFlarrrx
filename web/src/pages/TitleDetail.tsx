@@ -58,6 +58,7 @@ export function TitleDetail() {
           {d.overview
             ? <p className="mt-2 type-body-default text-ink-strong lg:text-base">{d.overview}</p>
             : <p className="mt-2 type-body-default text-ink-muted">{d.soon ? 'No overview yet. It fills in from TMDB as the premiere gets closer.' : 'No overview on TMDB yet.'}</p>}
+          {d.newSeason && <NewSeasonBanner d={d} />}
           <WhereToWatch d={d} />
           {d.cast.length > 0 && <CastRow people={d.cast} />}
           {d.related.length > 0 && (
@@ -86,6 +87,23 @@ function Hero({ art, wide, children }: { art: string | null; wide: boolean; chil
       {wide && <div className="absolute inset-y-0 left-0 w-2/3" style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%)' }} />}
       <div className="relative px-4 pb-6 pt-40 text-center lg:max-w-2xl lg:px-8 lg:text-left">{children}</div>
     </div>
+  );
+}
+
+/** Figma "New season of a series you have": above Where to watch, with its own Request button. */
+function NewSeasonBanner({ d }: { d: Detail }) {
+  const ns = d.newSeason!;
+  const where = d.watch.services[0]?.name;
+  return (
+    <section className="mt-6 flex items-center gap-4 rounded-xl bg-indigo-500 px-4 py-4">
+      <div className="min-w-0 flex-1">
+        <h2 className="type-heading-section text-white">Season {ns.season} is out</h2>
+        <p className="mt-0.5 type-body-default text-indigo-100">
+          You have season{ns.haveThrough === 1 ? ' 1' : `s 1–${ns.haveThrough}`}.{where ? ` On ${where}.` : ''}
+        </p>
+      </div>
+      <RequestButton d={{ ...d, download: null }} />
+    </section>
   );
 }
 

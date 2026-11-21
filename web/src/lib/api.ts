@@ -1,9 +1,10 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type {
+  DownloadsResponse, DownloadItem, RequestItem,
   BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse,
 } from '../../../src/api/types';
 
-export type { BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
+export type { DownloadsResponse, DownloadItem, RequestItem, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
 export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey } from '../../../src/api/types';
 
 export class ApiError extends Error {
@@ -81,7 +82,9 @@ export const useGenres = (kind?: Kind) =>
   useQuery({ queryKey: ['genres', kind ?? 'all'], queryFn: () => getJson<Genre[]>(`/api/genres${kind ? `?kind=${kind}` : ''}`), staleTime: 10 * 60_000 });
 export const useTop = (kind: Kind) => useQuery({ queryKey: ['top', kind], queryFn: () => getJson<TopResponse>(`/api/top?kind=${kind}`) });
 export const useTitle = (id: number) =>
-  useQuery({ queryKey: ['title', id], queryFn: () => getJson<TitleDetail>(`/api/titles/${id}`), enabled: Number.isInteger(id) && id > 0 });
+  useQuery({ queryKey: ['title', id], queryFn: () => getJson<TitleDetail>(`/api/titles/${id}`), enabled: Number.isInteger(id) && id > 0,
+    // While it's downloading, the Request button's progress updates every few seconds.
+    refetchInterval: (q) => (q.state.data?.download ? 5_000 : false) });
 
 export function useBrowse(q: BrowseQuery) {
   return useInfiniteQuery({
@@ -106,3 +109,9 @@ export const useBrowseCount = (q: BrowseQuery, enabled: boolean) =>
 export const useSeasons = (id: number, enabled: boolean) =>
   useQuery({ queryKey: ['seasons', id], queryFn: () => getJson<SeasonsResponse>(`/api/titles/${id}/seasons`), enabled, staleTime: 15_000, retry: 0 });
 export const useThemes = () => useQuery({ queryKey: ['themes'], queryFn: () => getJson<ThemeSummary[]>('/api/themes'), staleTime: 10 * 60_000 });
+
+/** The Downloads page polls every 5 seconds while it's open (the server caches for a few). */
+export const useDownloads = () => useQuery({
+  queryKey: ['downloads'], queryFn: () => getJson<DownloadsResponse>('/api/downloads'),
+  refetchInterval: 5_000, refetchIntervalInBackground: false, placeholderData: (prev) => prev,
+});

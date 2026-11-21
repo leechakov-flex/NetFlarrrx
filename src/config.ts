@@ -77,6 +77,14 @@ const schema = z.object({
   SONARR_URL: z.preprocess(clean, z.url().default('http://sonarr:8989')),
   SONARR_API_KEY: optStr(),
 
+  // qBittorrent (read only), for the Downloads page. It runs behind the VPN container, so
+  // it's reached through that container's name. Unset QBIT_PASSWORD = no torrent view.
+  QBIT_URL: z.preprocess(clean, z.url().default('http://gluetun:8080')),
+  QBIT_USERNAME: optStr(),
+  QBIT_PASSWORD: optStr(),
+  DOWNLOADS_CRON: z.preprocess(clean, z.string().default('*/5 * * * *')),
+  STALL_ALERT_HOURS: num(2),        // push an alert when a download has been stuck this long
+
   WATCHMODE_MIN_INTERVAL_MS: num(600),
   TMDB_CONCURRENCY: num(8),
   LOG_LEVEL: z.preprocess(clean, z.enum(['debug', 'info', 'warn', 'error']).default('info')),

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { duration } from '../lib/format';
 import { Icons } from './icons';
 const ArrowDownTrayIcon = Icons.plus, BellIcon = Icons.bell, CheckIcon = Icons.check, ClockIcon = Icons.clock;
 import { ApiError, postJson, savedPasscode, useMeta, useSeasons, type RequestResult, type SeasonInfo, type TitleDetail } from '../lib/api';
@@ -72,6 +74,8 @@ export function RequestButton({ d }: { d: TitleDetail }) {
   if (!d.tmdbId) {
     return <Button buttonType="inverse" disabled title="No TMDB match, so Seerr can’t request it"><ArrowDownTrayIcon className="h-5 w-5" /><span>Request</span></Button>;
   }
+
+  if (d.download) return <DownloadButton dl={d.download} />;
 
   if (d.kind === 'movie') {
     if (d.seerr === 'available') return <Button buttonType="success" disabled className="!opacity-100"><CheckIcon className="h-5 w-5" /><span>Available</span></Button>;
@@ -208,5 +212,28 @@ function SeasonPicker({ open, onClose, d, busy, onRequest }:
         <p className="mt-3 text-xs text-gray-400">Seerr is set to request whole series, so every open season is included.</p>
       )}
     </SlideOver>
+  );
+}
+
+/** Figma "Request states": downloading fills with progress; stuck shows yellow. Opens Downloads. */
+function DownloadButton({ dl }: { dl: NonNullable<TitleDetail['download']> }) {
+  const pct = Math.floor(dl.progress * 100);
+  const stuck = dl.state === 'stalled' || dl.state === 'metadata' || dl.state === 'error';
+  const base = 'relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-md border px-4 py-2 text-sm font-medium leading-5 transition';
+  if (stuck) {
+    const label = dl.state === 'stalled' ? `Stalled ${pct}%` : dl.state === 'metadata' ? 'Finding peers' : 'Download failed';
+    return (
+      <Link to="/downloads" className={`${base} border-yellow-400 bg-yellow-400/10 text-yellow-100 hover:bg-yellow-400/20`}>
+        <Icons.warning className="h-5 w-5" /><span>{label}</span>
+      </Link>
+    );
+  }
+  const label = dl.state === 'queued' || dl.state === 'paused' ? 'Queued' : dl.state === 'importing' ? 'Importing' : `Downloading ${pct}%`;
+  return (
+    <Link to="/downloads" className={`${base} border-indigo-500 bg-indigo-950/60 text-white hover:border-indigo-400`} aria-label={`${label}. Open Downloads`}>
+      <span aria-hidden className="absolute inset-y-0 left-0 bg-indigo-600 transition-[width] duration-700" style={{ width: `${pct}%` }} />
+      <Icons.download className="relative h-5 w-5" />
+      <span className="relative">{label}{dl.etaSeconds && dl.state === 'downloading' ? ` · ${duration(dl.etaSeconds)}` : ''}</span>
+    </Link>
   );
 }

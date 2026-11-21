@@ -131,6 +131,9 @@ export class FakeSeerr {
   /** Seasons per TMDB series ID; unknown series get seasons 0-3. */
   seasonCounts = new Map<number, number>();
   requests: { mediaType: string; mediaId: number; seasons?: number[]; is4k: boolean; headers: Record<string, string> }[] = [];
+  /** What GET /request lists (the Downloads page's "Your requests"); DELETE and retry act on it. */
+  requestList: Record<string, unknown>[] = [];
+  actions: string[] = [];
   /** Force the next POST /request to answer with this status (403, 409, 500...). */
   nextRequestStatus: number | null = null;
   constructor(media?: unknown[]) {
@@ -167,6 +170,19 @@ export class FakeSeerr {
         mediaInfo: m ? { status: m.status, seasons: m.seasons ?? [], requests: reqs } : null,
       });
     }
+    if (url.pathname === '/api/v1/request' && (init?.method ?? 'GET') === 'GET') {
+      return json(200, { pageInfo: { pages: 1, results: this.requestList.length }, results: this.requestList.slice(0, Number(url.searchParams.get('take') ?? 20)) });
+    }
+    const one = url.pathname.match(/^\/api\/v1\/request\/(\d+)(\/retry)?$/);
+    if (one) {
+      const id = Number(one[1]);
+      const r = this.requestList.find((x) => x.id === id);
+      if (!r) return json(404, { message: 'Request not found.' });
+      this.actions.push(`${one[2] ? 'retry' : init?.method} ${id}`);
+      if (one[2]) { r.status = 2; return json(200, r); }
+      this.requestList = this.requestList.filter((x) => x !== r);
+      return new Response(null, { status: 204 });
+    }
     if (url.pathname === '/api/v1/request' && init?.method === 'POST') {
       if (this.nextRequestStatus) {
         const st = this.nextRequestStatus;
@@ -187,5 +203,38 @@ export class FakeSeerr {
       return json(201, { id: this.requests.length, status: 2 });
     }
     return json(404, {});
+  };
+}
+
+/** qBittorrent Web API: login, torrents/info and transfer/info. */
+export class FakeQbit {
+  torrents: Record<string, unknown>[] = [];
+  password = 'qbit-pass';
+  logins = 0;
+  down = false;
+  fetch: FetchFn = async (input, init) => {
+    const url = new URL(String(input));
+    if (this.down) throw new TypeError('fetch failed');
+    if (url.pathname === '/api/v2/auth/login') {
+      this.logins++;
+      const body = new URLSearchParams(String(init?.body));
+      if (body.get('password') !== this.password) return new Response('Fails.', { status: 200 });
+      return new Response('Ok.', { status: 200, headers: { 'set-cookie': 'SID=abc123; HttpOnly; path=/' } });
+    }
+    const h = Object.fromEntries(Object.entries((init?.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));
+    if (h.cookie !== 'SID=abc123') return new Response('Forbidden', { status: 403 });
+    if (url.pathname === '/api/v2/torrents/info') return json(200, this.torrents);
+    if (url.pathname === '/api/v2/transfer/info') return json(200, { dl_info_speed: 2_500_000, up_info_speed: 100_000, connection_status: 'connected' });
+    return json(404, {});
+  };
+}
+
+/** Radarr or Sonarr GET /api/v3/queue (and the library endpoints, empty). */
+export class FakeArrQueue {
+  records: Record<string, unknown>[] = [];
+  fetch: FetchFn = async (input) => {
+    const url = new URL(String(input));
+    if (url.pathname === '/api/v3/queue') return json(200, { page: 1, totalRecords: this.records.length, records: this.records });
+    return json(200, []);
   };
 }

@@ -15,6 +15,7 @@ const USAGE = `Usage: cli <command>
   confirm <run-id>  apply a held sync run
   enrich            fetch TMDB details for titles that need them
   seerr-mirror      refresh the Seerr status mirror
+  downloads         check qBittorrent, the Radarr/Sonarr queues and Seerr requests
   themes [slug]     thematic rows: counts, which keywords do the work, sample titles
   keywords <text>   TMDB keywords containing <text>, with how many shown titles have each
   backup            take a verified database backup now
@@ -63,6 +64,14 @@ async function main() {
         if (!Number.isInteger(id)) throw new Error('confirm needs a run id');
         console.log(JSON.stringify(confirmHeldRun(app.db, cfg, id), null, 2));
         await app.enrich();
+        break;
+      }
+      case 'downloads': {
+        // Checks the qBittorrent, Radarr/Sonarr queue and Seerr connections; prints a short summary.
+        const d = await app.downloads();
+        console.table([...d.attention, ...d.downloading, ...d.queued].map((i) => ({ state: i.state, title: i.subtitle ? `${i.title} ${i.subtitle}` : i.title,
+          pct: Math.round(i.progress * 100), source: i.source ?? '-', since: i.since?.slice(0, 16) ?? '' })));
+        console.log(JSON.stringify({ qbit: d.qbit, seeding: d.qbit.seeding, requests: d.requests.length, errors: d.errors }, null, 2));
         break;
       }
       case 'enrich': console.log(JSON.stringify(await app.enrich(), null, 2)); break;
