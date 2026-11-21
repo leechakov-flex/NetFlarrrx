@@ -4,7 +4,8 @@ import { createServer } from '../server.js';
 import { testConfig } from '../config.js';
 import { get, run } from '../db/db.js';
 import { FakeArrQueue, FakeQbit, FakeSeerr, FakeTmdb, FakeWatchmode, realCatalog } from '../test-support/fakes.js';
-import { resetDownloadsCache, stateOf } from './downloads.js';
+import { requestStatus, resetDownloadsCache, stateOf } from './downloads.js';
+import type { MovieStatus, SeasonStatus } from '../clients/arr.js';
 import { newSeason } from '../catalog/newSeasons.js';
 import type { DownloadsResponse, MetaResponse, TitleDetail } from '../api/types.js';
 
@@ -78,7 +79,7 @@ describe('downloads', () => {
     seerr.requestList[1]!.status = 2;   // 12: approved, not failed
     const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;
     expect(d.requests.find((r) => r.id === 12)).toMatchObject({ state: 'available', detail: expect.stringMatching(/Downloaded/) });
-    expect(d.requests.find((r) => r.id === 14)).toMatchObject({ state: 'requested', detail: 'Have season 1 · Sonarr is looking for the rest' });
+    expect(d.requests.find((r) => r.id === 14)).toMatchObject({ state: 'missing', detail: expect.stringMatching(/^Have season 1 · Sonarr hasn’t found a copy in \d+ days$/) });
     expect(d.qbit.states).toEqual({ stalledDL: 1, downloading: 1, uploading: 1, queuedDL: 1 });
   });
 
@@ -150,5 +151,36 @@ describe('new seasons', () => {
     expect(newSeason({ ...base, haveSeason: 3 }, new Date(now))).toBeNull();
     expect(newSeason({ ...base, lastAirDate: '2025-01-01' }, new Date(now))).toBeNull();
     expect(newSeason({ ...base, haveSeason: null }, new Date(now))).toBeNull();
+  });
+});
+
+describe('request statuses', () => {
+  const now = new Date('2026-11-21T20:00:00Z');
+  const req = (o: Record<string, unknown> = {}) => ({ id: 1, status: 2, createdAt: '2026-10-01T00:00:00Z', seasons: [], media: { tmdbId: 5, mediaType: 'movie' as const, status: 3 }, ...o }) as Parameters<typeof requestStatus>[0];
+  const movies = (m: Partial<MovieStatus>) => ({ movies: new Map([[5, { hasFile: false, isAvailable: true, nextRelease: null, releasedAt: '2026-09-01T00:00:00Z', ...m }]]), shows: new Map() });
+  it('not out yet: Radarr says unavailable, with the digital date', () => {
+    expect(requestStatus(req(), movies({ isAvailable: false, nextRelease: '2026-12-12T00:00:00Z', releasedAt: null }), false, now))
+      .toEqual({ state: 'unreleased', detail: 'Out Dec 12', releaseDate: '2026-12-12T00:00:00Z' });
+  });
+  it('not out yet: in cinemas, digital release dated, even if Radarr may search', () => {
+    expect(requestStatus(req(), movies({ isAvailable: true, nextRelease: '2026-12-12T00:00:00Z', releasedAt: null }), false, now).state).toBe('unreleased');
+  });
+  it('searching for the first hours after it is out or requested, then not found', () => {
+    expect(requestStatus(req({ createdAt: '2026-11-21T18:00:00Z' }), movies({}), false, now)).toMatchObject({ state: 'requested', detail: 'Radarr is searching' });
+    expect(requestStatus(req(), movies({}), false, now)).toMatchObject({ state: 'missing', detail: 'Radarr hasn’t found a copy in 51 days' });
+  });
+  it('series: unaired season is not out yet; an aired one with no files is not found', () => {
+    const shows = (s2: Partial<SeasonStatus>) => ({ movies: new Map(), shows: new Map([[5, new Map([
+      [1, { files: 10, aired: true, nextAiring: null, lastAired: '2025-01-01T00:00:00Z' }],
+      [2, { files: 0, aired: false, nextAiring: '2027-01-08T02:00:00Z', lastAired: null, ...s2 }],
+    ])]]) });
+    const tv = req({ seasons: [{ seasonNumber: 2 }], media: { tmdbId: 5, mediaType: 'tv', status: 3 } });
+    expect(requestStatus(tv, shows({}), false, now)).toMatchObject({ state: 'unreleased', detail: 'Airs Jan 8' });
+    expect(requestStatus(tv, shows({ aired: true, lastAired: '2026-11-01T00:00:00Z', nextAiring: '2026-11-28T00:00:00Z' }), false, now))
+      .toMatchObject({ state: 'missing', detail: 'Sonarr hasn’t found a copy in 20 days' });
+  });
+  it('files on disk beat everything; Seerr failures stay failed', () => {
+    expect(requestStatus(req({ status: 4 }), movies({ hasFile: true }), false, now).state).toBe('available');
+    expect(requestStatus(req({ status: 4 }), movies({}), false, now).state).toBe('failed');
   });
 });

@@ -158,7 +158,8 @@ export interface DownloadItem {
   message: string | null;          // Radarr/Sonarr's warning, if any
 }
 
-export type RequestState = 'requested' | 'downloading' | 'available' | 'failed' | 'declined';
+/** requested = searching (or awaiting approval); unreleased = not out yet; missing = out, but no copy found. */
+export type RequestState = 'requested' | 'unreleased' | 'missing' | 'downloading' | 'available' | 'failed' | 'declined';
 
 export interface RequestItem {
   id: number;
@@ -173,7 +174,8 @@ export interface RequestItem {
   requestedAt: string | null;
   updatedAt: string | null;
   seasons: number[];
-  detail: string | null;           // the line under the title, e.g. "Sonarr is looking for a release"
+  detail: string | null;           // the line under the title, e.g. "Out Dec 12" or "Radarr hasn’t found a copy in 15 days"
+  releaseDate: string | null;      // not out yet: when it is
 }
 
 export interface DownloadsResponse {

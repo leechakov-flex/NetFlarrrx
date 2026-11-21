@@ -10,6 +10,10 @@ const RadarrMovie = z.object({
   tmdbId: z.number().int().optional(),
   hasFile: z.boolean().optional().default(false),
   added: z.string().nullable().optional(),
+  isAvailable: z.boolean().optional(),                 // past Radarr's "minimum availability"
+  inCinemas: z.string().nullable().optional(),
+  digitalRelease: z.string().nullable().optional(),
+  physicalRelease: z.string().nullable().optional(),
 }).passthrough();
 
 const SonarrSeries = z.object({
@@ -20,7 +24,11 @@ const SonarrSeries = z.object({
   statistics: z.object({ episodeFileCount: z.number().int().optional().default(0) }).passthrough().optional(),
   seasons: z.array(z.object({
     seasonNumber: z.number().int(), monitored: z.boolean().optional().default(false),
-    statistics: z.object({ episodeFileCount: z.number().int().optional().default(0) }).passthrough().optional(),
+    statistics: z.object({
+      episodeFileCount: z.number().int().optional().default(0),
+      previousAiring: z.string().nullable().optional(),   // latest episode that has aired
+      nextAiring: z.string().nullable().optional(),
+    }).passthrough().optional(),
   }).passthrough()).optional().default([]),
 }).passthrough();
 
@@ -29,6 +37,10 @@ export interface ArrItem {
   /** Series: the highest season with files, and the seasons Sonarr is set to download. */
   haveSeason?: number | null; haveSeasons?: number[]; monitoredSeasons?: number[];
 }
+
+/** Release and file state per title, for request statuses. */
+export interface MovieStatus { hasFile: boolean; isAvailable: boolean; nextRelease: string | null; releasedAt: string | null }
+export interface SeasonStatus { files: number; aired: boolean; nextAiring: string | null; lastAired: string | null }
 
 /** One download Radarr or Sonarr is tracking (GET /api/v3/queue). */
 export interface QueueItem {
@@ -75,6 +87,41 @@ export class ArrClient {
       const m = RadarrMovie.safeParse(r);
       return m.success && m.data.hasFile ? [{ title: m.data.title, tmdbId: m.data.tmdbId || null, added: m.data.added ?? null }] : [];
     });
+  }
+
+  /** Every movie in Radarr: has it a file, and is it out yet (by tmdbId). */
+  async movieStatus(now = new Date()): Promise<Map<number, MovieStatus>> {
+    const raw = await requestJson<unknown[]>(this.fetchFn, this.name, this.url('/api/v3/movie'), { headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 60_000 });
+    const out = new Map<number, MovieStatus>();
+    for (const r of z.array(z.unknown()).parse(raw)) {
+      const m = RadarrMovie.safeParse(r);
+      if (!m.success || !m.data.tmdbId) continue;
+      const home = [m.data.digitalRelease, m.data.physicalRelease].filter((x): x is string => !!x).sort();
+      const past = home.filter((x) => Date.parse(x) <= now.getTime());
+      out.set(m.data.tmdbId, {
+        hasFile: m.data.hasFile,
+        // Without Radarr's flag, out means a digital or disc release has happened.
+        isAvailable: m.data.isAvailable ?? past.length > 0,
+        nextRelease: home.find((x) => Date.parse(x) > now.getTime()) ?? null,
+        releasedAt: past[0] ?? null,
+      });
+    }
+    return out;
+  }
+
+  /** Every series in Sonarr, per season: files on disk and whether it has started airing (by tmdbId). */
+  async seasonStatus(): Promise<Map<number, Map<number, SeasonStatus>>> {
+    const raw = await requestJson<unknown[]>(this.fetchFn, this.name, this.url('/api/v3/series'), { headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 60_000 });
+    const out = new Map<number, Map<number, SeasonStatus>>();
+    for (const r of z.array(z.unknown()).parse(raw)) {
+      const s = SonarrSeries.safeParse(r);
+      if (!s.success || !s.data.tmdbId) continue;
+      out.set(s.data.tmdbId, new Map(s.data.seasons.filter((x) => x.seasonNumber > 0).map((x) => [x.seasonNumber, {
+        files: x.statistics?.episodeFileCount ?? 0, aired: !!x.statistics?.previousAiring,
+        nextAiring: x.statistics?.nextAiring ?? null, lastAired: x.statistics?.previousAiring ?? null,
+      }])));
+    }
+    return out;
   }
 
   /** Series with at least one episode on disk. */

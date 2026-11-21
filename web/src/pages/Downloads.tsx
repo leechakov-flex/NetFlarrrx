@@ -121,21 +121,28 @@ function DownloadRow({ it, attention }: { it: DownloadItem; attention?: boolean 
   );
 }
 
-const FILTERS = [['all', 'All'], ['requested', 'Requested'], ['downloading', 'Downloading'], ['available', 'Available'], ['failed', 'Failed']] as const;
+// "Not found" also lists Seerr failures and declines: everything that needs you to step in.
+const FILTERS = [['all', 'All'], ['missing', 'Not found'], ['unreleased', 'Not out yet'], ['requested', 'Searching'], ['downloading', 'Downloading'], ['available', 'Available']] as const;
 const REQ_BADGE: Record<RequestItem['state'], [string, string]> = {
-  requested: ['bg-gray-600 text-gray-100', 'Requested'], downloading: ['bg-indigo-500 text-white', 'Downloading'],
+  requested: ['bg-gray-600 text-gray-100', 'Searching'], unreleased: ['bg-sky-500/90 text-white', 'Not out yet'],
+  missing: ['bg-orange-500 text-black', 'Not found'], downloading: ['bg-indigo-500 text-white', 'Downloading'],
   available: ['bg-green-500 text-black', 'Available'], failed: ['bg-red-500 text-white', 'Failed'], declined: ['bg-gray-700 text-gray-300', 'Declined'],
 };
 
 function Requests({ items }: { items: RequestItem[] }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number][0]>('all');
-  const shown = items.filter((r) => filter === 'all' || r.state === filter || (filter === 'failed' && r.state === 'declined'));
+  const shown = items.filter((r) => filter === 'all' || r.state === filter || (filter === 'missing' && (r.state === 'failed' || r.state === 'declined')));
+  const count = (k: (typeof FILTERS)[number][0]) => (k === 'all' ? items.length : items.filter((r) => r.state === k || (k === 'missing' && (r.state === 'failed' || r.state === 'declined'))).length);
   const chip = (on: boolean) => `flex-shrink-0 rounded-full px-3.5 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-surface text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
   return (
     <section className="mt-10">
       <SectionTitle>Your requests</SectionTitle>
       <div className="scrollbar-none -mx-4 mb-2 flex gap-2 overflow-x-auto px-4" role="group" aria-label="Filter requests">
-        {FILTERS.map(([k, label]) => <button key={k} type="button" className={chip(filter === k)} aria-pressed={filter === k} onClick={() => setFilter(k)}>{label}</button>)}
+        {FILTERS.filter(([k]) => k === 'all' || count(k) > 0).map(([k, label]) => (
+          <button key={k} type="button" className={chip(filter === k)} aria-pressed={filter === k} onClick={() => setFilter(k)}>
+            {label}{k !== 'all' && <span className={filter === k ? 'ml-1.5 opacity-60' : 'ml-1.5 text-ink-muted'}>{count(k)}</span>}
+          </button>
+        ))}
       </div>
       {shown.length === 0 && <p className="py-6 type-body-default text-ink-tertiary">{items.length ? 'None here.' : 'No requests yet. Request a title from its page.'}</p>}
       {shown.map((r) => <RequestRow key={r.id} r={r} />)}
@@ -151,7 +158,7 @@ function RequestRow({ r }: { r: RequestItem }) {
   const [badgeCls, badgeLabel] = REQ_BADGE[r.state];
   const name = `${r.title}${r.year ? ` (${r.year})` : ''}${r.tmdbType === 'tv' && r.seasons.length ? ` · ${r.seasons.length === 1 ? `Season ${r.seasons[0]}` : `${r.seasons.length} seasons`}` : ''}`;
   const line = r.state === 'downloading' ? `Requested ${ago(r.requestedAt)}${r.progress !== null ? ` · ${Math.floor(r.progress * 100)}%` : ''}`
-    : r.state === 'requested' ? `Requested ${ago(r.requestedAt) ?? ''}${r.detail ? ` · ${r.detail}` : ''}`
+    : r.state === 'requested' || r.state === 'missing' || r.state === 'unreleased' ? [r.state === 'requested' ? `Requested ${ago(r.requestedAt) ?? ''}` : null, r.detail].filter(Boolean).join(' · ')
     : r.detail ?? (r.state === 'available' ? `Available${r.updatedAt ? ` since ${ago(r.updatedAt)}` : ''}` : '');
 
   async function act(action: 'cancel' | 'retry') {
@@ -179,7 +186,7 @@ function RequestRow({ r }: { r: RequestItem }) {
       {r.state === 'failed' && (
         <IconButton label={`Retry ${r.title}`} busy={busy === 'retry'} onClick={() => void act('retry')}><Icons.retry className="h-5 w-5" /></IconButton>
       )}
-      {(r.state === 'requested' || r.state === 'failed') && (
+      {(r.state === 'requested' || r.state === 'failed' || r.state === 'missing' || r.state === 'unreleased') && (
         <IconButton label={`Cancel request for ${r.title}`} busy={busy === 'cancel'} onClick={() => void act('cancel')}><Icons.xmark className="h-5 w-5" /></IconButton>
       )}
     </div>

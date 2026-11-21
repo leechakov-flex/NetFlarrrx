@@ -113,10 +113,17 @@ const qbit = new FakeQbit(), radarrQ = new FakeArrQueue(), sonarrQ = new FakeArr
   sonarrQ.records = [{ downloadId: 'B2', status: 'downloading', trackedDownloadStatus: 'ok', size: 1.8e9, sizeleft: 1e9,
     series: { title: shows[0]!.title, year: shows[0]!.year, tmdbId: shows[0]!.tmdb_id, images: [] }, episode: { seasonNumber: 7, episodeNumber: 3, title: 'Joan Is Awful' } }];
   const hrs = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  radarrQ.library = [
+    { title: 'x', tmdbId: films[4]!.tmdb_id, hasFile: false, isAvailable: false, digitalRelease: new Date(Date.now() + 20 * 86_400_000).toISOString() },
+    { title: 'y', tmdbId: films[6]!.tmdb_id, hasFile: false, isAvailable: true, digitalRelease: hrs(24 * 30) },
+    { title: 'z', tmdbId: films[7]!.tmdb_id, hasFile: false, isAvailable: true, digitalRelease: hrs(24 * 30) },
+  ];
   fakeSeerr.requestList = [
     { id: 41, status: 2, createdAt: hrs(2), type: 'movie', seasons: [], media: { tmdbId: films[4]!.tmdb_id, mediaType: 'movie', status: 2 } },
     { id: 42, status: 2, createdAt: hrs(5), type: 'movie', seasons: [], media: { tmdbId: films[2]!.tmdb_id, mediaType: 'movie', status: 3 } },
     { id: 43, status: 5, createdAt: hrs(50), updatedAt: hrs(40), type: 'movie', seasons: [], media: { tmdbId: films[5]!.tmdb_id, mediaType: 'movie', status: 5 } },
+    { id: 45, status: 2, createdAt: hrs(1), type: 'movie', seasons: [], media: { tmdbId: films[7]!.tmdb_id, mediaType: 'movie', status: 3 } },
+    { id: 46, status: 2, createdAt: hrs(24 * 15), type: 'movie', seasons: [], media: { tmdbId: films[6]!.tmdb_id, mediaType: 'movie', status: 3 } },
     { id: 44, status: 4, createdAt: hrs(30), type: 'movie', seasons: [], media: { tmdbId: films[6]!.tmdb_id, mediaType: 'movie', status: 2 } },
   ];
 }

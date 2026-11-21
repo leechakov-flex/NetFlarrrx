@@ -4,7 +4,7 @@
 import type { Config } from '../config.js';
 import { all, getJobState, setJobState, type Db } from '../db/db.js';
 import type { QbitClient, QbitTorrent } from '../clients/qbittorrent.js';
-import type { ArrClient, QueueItem } from '../clients/arr.js';
+import type { ArrClient, MovieStatus, QueueItem, SeasonStatus } from '../clients/arr.js';
 import type { SeerrClient, SeerrRequest } from '../clients/seerr.js';
 import type { TmdbClient } from '../clients/tmdb.js';
 import type { DownloadItem, DownloadState, DownloadsResponse, RequestItem, RequestState, TitleDownload } from '../api/types.js';
@@ -51,26 +51,27 @@ const poster = (path: string | null) => (path ? `https://image.tmdb.org/t/p/w185
 
 let cache: { at: number; value: DownloadsResponse } | null = null;
 
-// What Radarr and Sonarr have on disk, for request states. Seerr only marks a request
-// available after Jellyfin scans it in, which can lag hours behind the download.
-const HAVE_MS = 2 * 60_000;
-let haveCache: { at: number; movies: Set<number>; shows: Map<number, number[]> } | null = null;
-async function onDisk(d: DownloadDeps, now: number) {
-  if (haveCache && now - haveCache.at < HAVE_MS) return haveCache;
+// What Radarr and Sonarr have on disk and whether each title is out yet, for request
+// statuses. Seerr only marks a request available after Jellyfin scans it in, which can
+// lag hours behind the download, and it can't tell "not out yet" from "can't find it".
+const ARR_MS = 2 * 60_000;
+let arrCache: { at: number; movies: Map<number, MovieStatus>; shows: Map<number, Map<number, SeasonStatus>> } | null = null;
+async function arrStatus(d: DownloadDeps, now: number) {
+  if (arrCache && now - arrCache.at < ARR_MS) return arrCache;
   const [movies, shows] = await Promise.all([
-    d.radarr ? d.radarr.movies().catch(() => null) : null,
-    d.sonarr ? d.sonarr.series().catch(() => null) : null,
+    d.radarr ? d.radarr.movieStatus(new Date(now)).catch(() => null) : null,
+    d.sonarr ? d.sonarr.seasonStatus().catch(() => null) : null,
   ]);
-  const next = {
-    at: now,
-    movies: movies ? new Set(movies.flatMap((m) => (m.tmdbId ? [m.tmdbId] : []))) : haveCache?.movies ?? new Set<number>(),
-    shows: shows ? new Map(shows.flatMap((s) => (s.tmdbId ? [[s.tmdbId, s.haveSeasons ?? []] as [number, number[]]] : []))) : haveCache?.shows ?? new Map<number, number[]>(),
-  };
-  haveCache = next;
-  return next;
+  arrCache = { at: now, movies: movies ?? arrCache?.movies ?? new Map(), shows: shows ?? arrCache?.shows ?? new Map() };
+  return arrCache;
 }
+
 const tmdbNames = new Map<string, { title: string; year: number | null; posterPath: string | null } | null>();
-export const resetDownloadsCache = () => { cache = null; haveCache = null; };
+
+/** Released and still nothing after this long: "Not found" rather than "Searching". */
+export const NOT_FOUND_AFTER_MS = 6 * 3600_000;
+
+export const resetDownloadsCache = () => { cache = null; arrCache = null; };
 
 export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Promise<DownloadsResponse> {
   if (cache && now.getTime() - cache.at < CACHE_MS) return cache.value;
@@ -79,13 +80,13 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
     if (!p) return fallback;
     try { return await p; } catch (err) { if (!errors.includes(name)) log.warn(`downloads: ${name} unreachable`, { error: (err as Error).message, ...(typeof (err as { body?: unknown }).body === 'string' && (err as { body: string }).body ? { detail: (err as { body: string }).body.slice(0, 200) } : {}) }); errors.push(name); return fallback; }
   };
-  const [torrents, transfer, rq, sq, reqs, have] = await Promise.all([
+  const [torrents, transfer, rq, sq, reqs, arr] = await Promise.all([
     soft('qBittorrent', d.qbit?.torrents(), [] as QbitTorrent[]),
     soft('qBittorrent', d.qbit?.transfer(), null),
     soft('Radarr', d.radarr?.queue(), [] as QueueItem[]),
     soft('Sonarr', d.sonarr?.queue(), [] as QueueItem[]),
     soft('Seerr', d.seerr.requests(50), [] as SeerrRequest[]),
-    onDisk(d, now.getTime()),
+    arrStatus(d, now.getTime()),
   ]);
   const queue = [...rq, ...sq];
   const byHash = new Map(queue.filter((q) => q.downloadId).map((q) => [q.downloadId!, q]));
@@ -143,31 +144,10 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
       tmdbNames.set(key, name);
     }
     const dl = byTmdb.get(key);
-    const arr = r.media.mediaType === 'movie' ? 'Radarr' : 'Sonarr';
-    const wanted = r.seasons.map((x) => x.seasonNumber);
-    const haveSeasons = r.media.mediaType === 'tv' ? have.shows.get(r.media.tmdbId) ?? [] : [];
-    const gotSeasons = wanted.filter((n) => haveSeasons.includes(n));
-    const onDiskNow = r.media.mediaType === 'movie' ? have.movies.has(r.media.tmdbId)
-      : wanted.length ? gotSeasons.length === wanted.length : haveSeasons.length > 0;
-    let state: RequestState;
-    let detail: string | null = null;
-    if (r.status === 3) { state = 'declined'; detail = 'Declined in Seerr'; }
-    else if (r.media.status === 5 || r.media.status === 4 || onDiskNow) {
-      state = 'available';
-      detail = r.media.status === 5 || r.media.status === 4 ? null : `Downloaded · Jellyfin may still be adding it`;
-    } else if (dl) {
-      state = 'downloading';
-    } else if (r.status === 4) {
-      state = 'failed'; detail = `${arr} couldn’t take it. Retry sends it again.`;
-    } else {
-      state = 'requested';
-      detail = r.status === 1 ? 'Waiting for approval in Seerr'
-        : gotSeasons.length ? `Have season${gotSeasons.length === 1 ? ` ${gotSeasons[0]}` : `s ${gotSeasons.join(', ')}`} · ${arr} is looking for the rest`
-        : `${arr} is looking for a release`;
-    }
+    const v = requestStatus(r, arr, !!dl, now);
     requests.push({
       id: r.id, tmdbType: r.media.mediaType, tmdbId: r.media.tmdbId, title: name?.title ?? `TMDB ${r.media.tmdbId}`, year: name?.year ?? null,
-      titleId: tk?.id ?? null, posterUrl: poster(name?.posterPath ?? null), state, progress: dl ? dl.progress : null, detail,
+      titleId: tk?.id ?? null, posterUrl: poster(name?.posterPath ?? null), state: v.state, progress: dl ? dl.progress : null, detail: v.detail, releaseDate: v.releaseDate,
       requestedAt: r.createdAt ?? null, updatedAt: r.updatedAt ?? null, seasons: r.seasons.map((s) => s.seasonNumber),
     });
   }
@@ -190,6 +170,67 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
   return value;
 }
 const db = (d: DownloadDeps) => d.db;
+
+const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+/**
+ * One request's status: available (files on disk, or Seerr says so), downloading,
+ * not out yet (Radarr says it isn't released / Sonarr: the season hasn't aired),
+ * searching (out, just requested), not found (out for a while, no copy found),
+ * failed (Seerr couldn't hand it to Radarr/Sonarr) or declined.
+ */
+export function requestStatus(r: SeerrRequest, arr: { movies: Map<number, MovieStatus>; shows: Map<number, Map<number, SeasonStatus>> }, downloading: boolean, now: Date):
+  { state: RequestState; detail: string | null; releaseDate: string | null } {
+  const name = r.media.mediaType === 'movie' ? 'Radarr' : 'Sonarr';
+  const seerrAvailable = r.media.status === 5 || r.media.status === 4;
+  const requested = r.createdAt ? Date.parse(r.createdAt) : now.getTime();
+  if (r.status === 3) return { state: 'declined', detail: 'Declined in Seerr', releaseDate: null };
+
+  let onDisk = false, notOut = false, releaseDate: string | null = null, outSince: number | null = null, partial: string | null = null;
+  if (r.media.mediaType === 'movie') {
+    const m = arr.movies.get(r.media.tmdbId);
+    if (m) {
+      onDisk = m.hasFile;
+      // Also not out when there's no digital/disc release yet but one is dated, even if
+      // Radarr's minimum availability (e.g. "In cinemas") already lets it search.
+      notOut = !m.isAvailable || (m.releasedAt === null && m.nextRelease !== null);
+      releaseDate = m.nextRelease;
+      outSince = m.releasedAt ? Date.parse(m.releasedAt) : null;
+    }
+  } else {
+    const show = arr.shows.get(r.media.tmdbId);
+    if (show) {
+      const wanted = r.seasons.length ? r.seasons.map((x) => x.seasonNumber) : [...show.keys()];
+      const seasons = wanted.map((n) => [n, show.get(n) ?? null] as const);
+      const got = seasons.filter(([, x]) => x && x.files > 0).map(([n]) => n);
+      const missing = seasons.filter(([, x]) => !x || x.files === 0).map(([, x]) => x);
+      onDisk = seasons.length > 0 && missing.length === 0;
+      // A season Sonarr doesn't list yet counts as not found, not as unreleased.
+      notOut = missing.length > 0 && missing.every((x) => x !== null && !x.aired);
+      releaseDate = missing.map((x) => x?.nextAiring).filter((x): x is string => !!x).sort()[0] ?? null;
+      const aired = missing.map((x) => x?.lastAired).filter((x): x is string => !!x).sort();
+      outSince = aired.length ? Date.parse(aired[aired.length - 1]!) : null;
+      if (got.length) partial = `Have season${got.length === 1 ? ` ${got[0]}` : `s ${got.join(', ')}`}`;
+    }
+  }
+
+  if (seerrAvailable || onDisk) return { state: 'available', detail: seerrAvailable ? null : 'Downloaded · Jellyfin may still be adding it', releaseDate: null };
+  if (downloading) return { state: 'downloading', detail: partial, releaseDate: null };
+  if (r.status === 4) return { state: 'failed', detail: `Seerr couldn’t send it to ${name}. Retry sends it again.`, releaseDate: null };
+  if (r.status === 1) return { state: 'requested', detail: 'Waiting for approval in Seerr', releaseDate: null };
+  if (notOut) {
+    const what = r.media.mediaType === 'movie' ? 'Out' : 'Airs';
+    return { state: 'unreleased', releaseDate, detail: [partial, releaseDate ? `${what} ${day(releaseDate)}` : 'No release date yet'].filter(Boolean).join(' · ') };
+  }
+  // Out: give Radarr/Sonarr a few hours to find a copy before calling it not found.
+  const looking = Math.max(requested, outSince ?? 0);
+  if (now.getTime() - looking > NOT_FOUND_AFTER_MS) {
+    const days = Math.floor((now.getTime() - looking) / 86_400_000);
+    return { state: 'missing', releaseDate: null,
+      detail: [partial, `${name} hasn’t found a copy${days >= 1 ? ` in ${days} day${days === 1 ? '' : 's'}` : ' yet'}`].filter(Boolean).join(' · ') };
+  }
+  return { state: 'requested', releaseDate: null, detail: [partial, `${name} is searching`].filter(Boolean).join(' · ') };
+}
 
 /** For a title's Request button: is it downloading, and how far along. */
 export function titleDownload(snapshot: DownloadsResponse, tmdbType: 'movie' | 'tv' | null, tmdbId: number | null, titleId: number): TitleDownload | null {
