@@ -225,10 +225,10 @@ export class FakeQbit {
       if (this.requireReferer && !lh.referer) return new Response('Unauthorized', { status: 401 });
       const body = new URLSearchParams(String(init?.body));
       if (body.get('password') !== this.password) return new Response('Fails.', { status: 200 });
-      return new Response(this.v5 ? null : 'Ok.', { status: this.v5 ? 204 : 200, headers: { 'set-cookie': 'SID=abc123; HttpOnly; path=/' } });
+      return new Response(this.v5 ? null : 'Ok.', { status: this.v5 ? 204 : 200, headers: { 'set-cookie': `${this.v5 ? 'QBT_SID_8080' : 'SID'}=abc123; HttpOnly; SameSite=Strict; path=/` } });
     }
     const h = Object.fromEntries(Object.entries((init?.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));
-    if (h.cookie !== 'SID=abc123') return new Response('Forbidden', { status: 403 });
+    if (h.cookie !== (this.v5 ? 'QBT_SID_8080=abc123' : 'SID=abc123')) return new Response('Forbidden', { status: 403 });
     if (url.pathname === '/api/v2/torrents/info') return json(200, this.torrents);
     if (url.pathname === '/api/v2/transfer/info') return json(200, { dl_info_speed: 2_500_000, up_info_speed: 100_000, connection_status: 'connected' });
     return json(404, {});

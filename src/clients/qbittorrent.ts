@@ -56,7 +56,8 @@ export class QbitClient {
         method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...extra }, body, signal: AbortSignal.timeout(10_000),
       });
       const text = (await res.text()).trim();
-      const sid = res.headers.get('set-cookie')?.match(/SID=[^;]+/)?.[0];
+      // The session cookie is "SID" up to 4.x and "QBT_SID_<port>" from 5.0 (its name is configurable).
+      const sid = res.headers.get('set-cookie')?.match(/(?:^|[\s,])((?:QBT_)?SID[^=;,\s]*=[^;,\s]+)/)?.[1];
       // Older qBittorrent answers 200 "Ok."; 5.x answers 204 with no body. With "bypass
       // authentication" for the subnet there may be no cookie at all, which is fine too.
       if (res.ok && (text === 'Ok.' || text === '')) {
