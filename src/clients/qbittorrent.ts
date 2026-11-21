@@ -57,8 +57,10 @@ export class QbitClient {
       });
       const text = (await res.text()).trim();
       const sid = res.headers.get('set-cookie')?.match(/SID=[^;]+/)?.[0];
-      if (res.ok && text === 'Ok.' && sid) {
-        this.cookie = sid; this.extra = extra; this.refused = null;
+      // Older qBittorrent answers 200 "Ok."; 5.x answers 204 with no body. With "bypass
+      // authentication" for the subnet there may be no cookie at all, which is fine too.
+      if (res.ok && (text === 'Ok.' || text === '')) {
+        this.cookie = sid ?? ''; this.extra = extra; this.refused = null;
         return;
       }
       if (res.status === 401 && Object.keys(extra).length === 0) continue;   // try with Referer/Origin
@@ -73,11 +75,11 @@ export class QbitClient {
 
   private async get(path: string): Promise<unknown> {
     for (let attempt = 0; attempt < 2; attempt++) {
-      if (!this.cookie) {
+      if (this.cookie === null) {
         this.loggingIn ??= this.login().finally(() => { this.loggingIn = null; });
         await this.loggingIn;
       }
-      const res = await this.fetchFn(this.url(path), { headers: { Cookie: this.cookie!, ...this.extra }, signal: AbortSignal.timeout(10_000) });
+      const res = await this.fetchFn(this.url(path), { headers: { ...(this.cookie ? { Cookie: this.cookie } : {}), ...this.extra }, signal: AbortSignal.timeout(10_000) });
       if (res.status === 403 && attempt === 0) { this.cookie = null; continue; }
       if (!res.ok) throw new HttpError('qbittorrent', res.status, this.url(path), await res.text().catch(() => ''));
       return res.json();

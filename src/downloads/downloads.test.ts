@@ -88,6 +88,13 @@ describe('downloads', () => {
     expect(qbit.logins).toBe(1);    // second look didn't try again (qBittorrent bans after 5 failures)
   });
 
+  it('logs in to qBittorrent 5 (204, no body)', async () => {
+    qbit.v5 = true;
+    const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;
+    expect(d.qbit.connected).toBe(true);
+    expect(d.attention).toHaveLength(1);
+  });
+
   it('logs in with Referer when qBittorrent’s cross-site check wants it', async () => {
     qbit.requireReferer = true;
     const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;

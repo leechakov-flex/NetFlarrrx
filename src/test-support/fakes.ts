@@ -214,6 +214,8 @@ export class FakeQbit {
   down = false;
   /** Like a qBittorrent whose cross-site check only passes with a matching Referer. */
   requireReferer = false;
+  /** qBittorrent 5.x answers a good login with 204 and no body. */
+  v5 = false;
   fetch: FetchFn = async (input, init) => {
     const url = new URL(String(input));
     if (this.down) throw new TypeError('fetch failed');
@@ -223,7 +225,7 @@ export class FakeQbit {
       if (this.requireReferer && !lh.referer) return new Response('Unauthorized', { status: 401 });
       const body = new URLSearchParams(String(init?.body));
       if (body.get('password') !== this.password) return new Response('Fails.', { status: 200 });
-      return new Response('Ok.', { status: 200, headers: { 'set-cookie': 'SID=abc123; HttpOnly; path=/' } });
+      return new Response(this.v5 ? null : 'Ok.', { status: this.v5 ? 204 : 200, headers: { 'set-cookie': 'SID=abc123; HttpOnly; path=/' } });
     }
     const h = Object.fromEntries(Object.entries((init?.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));
     if (h.cookie !== 'SID=abc123') return new Response('Forbidden', { status: 403 });
