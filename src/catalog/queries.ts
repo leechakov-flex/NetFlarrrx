@@ -2,7 +2,7 @@ import type { Config } from '../config.js';
 import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere } from './rules.js';
 import { loadThemes, themeWhere, type ThemeRule } from './themes.js';
-import { becauseSeeds, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
+import { becauseSeeds, libraryReport, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
   BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ThemeSummary, TitleCard, TitleDetail, TopResponse,
 } from '../api/types.js';
@@ -271,4 +271,10 @@ export function keywordSearch(db: Db, cfg: Config, text: string, limit = 40, now
     JOIN title_keywords x ON x.title_id = tk.id JOIN keywords k ON k.id = x.keyword_id
     WHERE ${base.sql} AND lower(k.name) LIKE ?
     GROUP BY k.id ORDER BY titles DESC, k.name LIMIT ?`, [...base.params, `%${text.toLowerCase()}%`, limit]);
+}
+
+/** For the CLI: library titles, their category and how many recommendable Netflix titles each brings. */
+export function libraryOverview(db: Db, cfg: Config, now = new Date()) {
+  const f = filters(cfg, { ...REC_FLOOR }, now);
+  return libraryReport(db, { sql: `${f.sql} AND ${REC_RECENT}`, params: f.params }, FROM);
 }

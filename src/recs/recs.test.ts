@@ -218,3 +218,23 @@ describe('discovery tweaks', () => {
     expect(rows).toContain('Because you have Knives Out');
   });
 });
+
+describe('stand-up detection', () => {
+  it('spots specials TMDB has no keyword for', async () => {
+    // A Netflix special in the library (Watchmode tv_special, TMDB comedy), 95 minutes, no keyword.
+    run(app.db, `UPDATE titles SET watchmode_type = 'tv_special' WHERE id = ?`, [netflix[5]!.id]);
+    const special = netflix[5]!.tmdb_id;
+    seerr.media = [
+      { id: 1, mediaType: 'movie', tmdbId: special, status: 5, seasons: [] },
+      { id: 2, mediaType: 'movie', tmdbId: LIB(2), status: 5, seasons: [] },
+      { id: 3, mediaType: 'movie', tmdbId: LIB(3), status: 5, seasons: [] },
+    ];
+    tmdb.overrides.set(`movie:${special}`, { title: 'An Evening Out', genres: [{ id: 35, name: 'Comedy' }], runtime: 95, keywords: { keywords: [] } });
+    tmdb.overrides.set(`movie:${LIB(2)}`, { title: 'Russell Brand: Open Secret', genres: [{ id: 35, name: 'Comedy' }], runtime: 97, keywords: { keywords: [] } });
+    tmdb.overrides.set(`movie:${LIB(3)}`, { title: 'Cunk on Cinema', genres: [{ id: 35, name: 'Comedy' }, { id: 99, name: 'Documentary' }], runtime: 60, keywords: { keywords: [] } });
+    await app.mirror();
+    await app.library();
+    expect(Object.fromEntries(all<{ title: string; category: string }>(app.db, 'SELECT title, category FROM library_items').map((r) => [r.title, r.category])))
+      .toEqual({ 'An Evening Out': 'standup', 'Russell Brand: Open Secret': 'standup', 'Cunk on Cinema': 'movie' });
+  });
+});

@@ -4,7 +4,7 @@ import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { confirmHeldRun, recentRuns } from './sync/catalog.js';
 import { setLogLevel } from './log.js';
-import { browse, home, keywordSearch, themePreview, themesFor } from './catalog/queries.js';
+import { browse, home, keywordSearch, libraryOverview, themePreview, themesFor } from './catalog/queries.js';
 
 const USAGE = `Usage: cli <command>
   status            catalog counts, health and the last 10 sync runs
@@ -18,7 +18,8 @@ const USAGE = `Usage: cli <command>
   crosscheck        compare our Netflix list with TMDB's (free, ~1 minute)
   alert-test        send a test alert to ALERT_URL
   alerts            show what would alert right now
-  recs              refresh your library from Seerr and show the top recommendations`;
+  recs              refresh your library from Seerr and show the top recommendations
+  library           each library title: stand-up, movie or series, and its Netflix matches`;
 
 async function main() {
   const [cmd, arg] = process.argv.slice(2);
@@ -94,6 +95,13 @@ async function main() {
         console.table(top.items.slice(0, 20).map((i) => ({ title: i.title.slice(0, 44), year: i.year, kind: i.kind, rating: i.voteAverage })));
         console.log('\n"Because you have" rows on Discover:');
         for (const r of home(app.db, cfg).rows.filter((r) => r.slug.startsWith('because-'))) console.log(`  ${r.title} (${r.total} titles)`);
+        break;
+      }
+      case 'library': {
+        const rows = libraryOverview(app.db, cfg);
+        const by = (c: string) => rows.filter((r) => r.category === c).length;
+        console.log(`${rows.length} titles: ${by('standup')} stand-up, ${by('movie')} movies, ${by('series')} series. Rows need 5+ matches.`);
+        console.table(rows.slice(0, 40).map((r) => ({ title: r.title.slice(0, 44), category: r.category, source: r.source, matches: r.matches })));
         break;
       }
       case 'alerts': console.log(JSON.stringify({ alertUrlSet: app.notifier.enabled, problems: app.problems() }, null, 2)); break;

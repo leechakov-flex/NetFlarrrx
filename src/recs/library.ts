@@ -111,7 +111,7 @@ export async function refreshLibrary(db: Db, cfg: Config, tmdb: TmdbClient, src:
           for (const rec of r.recs) ins.run(item.media_type, item.tmdb_id, item.media_type, rec.id, rec.rank);
         }
         run(db, 'UPDATE library_items SET title = COALESCE(title, ?), recs_at = ?, recs_status = ?, category = ? WHERE media_type = ? AND tmdb_id = ?',
-          [r?.title ?? null, iso, r ? 'ok' : 'missing', r ? categorize(item.media_type, r) : null, item.media_type, item.tmdb_id]);
+          [r?.title ?? null, iso, r ? 'ok' : 'missing', r ? categorize(item.media_type, { ...r, special: isWatchmodeSpecial(db, item.media_type, item.tmdb_id) }) : null, item.media_type, item.tmdb_id]);
       });
       result.fetched += 1;
     } catch (err) {
@@ -141,13 +141,18 @@ export const REC_FLOOR = { minRating: 6, minVotes: 30 } as const;
 /** ...and older ones: released or aired in the last 10 years, unless rated 7.5 or higher. */
 export const REC_RECENT = `(min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) >= date('now', '-3650 days') OR tk.vote_average >= 7.5)`;
 
+const isWatchmodeSpecial = (db: Db, type: string, id: number) =>
+  !!get<{ n: number }>(db, `SELECT 1 n FROM titles WHERE tmdb_type = ? AND tmdb_id = ? AND watchmode_type = 'tv_special' LIMIT 1`, [type, id]);
+
 /** Stand-up specials, other movies and series, so "Because you have" rows can be mixed. */
-function categorize(type: 'movie' | 'tv', r: { title: string | null; genres: string[]; keywords: string[]; runtime: number | null }): 'standup' | 'movie' | 'series' {
+function categorize(type: 'movie' | 'tv', r: { title: string | null; genres: string[]; keywords: string[]; runtime: number | null; special?: boolean }): 'standup' | 'movie' | 'series' {
   if (type === 'tv') return 'series';
+  if (r.special && r.genres.includes('Comedy')) return 'standup';
   const kws = new Set(r.keywords.map((k) => k.toLowerCase()));
   if (STANDUP.some((k) => kws.has(k))) return 'standup';
-  // Specials TMDB hasn't keyworded: a short comedy named "Comedian: Title".
-  if (r.genres.includes('Comedy') && (r.runtime ?? 999) <= 90 && /^[^:]{3,40}: /.test(r.title ?? '')) return 'standup';
+  if (/stand[- ]?up/i.test(r.title ?? '')) return 'standup';
+  // Specials TMDB hasn't keyworded: a comedy up to 100 minutes named "Comedian: Title".
+  if (r.genres.includes('Comedy') && (r.runtime ?? 999) <= 100 && /^[^:]{3,40}: /.test(r.title ?? '')) return 'standup';
   return 'movie';
 }
 
@@ -163,11 +168,22 @@ export const libraryCount = (db: Db) => get<{ n: number }>(db, 'SELECT count(*) 
  * recently added titles, the ones whose recommendations include the most
  * Netflix titles you don't have. Takes the shown-title filter as SQL.
  */
-export function becauseSeeds(db: Db, eligible: { sql: string; params: (string | number)[] }, from: string, count: number, minMatches = 6) {
+/** For the CLI: every library title with its category and Netflix matches, best first. */
+export function libraryReport(db: Db, eligible: { sql: string; params: (string | number)[] }, from: string) {
+  return all<{ title: string; category: string | null; source: string | null; matches: number }>(db, `
+    SELECT s.title, s.category, s.source, (
+      SELECT count(DISTINCT tk.id) ${from}
+      JOIN library_recs r ON r.rec_type = tk.tmdb_type AND r.rec_id = tk.tmdb_id
+      WHERE r.seed_type = s.media_type AND r.seed_id = s.tmdb_id AND ${eligible.sql} AND ${NOT_MINE}
+    ) matches
+    FROM library_items s WHERE s.title IS NOT NULL ORDER BY matches DESC, s.title`, eligible.params);
+}
+
+export function becauseSeeds(db: Db, eligible: { sql: string; params: (string | number)[] }, from: string, count: number, minMatches = 5) {
   const candidates = all<{ media_type: 'movie' | 'tv'; tmdb_id: number; title: string; category: string | null; matches: number }>(db, `
     WITH recent AS (
       SELECT media_type, tmdb_id, title, category FROM library_items WHERE recs_status = 'ok' AND title IS NOT NULL
-      ORDER BY added_at DESC LIMIT 100
+      ORDER BY added_at DESC LIMIT 400
     )
     SELECT s.media_type, s.tmdb_id, s.title, s.category, (
       SELECT count(DISTINCT tk.id) ${from}

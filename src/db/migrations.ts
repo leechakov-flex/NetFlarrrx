@@ -234,4 +234,9 @@ ALTER TABLE library_items ADD COLUMN category TEXT;   -- standup, movie or serie
 UPDATE library_items SET recs_at = NULL;              -- re-fetch once to learn each title's category
 `,
   },
+  {
+    version: 6,
+    name: 'library_categories_again',
+    sql: `UPDATE library_items SET recs_at = NULL;   -- re-sort library titles with the wider stand-up check`,
+  },
 ];
