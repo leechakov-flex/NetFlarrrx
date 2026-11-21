@@ -11,5 +11,5 @@
   </defs>
   <rect width="512" height="512" rx="112" fill="#111827"/>
   <rect width="512" height="512" rx="112" fill="url(#glow)"/>
-  <path d="M176 368V144l112 144V144h48v224L224 224v144z" fill="url(#g)"/>
+  <path d="M132 368V144h58l66 118 66-118h58v224h-52V238l-56 100h-32l-56-100v130z" fill="url(#g)"/>
 </svg>

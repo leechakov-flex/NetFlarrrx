@@ -1,5 +1,5 @@
 // Command line for running jobs by hand, e.g. inside the container:
-//   docker exec netflarrrx node dist/cli.js status
+//   docker exec monkeysee node dist/cli.js status
 import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { confirmHeldRun, recentRuns } from './sync/catalog.js';
@@ -87,15 +87,15 @@ async function main() {
         break;
       }
       case 'alert-test': {
-        if (!app.notifier.enabled) throw new Error('ALERT_URL is not set in netflarrrx.env');
-        await app.notifier.send('Test alert', 'If you can read this, NetFlarrrx alerts work.', 'test');
+        if (!app.notifier.enabled) throw new Error('ALERT_URL is not set in monkeysee.env');
+        await app.notifier.send('Test alert', 'If you can read this, MonkeySee alerts work.', 'test');
         console.log('Sent.');
         break;
       }
       case 'recs': {
         const lib = await app.library();
         console.log(`Library: ${lib.library} titles (Radarr ${lib.sources.radarr}, Sonarr ${lib.sources.sonarr}, Seerr ${lib.sources.seerr}); ${lib.added} new, ${lib.removed} gone, ${lib.fetched} fetched from TMDB, ${lib.errors} errors.`);
-        if (lib.sources.radarr === 'off' || lib.sources.sonarr === 'off') console.log('Tip: add RADARR_API_KEY and SONARR_API_KEY to netflarrrx.env so the whole library counts.');
+        if (lib.sources.radarr === 'off' || lib.sources.sonarr === 'off') console.log('Tip: add RADARR_API_KEY and SONARR_API_KEY to monkeysee.env so the whole library counts.');
         const top = browse(app.db, cfg, { theme: 'for-you' });
         console.log(`\nRecommended for you: ${top.total} Netflix titles. Top 20:`);
         console.table(top.items.slice(0, 20).map((i) => ({ title: i.title.slice(0, 44), year: i.year, kind: i.kind, rating: i.voteAverage })));

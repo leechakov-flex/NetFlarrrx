@@ -1,4 +1,4 @@
-// NetFlarrrx service worker. Keeps the app shell so the installed app opens
+// MonkeySee service worker. Keeps the app shell so the installed app opens
 // instantly and shows a clear message when MonkeyServer is out of reach.
 // Data (/api) is never cached: catalog and Seerr status must be live.
 const SHELL = 'nfx-shell-v1';

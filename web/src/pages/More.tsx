@@ -62,7 +62,7 @@ export function More() {
         </div>
       )}
       <p className="mt-6 max-w-xl text-sm text-gray-400">
-        NetFlarrrx checks Netflix’s catalog once a day at 6:23 a.m. A title’s date added is the first day it appeared after tracking began.
+        MonkeySee checks Netflix’s catalog once a day at 6:23 a.m. A title’s date added is the first day it appeared after tracking began.
         Every Sunday it compares the list with TMDB’s, which comes from JustWatch.
       </p>
       <Credits />

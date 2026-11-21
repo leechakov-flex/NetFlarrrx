@@ -34,7 +34,7 @@ export class Notifier {
     // ntfy: headers must be plain ASCII.
     const ascii = (s: string) => s.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/[^\x20-\x7e]/g, '');
     const headers: Record<string, string> = {
-      Title: ascii(`NetFlarrrx: ${title}`),
+      Title: ascii(`MonkeySee: ${title}`),
       Priority: kind === 'problem' ? 'high' : 'default',
       Tags: kind === 'problem' ? 'warning' : kind === 'resolved' ? 'white_check_mark' : 'bell',
       'Content-Type': 'text/plain; charset=utf-8',

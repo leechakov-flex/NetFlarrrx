@@ -84,7 +84,7 @@ function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-gray-700 bg-gray-800 lg:flex">
       <div className="px-4 pt-5">
-        <Link to="/" className="block text-3xl font-bold"><span className="text-overseerr">NetFlarrrx</span></Link>
+        <Link to="/" className="block text-3xl font-bold"><span className="text-overseerr">MonkeySee</span></Link>
         <p className="mt-1 text-sm font-medium text-gray-400">What’s new on Netflix</p>
       </div>
       <nav className="mt-8 flex-1 space-y-1 px-4">

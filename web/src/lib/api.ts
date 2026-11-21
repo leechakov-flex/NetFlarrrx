@@ -32,9 +32,18 @@ export async function postJson<T>(path: string, body: unknown, passcode?: string
 }
 
 // The passcode is kept on this device so it's asked for once.
-const PASSCODE_KEY = 'netflarrrx.passcode';
+const PASSCODE_KEY = 'monkeysee.passcode';
+const OLD_PASSCODE_KEY = 'netflarrrx.passcode';   // from before the rename; moved over on first read
 export const savedPasscode = {
-  get(): string | null { try { return localStorage.getItem(PASSCODE_KEY); } catch { return null; } },
+  get(): string | null {
+    try {
+      const v = localStorage.getItem(PASSCODE_KEY);
+      if (v !== null) return v;
+      const old = localStorage.getItem(OLD_PASSCODE_KEY);
+      if (old !== null) { localStorage.setItem(PASSCODE_KEY, old); localStorage.removeItem(OLD_PASSCODE_KEY); }
+      return old;
+    } catch { return null; }
+  },
   set(v: string) { try { localStorage.setItem(PASSCODE_KEY, v); } catch { /* private mode: ask each time */ } },
   clear() { try { localStorage.removeItem(PASSCODE_KEY); } catch { /* ignore */ } },
 };

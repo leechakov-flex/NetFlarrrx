@@ -32,7 +32,7 @@ let sink: AlertSink;
 async function setup(overrides: Partial<Record<keyof Config, string>> = {}) {
   tmdb = new FakeTmdb();
   sink = new AlertSink();
-  app = createApp(testConfig({ DATA_DIR: dir, ALERT_URL: 'https://ntfy.sh/netflarrrx-test', APP_URL: 'http://monkeyserver.local:8484', ...overrides }), {
+  app = createApp(testConfig({ DATA_DIR: dir, ALERT_URL: 'https://ntfy.sh/monkeysee-test', APP_URL: 'http://monkeyserver.local:8484', ...overrides }), {
     watchmode: new FakeWatchmode(catalog()).fetch, tmdb: tmdb.fetch, seerr: new FakeSeerr([]).fetch, alerts: sink.fetch,
   });
   await app.pipeline('cli');
@@ -55,7 +55,7 @@ describe('backups', () => {
     await setup({ BACKUP_KEEP: '3' });
     for (const d of ['2026-11-01', '2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05']) runBackup(app.db, app.cfg, new Date(`${d}T12:00:00Z`));
     runBackup(app.db, app.cfg, new Date('2026-11-05T18:00:00Z'));     // same day again: replaces
-    expect(readdirSync(join(dir, 'backups')).sort()).toEqual(['netflarrrx-2026-11-03.sqlite', 'netflarrrx-2026-11-04.sqlite', 'netflarrrx-2026-11-05.sqlite']);
+    expect(readdirSync(join(dir, 'backups')).sort()).toEqual(['monkeysee-2026-11-03.sqlite', 'monkeysee-2026-11-04.sqlite', 'monkeysee-2026-11-05.sqlite']);
   });
 
   it('records a failure, keeps the last good time, and alerts', async () => {
@@ -67,7 +67,7 @@ describe('backups', () => {
       const r = await bad.backup();
       expect(r.ok).toBe(false);
       expect(bad.health().backup).toEqual({ last_ok_at: ok.at, last_error: expect.any(String) });
-      expect(sink.sent.map((s) => s.headers.Title)).toContain('NetFlarrrx: Backup failed');
+      expect(sink.sent.map((s) => s.headers.Title)).toContain('MonkeySee: Backup failed');
     } finally { bad.close(); }
   });
 
@@ -90,13 +90,13 @@ describe('alerts', () => {
     await reconcileAlerts(app.db, n, p, new Date(t0.getTime() + 3600_000));            // still open: quiet
     expect(sink.sent).toHaveLength(1);
     expect(sink.sent[0]).toMatchObject({
-      url: 'https://ntfy.sh/netflarrrx-test', body: 'run 4 held: count swing 14%',
-      headers: expect.objectContaining({ Title: 'NetFlarrrx: Sync held', Priority: 'high', Tags: 'warning', Click: 'http://monkeyserver.local:8484' }),
+      url: 'https://ntfy.sh/monkeysee-test', body: 'run 4 held: count swing 14%',
+      headers: expect.objectContaining({ Title: 'MonkeySee: Sync held', Priority: 'high', Tags: 'warning', Click: 'http://monkeyserver.local:8484' }),
     });
     await reconcileAlerts(app.db, n, p, new Date(t0.getTime() + 25 * 3600_000));       // reminder
-    expect(sink.sent[1]!.headers.Title).toBe('NetFlarrrx: Still: Sync held');
+    expect(sink.sent[1]!.headers.Title).toBe('MonkeySee: Still: Sync held');
     await reconcileAlerts(app.db, n, [], new Date(t0.getTime() + 26 * 3600_000));      // cleared
-    expect(sink.sent[2]!.headers).toMatchObject({ Title: 'NetFlarrrx: Resolved: Sync held', Tags: 'white_check_mark' });
+    expect(sink.sent[2]!.headers).toMatchObject({ Title: 'MonkeySee: Resolved: Sync held', Tags: 'white_check_mark' });
     expect(sink.sent).toHaveLength(3);
   });
 
@@ -116,7 +116,7 @@ describe('alerts', () => {
     expect(JSON.parse(sink.sent[0]!.body)).toEqual({ content: '⚠️ **Sync held**\ndetails\nhttp://monkeyserver.local:8484' });
     const ntfy = new Notifier(testConfig({ ALERT_URL: 'https://ntfy.example.com/nfx', ALERT_TOKEN: 'tk_123' }), sink.fetch);
     await ntfy.send('Netflix’s list', 'x', 'test');
-    expect(sink.sent[1]!.headers).toMatchObject({ Title: "NetFlarrrx: Netflix's list", Authorization: 'Bearer tk_123' });
+    expect(sink.sent[1]!.headers).toMatchObject({ Title: "MonkeySee: Netflix's list", Authorization: 'Bearer tk_123' });
   });
 
   it('a held sync alerts through the pipeline', async () => {
@@ -124,7 +124,7 @@ describe('alerts', () => {
     setJobState(app.db, 'alerts', { open: {} });
     run(app.db, `UPDATE sync_runs SET status = 'held', note = 'count swing 14%' WHERE id = (SELECT max(id) FROM sync_runs)`);
     await app.checkAlerts();
-    expect(sink.sent.map((s) => s.headers.Title)).toContain('NetFlarrrx: Sync held');
+    expect(sink.sent.map((s) => s.headers.Title)).toContain('MonkeySee: Sync held');
   });
 
   it('without ALERT_URL nothing is sent', async () => {
@@ -164,7 +164,7 @@ describe('TMDB cross-check', () => {
     await setup();
     tmdbList(1, 200);                      // we have 60 of 260: 23%
     await app.crosscheck();
-    expect(sink.sent.map((s) => s.headers.Title)).toContain('NetFlarrrx: Netflix list looks incomplete');
+    expect(sink.sent.map((s) => s.headers.Title)).toContain('MonkeySee: Netflix list looks incomplete');
 
     tmdbList(1);                           // back to 100%
     await app.crosscheck();

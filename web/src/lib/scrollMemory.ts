@@ -7,7 +7,7 @@
  * also survives a reload of the tab. Storage can be unavailable (private mode),
  * so every access is guarded.
  */
-const STORAGE_KEY = 'netflarrrx.scroll';
+const STORAGE_KEY = 'monkeysee.scroll';
 const MAX_ENTRIES = 300;
 
 let memory: Map<string, number> | null = null;

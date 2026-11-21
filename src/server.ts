@@ -114,8 +114,8 @@ export function createServer(app: App, opts: ServerOptions = {}) {
       const h = app.health();
       const s = h.stats;
       return c.html(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NetFlarrrx</title><body style="font:16px system-ui;max-width:40rem;margin:2rem auto;padding:0 1rem">
-<h1>NetFlarrrx</h1><p>The web UI isn't built. Run <code>npm run build</code>.</p>
+<title>MonkeySee</title><body style="font:16px system-ui;max-width:40rem;margin:2rem auto;padding:0 1rem">
+<h1>MonkeySee</h1><p>The web UI isn't built. Run <code>npm run build</code>.</p>
 <ul><li>Sync status: <b>${h.status}</b>${h.reason ? ` — ${escapeHtml(h.reason)}` : ''}</li>
 <li>On Netflix: ${s.on_service}; shown: ${s.eligible}</li></ul></body>`);
     });

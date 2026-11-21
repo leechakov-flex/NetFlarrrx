@@ -1,20 +1,36 @@
 import { DatabaseSync, type SQLInputValue } from 'node:sqlite';
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { migrations } from './migrations.js';
 
 export type Db = DatabaseSync;
 export type Params = Record<string, SQLInputValue> | SQLInputValue[];
 
+export const DB_FILE = 'monkeysee.sqlite';
+/** The app was called NetFlarrrx before; its database file is renamed on first start. */
+const OLD_DB_FILE = 'netflarrrx.sqlite';
+
 export function openDb(dataDir: string): Db {
-  const path = dataDir === ':memory:' ? ':memory:' : join(dataDir, 'netflarrrx.sqlite');
-  if (path !== ':memory:') mkdirSync(dataDir, { recursive: true });
+  const path = dataDir === ':memory:' ? ':memory:' : join(dataDir, DB_FILE);
+  if (path !== ':memory:') {
+    mkdirSync(dataDir, { recursive: true });
+    adoptOldDb(dataDir);
+  }
   const db = new DatabaseSync(path);
   db.exec('PRAGMA foreign_keys = ON;');
   db.exec('PRAGMA busy_timeout = 5000;');
   if (path !== ':memory:') db.exec('PRAGMA journal_mode = WAL;');
   migrate(db);
   return db;
+}
+
+/** Move netflarrrx.sqlite (and its -wal/-shm files) to monkeysee.sqlite, once, before opening. */
+export function adoptOldDb(dataDir: string) {
+  const oldPath = join(dataDir, OLD_DB_FILE), newPath = join(dataDir, DB_FILE);
+  if (existsSync(newPath) || !existsSync(oldPath)) return;
+  for (const suffix of ['-wal', '-shm', '']) {   // main file last, so a crash midway retries next start
+    if (existsSync(oldPath + suffix)) renameSync(oldPath + suffix, newPath + suffix);
+  }
 }
 
 export function migrate(db: Db) {

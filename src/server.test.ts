@@ -134,7 +134,7 @@ describe('install files', () => {
     const web = mkdtempSync(join(tmpdir(), 'nfx-web-'));
     mkdirSync(join(web, 'icons'));
     writeFileSync(join(web, 'index.html'), '<!doctype html><div id="root"></div>');
-    writeFileSync(join(web, 'manifest.webmanifest'), '{"name":"NetFlarrrx"}');
+    writeFileSync(join(web, 'manifest.webmanifest'), '{"name":"MonkeySee"}');
     writeFileSync(join(web, 'sw.js'), 'self.addEventListener("fetch", () => {})');
     writeFileSync(join(web, 'icons', 'icon-192.png'), 'png');
     app = createApp(testConfig());           // closed by afterEach

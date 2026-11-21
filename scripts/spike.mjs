@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// M0 data spike for NetFlarrrx.
+// M0 data spike for MonkeySee.
 //
 // Read-only. Answers the M0 questions from the plan:
 //   - Watchmode quota and how many credits a full Netflix US sync costs
@@ -448,7 +448,7 @@ function writeJson(name, data) {
 
 function renderMarkdown(r) {
   const f = r.findings;
-  const lines = [`# NetFlarrrx M0 spike report`, '', `Generated ${r.generated_at} with Node ${r.node}.`, ''];
+  const lines = [`# MonkeySee M0 spike report`, '', `Generated ${r.generated_at} with Node ${r.node}.`, ''];
   const w = f.watchmode;
   if (w) {
     lines.push('## Watchmode', '',

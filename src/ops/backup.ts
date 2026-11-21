@@ -15,7 +15,9 @@ export interface BackupState {
   error?: string;
 }
 
-const NAME = /^netflarrrx-(\d{4}-\d{2}-\d{2})\.sqlite$/;
+// monkeysee-YYYY-MM-DD.sqlite; netflarrrx-… files are from before the rename and age out normally.
+const NAME = /^(?:monkeysee|netflarrrx)-(\d{4}-\d{2}-\d{2})\.sqlite$/;
+const byDate = (a: string, b: string) => a.replace(NAME, '$1').localeCompare(b.replace(NAME, '$1'));
 
 export function backupDir(cfg: Config): string | null {
   if (cfg.BACKUP_DIR) return cfg.BACKUP_DIR;
@@ -34,7 +36,7 @@ export function runBackup(db: Db, cfg: Config, now = new Date()): BackupState {
   const dir = backupDir(cfg);
   const at = now.toISOString();
   if (!dir) return record(db, { ok: false, at, error: 'no backup folder: set BACKUP_DIR' });
-  const file = join(dir, `netflarrrx-${localDate(now, cfg.TZ)}.sqlite`);
+  const file = join(dir, `monkeysee-${localDate(now, cfg.TZ)}.sqlite`);
   const tmp = `${file}.partial`;
   try {
     mkdirSync(dir, { recursive: true });
@@ -65,7 +67,7 @@ export function runBackup(db: Db, cfg: Config, now = new Date()): BackupState {
 }
 
 function prune(dir: string, keep: number): number {
-  const files = readdirSync(dir).filter((f) => NAME.test(f)).sort().reverse();   // newest first (ISO dates)
+  const files = readdirSync(dir).filter((f) => NAME.test(f)).sort(byDate).reverse();   // newest first (ISO dates)
   for (const f of files.slice(Math.max(1, keep))) rmSync(join(dir, f));
   return Math.min(files.length, Math.max(1, keep));
 }

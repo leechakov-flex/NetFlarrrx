@@ -1,6 +1,6 @@
 {
-  "name": "NetFlarrrx",
-  "short_name": "NetFlarrrx",
+  "name": "MonkeySee",
+  "short_name": "MonkeySee",
   "description": "What's new on Netflix, with requests to MonkeyServer through Seerr.",
   "id": "/",
   "start_url": "/",
