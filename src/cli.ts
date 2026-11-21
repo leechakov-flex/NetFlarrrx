@@ -70,7 +70,7 @@ async function main() {
         const x = await app.crosscheck();
         if (!x.ok) throw new Error(`cross-check failed: ${x.error}`);
         console.log(`TMDB lists ${x.tmdbTotal} titles on Netflix; we list ${x.oursTotal}; ${x.both} in both.`);
-        console.log(`We have ${x.coveragePct}% of TMDB's list; TMDB has ${x.agreementPct}% of ours. (Alert below ${cfg.CROSSCHECK_MIN_PCT}%.)`);
+        console.log(`We have ${x.coveragePct}% of TMDB's list (alert below ${cfg.CROSSCHECK_MIN_PCT}%); TMDB has ${x.agreementPct}% of ours (alert below ${cfg.CROSSCHECK_MIN_AGREE_PCT}%).`);
         console.table(x.byType);
         console.log('\nMost popular titles TMDB has that we don\'t (check a few on JustWatch or Netflix):');
         console.table(x.onlyTmdb?.slice(0, 15));

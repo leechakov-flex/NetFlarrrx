@@ -61,7 +61,9 @@ const schema = z.object({
 
   // TMDB cross-check (M5): weekly compare with TMDB's own Netflix list (JustWatch data).
   CROSSCHECK_CRON: z.preprocess(clean, z.string().default('17 5 * * 0')),
-  CROSSCHECK_MIN_PCT: num(60),      // alert if fewer than this % of TMDB's Netflix titles are in ours
+  // Baseline Nov 20 on MonkeyServer: we had 82.2% of TMDB's list; TMDB had 97% of ours.
+  CROSSCHECK_MIN_PCT: num(70),      // alert if fewer than this % of TMDB's Netflix titles are in ours
+  CROSSCHECK_MIN_AGREE_PCT: num(85), // alert if fewer than this % of ours are on TMDB's list (stale entries)
   CROSSCHECK_MAX_DROP: num(10),     // or if that share falls this many points since the last run
   TMDB_NETFLIX_PROVIDER_ID: num(8),
 

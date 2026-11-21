@@ -121,7 +121,12 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         if (x.coveragePct < cfg.CROSSCHECK_MIN_PCT) {
           out.push({ key: 'crosscheck:low', title: 'Netflix list looks incomplete',
             message: `Only ${x.coveragePct}% of the ${x.tmdbTotal} titles TMDB lists on Netflix are in NetFlarrrx (alert below ${cfg.CROSSCHECK_MIN_PCT}%). Watchmode's list may be stale.\nDetails: docker exec netflarrrx node dist/cli.js crosscheck` });
-        } else if (x.previousCoveragePct != null && x.previousCoveragePct - x.coveragePct > cfg.CROSSCHECK_MAX_DROP) {
+        }
+        if (x.agreementPct !== undefined && x.agreementPct < cfg.CROSSCHECK_MIN_AGREE_PCT) {
+          out.push({ key: 'crosscheck:stale', title: 'Netflix list may include titles that left',
+            message: `Only ${x.agreementPct}% of the ${x.oursTotal} titles NetFlarrrx lists are on TMDB's Netflix list (alert below ${cfg.CROSSCHECK_MIN_AGREE_PCT}%). Watchmode may be listing titles Netflix removed.\nDetails: docker exec netflarrrx node dist/cli.js crosscheck` });
+        }
+        if (x.coveragePct >= cfg.CROSSCHECK_MIN_PCT && x.previousCoveragePct != null && x.previousCoveragePct - x.coveragePct > cfg.CROSSCHECK_MAX_DROP) {
           out.push({ key: 'crosscheck:drop', title: 'Netflix list changed sharply',
             message: `Match with TMDB fell from ${x.previousCoveragePct}% to ${x.coveragePct}% since last week.\nDetails: docker exec netflarrrx node dist/cli.js crosscheck` });
         }

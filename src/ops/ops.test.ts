@@ -149,12 +149,12 @@ describe('TMDB cross-check', () => {
 
   it('pages through TMDB and reports both directions', async () => {
     await setup();
-    const n = tmdbList(0.9, 30);          // 2+ pages of movies
+    const n = tmdbList(0.9, 10);          // 84% coverage; more than one page of movies
     const x = await app.crosscheck();
     expect(x.ok).toBe(true);
     expect(x.oursTotal).toBe(n);
     expect(x.both).toBe(Math.round(n * 0.9));
-    expect(x.tmdbTotal).toBe(Math.round(n * 0.9) + 30);
+    expect(x.tmdbTotal).toBe(Math.round(n * 0.9) + 10);
     expect(x.onlyTmdb![0]).toEqual({ tmdbId: 900000, type: 'movie', title: 'Only on TMDB 0', year: 2020 });
     expect(x.onlyOurs).toHaveLength(n - Math.round(n * 0.9));
     expect(app.problems().map((p) => p.key)).not.toContain('crosscheck:low');
@@ -171,6 +171,10 @@ describe('TMDB cross-check', () => {
     tmdbList(1, 12);                       // 60 of 72: 83%, a 17-point drop
     await app.crosscheck();
     expect(app.problems().map((p) => p.key)).toEqual(['crosscheck:drop']);
+
+    tmdbList(0.8);                         // TMDB lacks 20% of ours: stale entries on our side
+    await app.crosscheck();
+    expect(app.problems().map((p) => p.key)).toContain('crosscheck:stale');
 
     tmdb.discoverFailPage = 1;
     const x = await app.crosscheck();
