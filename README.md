@@ -13,7 +13,8 @@ Plan: *Netflix Catalog Browser (Seerr Companion) — PRD and Engineering Plan* (
 | M2: browse UI | Built. Discover rows, Movies and Series with filters, Top rated, title detail with trailers, search. Styled to match Seerr. |
 | M3: requests | Deployed. Request movies in one tap, pick seasons for series, passcode-protected, "Hide what I have" filter. |
 | M4: thematic rows | Deployed. Six rule-based rows on Discover (acclaimed, hidden gems, true stories, heists, limited series, short movies), editable in `themes.json`. |
-| M5: polish | Built. Nightly verified backups, ntfy alerts, weekly TMDB cross-check, add to home screen. A second streaming service is deferred. |
+| M5: polish | Deployed. Nightly verified backups, ntfy alerts, weekly TMDB cross-check, add to home screen. A second streaming service is deferred. |
+| Discover v2 | Built. A long, new-first Discover page with stand-up and comedy up top, recent genre rows, and recommendations from your library. |
 
 ## What runs
 
@@ -95,9 +96,29 @@ To update later: `docker compose pull netflarrrx && docker compose up -d netflar
 
 Requests go to Seerr with its API key, so they're made as the Seerr admin and approved automatically; Sonarr or Radarr picks them up from there. Set `APP_PASSCODE` in `netflarrrx.env` so only people with the passcode can request: each phone or browser asks once and remembers it. Ten wrong tries from one device pause it for 15 minutes. To make requests as a different Seerr user (so they wait for approval), add `SEERR_USER_ID=<their Seerr user ID>`.
 
-## Thematic rows
+## Discover
 
-Discover shows six rows after *Popular on Netflix*, each defined by a rule. A title joins a row when it matches **any** signal (a TMDB keyword, a genre, or a Watchmode type) and passes **every** limit (kind, year, rating, votes, runtime, seasons, excluded genres or keywords). Names match TMDB's own, ignoring case.
+Discover is a deliberately long page of about 30 rows, newest first:
+
+1. **New on Netflix:** new this week and this month (from the daily sync; these fill in as history builds), new movies (released in the last 4 months), new episodes and seasons (aired in the last 45 days), new Netflix originals.
+2. **Recommended for you,** then *Because you have …* rows spread down the page.
+3. **Comedy:** stand-up specials, new comedy movies, comedy series.
+4. **Popular now, by genre:** action, thrillers, crime, sci-fi and fantasy, horror, dramas, romance, documentaries, reality, animation, family. Genre rows only take titles from the last 2 to 3 years, so old catalogue hits don't crowd out new ones.
+5. **Themes:** true stories, heists, limited series, hidden gems, short movies, critically acclaimed, and all-time popular at the very end.
+
+"Newest added" sorting puts dated arrivals first, then titles by their latest release or episode.
+
+### Recommended for you
+
+Your library is what Seerr shows as available, which mirrors Plex and so what Sonarr and Radarr fetched. After each daily sync NetFlarrrx copies it and asks TMDB, once per title, what people who liked it also liked (free; cached for 60 days). A Netflix title scores higher the more of your titles recommend it and the higher it ranks; anything you already have or requested is left out. *Because you have X* rows use your most recently added titles with the most Netflix matches.
+
+```bash
+docker exec netflarrrx node dist/cli.js recs     # refresh now and show the top picks
+```
+
+## Rows and rules
+
+Each Discover row is defined by a rule. A title joins a row when it matches **any** signal (a TMDB keyword, a genre, or a Watchmode type) and passes **every** limit (kind, year, rating, votes, runtime, seasons, excluded genres or keywords). Names match TMDB's own, ignoring case.
 
 Tune them against your catalog:
 
@@ -118,7 +139,7 @@ To change them, put a `themes.json` in `~/server/config/netflarrrx/` and restart
 ]
 ```
 
-Fields: `slug`, `title`, `kind` (movie or series), `signals` {keywords, genres, types}, `exclude` {keywords, genres}, `year`, `rating`, `votes`, `runtime`, `seasons` (each `{min, max}`), `sort` (added, rating, popularity, release, title), `home` (false keeps it off Discover but under More → Collections).
+Fields: `slug`, `title`, `kind` (movie or series), `signals` {keywords, genres, types}, `require` {genres}, `exclude` {keywords, genres, types}, `year`, `rating`, `votes`, `runtime`, `seasons` (each `{min, max}`), `released` / `aired` (`{withinDays}`), `originals` (true or false), `addedWithin` (days), `sort` (added, rating, popularity, release, title, match), `home` (false keeps it off Discover but under More → Collections), `special` (for-you or because). A `themes.json` replaces the whole list, so copy the defaults from `src/catalog/themes.ts` and change from there.
 
 ## Backups, alerts and the TMDB cross-check
 

@@ -51,6 +51,7 @@ export function browseParams(q: BrowseQuery, page?: number): string {
   if (q.q) p.set('q', q.q);
   if (q.hideHave) p.set('hide', 'have');
   if (q.theme) p.set('theme', q.theme);
+  if (q.because) p.set('because', q.because);
   if (page && page > 1) p.set('page', String(page));
   return p.toString();
 }

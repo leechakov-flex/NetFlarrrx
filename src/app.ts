@@ -12,6 +12,7 @@ import { log } from './log.js';
 import { backupDir, lastBackup, runBackup, type BackupState } from './ops/backup.js';
 import { lastCrossCheck, runCrossCheck, type CrossCheckState } from './ops/crosscheck.js';
 import { Notifier, reconcileAlerts, type Problem } from './ops/alerts.js';
+import { refreshLibrary, libraryCount, type LibraryResult } from './recs/library.js';
 
 export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn }
 
@@ -27,6 +28,8 @@ export interface App {
   enrich(): Promise<EnrichResult>;
   mirror(): Promise<MirrorResult>;
   backup(): Promise<BackupState>;
+  /** Library from Seerr plus TMDB recommendations, for "Recommended for you". */
+  library(): Promise<LibraryResult>;
   crosscheck(): Promise<CrossCheckState>;
   /** Work out what needs attention and alert on changes (ntfy or Discord). */
   checkAlerts(now?: Date): Promise<{ open: string[]; sent: string[] }>;
@@ -72,6 +75,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         const sync = await runCatalogSync({ db, cfg, watchmode }, trigger);
         const enrich = await enrichTitles(db, cfg, tmdb);   // also catches up on titles a failed run left pending
         const mirror = await mirrorSeerrMedia(db, seerr);
+        await safely('library', app.library());
         await safely('alerts', app.checkAlerts());
         return { sync, enrich, mirror };
       } catch (err) {
@@ -84,6 +88,8 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
 
     enrich: () => enrichTitles(db, cfg, tmdb),
     mirror: () => mirrorSeerrMedia(db, seerr),
+
+    library: () => refreshLibrary(db, cfg, tmdb),
 
     async backup() {
       const r = runBackup(db, cfg);
@@ -186,5 +192,6 @@ export async function startupTasks(app: App) {
   const b = lastBackup(app.db);
   if (backupDir(app.cfg) && (!b?.lastOkAt || Date.now() - Date.parse(b.lastOkAt) > 24 * 3600_000)) await app.backup();
   if (!lastCrossCheck(app.db)) await app.crosscheck();
+  if (libraryCount(app.db) === 0) await app.library().catch(() => undefined);
   await app.checkAlerts().catch(() => undefined);
 }

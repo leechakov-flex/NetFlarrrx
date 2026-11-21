@@ -22,30 +22,101 @@ export const ThemeRule = z.object({
   signals: z.object({
     keywords: z.array(z.string()).optional(),
     genres: z.array(z.string()).optional(),
-    types: z.array(z.enum(['movie', 'tv_movie', 'short_film', 'tv_series', 'tv_miniseries'])).optional(),
+    types: z.array(z.enum(['movie', 'tv_movie', 'short_film', 'tv_special', 'tv_series', 'tv_miniseries'])).optional(),
   }).strict().optional(),
+  require: z.object({ genres: z.array(z.string()).min(1) }).strict().optional(),   // must have one of these genres
   exclude: z.object({
     keywords: z.array(z.string()).optional(),
     genres: z.array(z.string()).optional(),
+    types: z.array(z.string()).optional(),
   }).strict().optional(),
   year: range.optional(),
   rating: range.optional(),         // TMDB vote average, 0-10
   votes: range.optional(),          // TMDB vote count
   runtime: range.optional(),        // minutes; applies to movies only
   seasons: range.optional(),        // season count; applies to series only
-  sort: z.enum(['added', 'rating', 'popularity', 'release', 'title']).default('added'),
+  released: z.object({ withinDays: z.number().int().positive() }).strict().optional(),  // first release (movie) or premiere (series)
+  aired: z.object({ withinDays: z.number().int().positive() }).strict().optional(),     // movie release, or a series' latest episode
+  originals: z.boolean().optional(),  // true = Netflix originals only, false = none
+  addedWithin: z.number().int().positive().optional(),  // days since it appeared on Netflix (needs tracking history)
+  sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match']).default('added'),
   home: z.boolean().default(true),  // show as a row on Discover
+  // Rows built from your library instead of filters. "because" rows each take
+  // the next of your titles with the most Netflix matches.
+  special: z.enum(['for-you', 'because']).optional(),
 }).strict();
 export type ThemeRule = z.infer<typeof ThemeRule>;
 
 const ThemeFile = z.array(ThemeRule).refine((a) => new Set(a.map((t) => t.slug)).size === a.length, 'theme slugs must be unique');
 
-/** The six starter rows from the PRD, tuned on first use. Order = order on Discover. */
+const STANDUP = ["stand-up comedy", "stand-up special", "stand up comedy", "stand-up comedian", "comedy special"];
+
+/**
+ * Every Discover row, in order: new arrivals first, then a long mixed scroll of
+ * recommendations, comedy, recent genre picks and themes. Genre rows only take
+ * titles from the last few years, so old catalogue hits don't crowd out new ones.
+ * Rows with nothing to show are skipped (the "new on Netflix" ones fill in as
+ * tracking history builds; "for you" needs titles available in Seerr).
+ */
 export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
+  // New on Netflix
+  { slug: 'new-week', title: 'New on Netflix this week', addedWithin: 7 },
+  { slug: 'new-month', title: 'New this month', addedWithin: 30 },
+  { slug: 'new-movies', title: 'New movies', kind: 'movie', released: { withinDays: 120 }, sort: 'release',
+    exclude: { types: ['tv_special'] } },
+  { slug: 'new-episodes', title: 'New episodes and seasons', kind: 'series', aired: { withinDays: 45 } },
+  { slug: 'new-originals', title: 'New Netflix originals', originals: true, aired: { withinDays: 180 } },
+  { slug: 'for-you', title: 'Recommended for you', special: 'for-you', sort: 'match' },
+
+  // Comedy, up top
+  { slug: 'standup', title: 'Stand-up specials', kind: 'movie',
+    signals: { keywords: STANDUP, types: ['tv_special'] }, require: { genres: ['Comedy'] }, sort: 'release' },
+  { slug: 'new-comedies', title: 'New comedy movies', kind: 'movie', require: { genres: ['Comedy'] }, released: { withinDays: 730 },
+    exclude: { keywords: STANDUP, types: ['tv_special'], genres: ['Documentary'] }, sort: 'release' },
+  { slug: 'comedy-series', title: 'Comedy series', kind: 'series', require: { genres: ['Comedy'] }, aired: { withinDays: 730 },
+    exclude: { genres: ['Kids', 'Talk', 'News'] }, sort: 'popularity' },
+  { slug: 'because-1', title: 'Because you have', special: 'because' },
+
+  // Popular now, by genre (recent titles only)
+  { slug: 'trending', title: 'Popular right now', aired: { withinDays: 365 }, sort: 'popularity' },
+  { slug: 'action', title: 'Action and adventure', require: { genres: ['Action', 'Adventure', 'Action & Adventure'] },
+    aired: { withinDays: 1095 }, exclude: { genres: ['Kids', 'Family'] }, sort: 'popularity' },
+  { slug: 'thrillers', title: 'Thrillers and mysteries', require: { genres: ['Thriller', 'Mystery'] },
+    aired: { withinDays: 1095 }, exclude: { genres: ['Documentary', 'Kids'] }, sort: 'popularity' },
+  { slug: 'crime', title: 'Crime', require: { genres: ['Crime'] }, aired: { withinDays: 1095 },
+    exclude: { genres: ['Documentary'] }, sort: 'popularity' },
+  { slug: 'new-for-you', title: 'New for you', special: 'for-you', aired: { withinDays: 365 }, sort: 'added' },
+  { slug: 'scifi', title: 'Sci-fi and fantasy', require: { genres: ['Science Fiction', 'Fantasy', 'Sci-Fi & Fantasy'] },
+    aired: { withinDays: 1095 }, exclude: { genres: ['Kids'] }, sort: 'popularity' },
+  { slug: 'horror', title: 'Horror', require: { genres: ['Horror'] }, aired: { withinDays: 1095 }, sort: 'popularity' },
   {
-    slug: 'acclaimed', title: 'Critically acclaimed',
-    rating: { min: 7.5 }, votes: { min: 1000 }, sort: 'rating',
+    slug: 'true-stories', title: 'Based on a true story',
+    signals: { keywords: ['based on true story', 'based on a true story', 'based on real events', 'based on real person', 'true story', 'biography', 'true crime', 'historical figure'] },
+    exclude: { genres: ['Documentary', 'Reality'] },
   },
+  { slug: 'dramas', title: 'Dramas', require: { genres: ['Drama'] }, aired: { withinDays: 730 },
+    exclude: { genres: ['Comedy', 'Kids', 'Soap'] }, sort: 'popularity' },
+  { slug: 'because-2', title: 'Because you have', special: 'because' },
+  { slug: 'romance', title: 'Romance', require: { genres: ['Romance'] }, aired: { withinDays: 1095 }, sort: 'popularity' },
+  { slug: 'docs', title: 'Documentaries and docuseries', require: { genres: ['Documentary'] }, aired: { withinDays: 730 }, sort: 'popularity' },
+  { slug: 'reality', title: 'Reality and competition', kind: 'series', require: { genres: ['Reality'] }, aired: { withinDays: 730 }, sort: 'popularity' },
+  {
+    // "thief", "robbery" and "scam" pulled in Wicked, Conan and Saw X, so only heist and con keywords.
+    slug: 'heists', title: 'Heists and cons',
+    signals: { keywords: ['heist', 'bank robbery', 'art heist', 'jewel heist', 'casino heist', 'heist movie', 'con artist', 'con man', 'swindle', 'grifter', 'master thief'] },
+    exclude: { genres: ['Documentary', 'Animation', 'Family'] },
+  },
+  { slug: 'animation', title: 'Anime and animation', require: { genres: ['Animation'] }, aired: { withinDays: 1095 },
+    exclude: { genres: ['Kids', 'Family'] }, sort: 'popularity' },
+  {
+    slug: 'limited-series', title: 'Limited series',
+    kind: 'series',
+    signals: { types: ['tv_miniseries'], keywords: ['miniseries', 'limited series', 'mini-series'] },
+    seasons: { max: 1 },
+    exclude: { genres: ['Documentary', 'Reality', 'Talk', 'Kids'] },
+  },
+  { slug: 'because-3', title: 'Because you have', special: 'because' },
+  { slug: 'family', title: 'Family and kids', require: { genres: ['Family', 'Kids'] }, aired: { withinDays: 1095 }, sort: 'popularity' },
   {
     // Tuned Nov 20 on the real catalog: 150+ votes keeps out brand-new titles rated
     // on a handful of votes; a 60-minute floor drops trailer specials and ambient videos.
@@ -54,30 +125,13 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
     exclude: { genres: ['Documentary', 'Talk', 'News', 'Reality', 'Kids', 'Family'] },
   },
   {
-    slug: 'true-stories', title: 'Based on a true story',
-    signals: { keywords: ['based on true story', 'based on a true story', 'based on real events', 'based on real person', 'true story', 'biography', 'true crime', 'historical figure'] },
-    exclude: { genres: ['Documentary', 'Reality'] },
-  },
-  {
-    slug: 'heists', title: 'Heists and cons',
-    // "thief", "robbery" and "scam" pulled in Wicked, Conan and Saw X, so only heist and con keywords.
-    signals: { keywords: ['heist', 'bank robbery', 'art heist', 'jewel heist', 'casino heist', 'heist movie', 'con artist', 'con man', 'swindle', 'grifter', 'master thief'] },
-    exclude: { genres: ['Documentary', 'Animation', 'Family'] },
-  },
-  {
-    slug: 'limited-series', title: 'Limited series',
-    kind: 'series',
-    signals: { types: ['tv_miniseries'], keywords: ['miniseries', 'limited series', 'mini-series'] },
-    seasons: { max: 1 },
-    exclude: { genres: ['Documentary', 'Reality', 'Talk', 'Kids'] },
-  },
-  {
-    slug: 'short-movies', title: 'Short movies',
-    kind: 'movie',
     // A floor on rating and votes drops the stream of low-vote TV movies.
+    slug: 'short-movies', title: 'Short movies', kind: 'movie',
     runtime: { min: 40, max: 89 }, rating: { min: 6 }, votes: { min: 100 },
-    exclude: { genres: ['Documentary'] },
+    exclude: { genres: ['Documentary'], types: ['tv_special'] },
   },
+  { slug: 'acclaimed', title: 'Critically acclaimed', rating: { min: 7.5 }, votes: { min: 1000 }, sort: 'rating' },
+  { slug: 'popular', title: 'All-time popular on Netflix', sort: 'popularity' },
 ]);
 
 /**
@@ -102,7 +156,10 @@ const lower = (a: string[]) => a.map((s) => s.toLowerCase());
 const qs = (n: number) => Array.from({ length: n }, () => '?').join(',');
 
 /** SQL for a theme, on top of the eligibility rule. Expects `tk` = title_kinds. */
-export function themeWhere(t: ThemeRule): { sql: string; params: (string | number)[] } {
+const daysAgo = (now: Date, d: number) => new Date(now.getTime() - d * 86_400_000).toISOString().slice(0, 10);
+const today = (now: Date) => now.toISOString().slice(0, 10);
+
+export function themeWhere(t: ThemeRule, now = new Date()): { sql: string; params: (string | number)[] } {
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (t.kind) { where.push('tk.kind = ?'); params.push(t.kind); }
@@ -123,6 +180,10 @@ export function themeWhere(t: ThemeRule): { sql: string; params: (string | numbe
   }
   if (sig.length) where.push(`(${sig.join(' OR ')})`);
 
+  if (t.require?.genres.length) {
+    where.push(`EXISTS (SELECT 1 FROM title_genres tgr JOIN genres gr ON gr.id = tgr.genre_id WHERE tgr.title_id = tk.id AND lower(gr.name) IN (${qs(t.require.genres.length)}))`);
+    params.push(...lower(t.require.genres));
+  }
   const x = t.exclude ?? {};
   if (x.keywords?.length) {
     where.push(`NOT EXISTS (SELECT 1 FROM title_keywords tkx JOIN keywords kx ON kx.id = tkx.keyword_id WHERE tkx.title_id = tk.id AND lower(kx.name) IN (${qs(x.keywords.length)}))`);
@@ -132,6 +193,8 @@ export function themeWhere(t: ThemeRule): { sql: string; params: (string | numbe
     where.push(`NOT EXISTS (SELECT 1 FROM title_genres tgx JOIN genres gx ON gx.id = tgx.genre_id WHERE tgx.title_id = tk.id AND lower(gx.name) IN (${qs(x.genres.length)}))`);
     params.push(...lower(x.genres));
   }
+
+  if (x.types?.length) { where.push(`tk.watchmode_type NOT IN (${qs(x.types.length)})`); params.push(...x.types); }
 
   const bound = (col: string, r?: { min?: number; max?: number }) => {
     if (r?.min !== undefined) { where.push(`${col} >= ?`); params.push(r.min); }
@@ -148,5 +211,12 @@ export function themeWhere(t: ThemeRule): { sql: string; params: (string | numbe
   };
   scoped('movie', 'tk.runtime', t.runtime);
   scoped('series', 'tk.seasons', t.seasons);
+  if (t.released) { where.push('tk.release_date >= ? AND tk.release_date <= ?'); params.push(daysAgo(now, t.released.withinDays), today(now)); }
+  if (t.aired) {
+    where.push(`COALESCE(tk.last_air_date, tk.release_date) >= ? AND COALESCE(tk.last_air_date, tk.release_date) <= ?`);
+    params.push(daysAgo(now, t.aired.withinDays), today(now));
+  }
+  if (t.originals !== undefined) where.push(t.originals ? 'tk.netflix_original = 1' : 'tk.netflix_original = 0');
+  if (t.addedWithin) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - t.addedWithin * 86_400_000).toISOString()); }
   return { sql: where.length ? where.join(' AND ') : '1 = 1', params };
 }

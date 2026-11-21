@@ -13,11 +13,11 @@ export function Discover() {
           <p className="text-sm font-semibold">
             {home.data.trackingSince ? `Tracking Netflix since ${longDate(home.data.trackingSince)}` : 'Starting to track Netflix'}
           </p>
-          <p className="mt-0.5 text-sm">Titles that were already on Netflix show no date. “New” rows fill in as Netflix adds titles.</p>
+          <p className="mt-0.5 text-sm">“New on Netflix” rows fill in as Netflix adds titles. Until then, the newest releases and episodes lead.</p>
         </div>
       )}
       {home.isPending
-        ? ['New this week', 'New this month', 'Popular on Netflix'].map((t) => <SliderPlaceholder key={t} title={t} />)
+        ? ['New on Netflix this week', 'New movies', 'New episodes and seasons', 'Stand-up specials'].map((t) => <SliderPlaceholder key={t} title={t} />)
         : home.data.rows.map((row) => <Slider key={row.slug} row={row} />)}
       {home.data && home.data.rows.length === 0 && <Empty>No titles yet. The first sync is still running.</Empty>}
       <Credits />

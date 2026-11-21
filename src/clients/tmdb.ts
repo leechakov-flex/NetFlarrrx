@@ -29,6 +29,9 @@ const Details = z.object({
   popularity: z.number().nullable().optional(),
   runtime: z.number().int().nullable().optional(),
   number_of_seasons: z.number().int().nullable().optional(),
+  last_air_date: z.string().nullable().optional(),     // tv
+  networks: z.array(Named).optional().default([]),     // tv
+  production_companies: z.array(Named).optional().default([]),
   genres: z.array(Named).optional().default([]),
   keywords: z.object({
     keywords: z.array(Named).optional(),   // movie
@@ -62,6 +65,8 @@ export interface TmdbDetails {
   trailer: { key: string; name: string } | null;
   genres: { id: number; name: string }[];
   keywords: { id: number; name: string }[];
+  lastAirDate: string | null;
+  netflixOriginal: boolean;
 }
 
 /**
@@ -80,6 +85,11 @@ export function pickTrailer(videos: TmdbVideo[]): { key: string; name: string } 
   return { key: best.key, name: best.name };
 }
 
+const Recs = z.object({
+  title: z.string().optional(), name: z.string().optional(),
+  recommendations: z.object({ results: z.array(z.object({ id: z.number().int() }).passthrough()).optional().default([]) }).optional(),
+});
+
 export interface DiscoverItem { id: number; title: string; year: number | null; popularity: number | null }
 
 const DiscoverPage = z.object({
@@ -96,6 +106,20 @@ const DiscoverPage = z.object({
 
 export class TmdbClient {
   constructor(private base: string, private token: string, private fetchFn: FetchFn = fetch) {}
+
+  /** A library title's name and TMDB's recommendations for it (one page, about 20). */
+  async recommendations(type: 'movie' | 'tv', id: number): Promise<{ title: string | null; recs: { id: number; rank: number }[] } | null> {
+    let raw: unknown;
+    try {
+      raw = await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=recommendations&language=en-US`,
+        { headers: { Authorization: `Bearer ${this.token}` } });
+    } catch (err) {
+      if (err instanceof HttpError && err.isNotFound) return null;
+      throw err;
+    }
+    const d = Recs.parse(raw);
+    return { title: d.title ?? d.name ?? null, recs: (d.recommendations?.results ?? []).map((r, i) => ({ id: r.id, rank: i + 1 })) };
+  }
 
   /** One page of titles TMDB lists on a streaming service (flat-rate) in a region. */
   async discover(type: 'movie' | 'tv', providerId: number, region: string, page: number) {
@@ -152,6 +176,11 @@ export class TmdbClient {
       trailer: pickTrailer(videos),
       genres: d.genres,
       keywords: d.keywords?.keywords ?? d.keywords?.results ?? [],
+      lastAirDate: type === 'tv' ? (d.last_air_date || null) : null,
+      // Series: Netflix is the network. Films and specials: a Netflix studio made it.
+      netflixOriginal: type === 'tv'
+        ? d.networks.some((n) => n.name === 'Netflix')
+        : d.production_companies.some((c) => /^Netflix\b/.test(c.name)),
     };
   }
 }

@@ -37,7 +37,7 @@ const tmdbFetch: FetchFn = varied
       if (!res.ok) return res;
       const body = (await res.json()) as Record<string, unknown> & { id: number };
       const id = body.id;
-      delete body.title; delete body.name;               // fall back to Watchmode's real titles
+      if (body.id < 7_000_000) { delete body.title; delete body.name; }   // fall back to Watchmode's real titles (not for the fake library)
       body.poster_path = null; body.backdrop_path = null;
       body.original_language = id % 5 < 3 ? 'en' : 'ko';
       body.vote_average = Math.round(((id % 47) / 47 * 4 + 5) * 10) / 10;
@@ -60,5 +60,17 @@ const tmdbFetch: FetchFn = varied
 const base = Number(process.env.FAKE_PORT_BASE ?? 18000);
 serve(base + 1, new FakeWatchmode().fetch);
 serve(base + 2, tmdbFetch);
-serve(base + 3, new FakeSeerr().fetch);
+// A small library (Seerr "available") whose TMDB recommendations point at Netflix titles.
+const fakeSeerr = new FakeSeerr();
+{
+  const films = new FakeWatchmode().catalog.filter((t) => t.tmdb_id && t.tmdb_type === 'movie');
+  const names = ['The Office', 'Parks and Recreation', 'Superbad', 'Knives Out', 'Severance', 'The Bear'];
+  names.forEach((title, i) => {
+    const id = 7_000_000 + i;
+    fakeSeerr.media.push({ id: 9000 + i, mediaType: 'movie', tmdbId: id, status: 5, seasons: [], updatedAt: `2026-11-1${i}T00:00:00Z` });
+    tmdb.overrides.set(`movie:${id}`, { title });
+    tmdb.recs.set(`movie:${id}`, films.filter((_, k) => (k * 7 + i * 13) % 61 === 0).slice(0, 20).map((t) => t.tmdb_id!));
+  });
+}
+serve(base + 3, fakeSeerr.fetch);
 console.log(`fakes on ${base + 1} (watchmode) ${base + 2} (tmdb) ${base + 3} (seerr)${varied ? ' [varied]' : ''}`);

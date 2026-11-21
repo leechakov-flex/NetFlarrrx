@@ -174,4 +174,49 @@ FROM titles t;
 UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
 `,
   },
+  {
+    version: 3,
+    name: 'specials_originals_library',
+    sql: `
+ALTER TABLE titles ADD COLUMN last_air_date TEXT;                           -- series: latest episode aired
+ALTER TABLE titles ADD COLUMN netflix_original INTEGER NOT NULL DEFAULT 0;  -- TMDB network or studio is Netflix
+
+-- Watchmode files stand-up and other specials as tv_special; TMDB has them as
+-- movies, so the app shows them as movies.
+DROP VIEW title_kinds;
+CREATE VIEW title_kinds AS
+SELECT t.*,
+  CASE t.watchmode_type
+    WHEN 'movie' THEN 'movie' WHEN 'tv_movie' THEN 'movie' WHEN 'short_film' THEN 'movie' WHEN 'tv_special' THEN 'movie'
+    WHEN 'tv_series' THEN 'series' WHEN 'tv_miniseries' THEN 'series'
+    ELSE NULL
+  END AS kind
+FROM titles t;
+
+-- Your library (what Seerr shows as available), with TMDB's recommendations
+-- for each title, for "Recommended for you".
+CREATE TABLE library_items (
+  media_type  TEXT NOT NULL CHECK (media_type IN ('movie', 'tv')),
+  tmdb_id     INTEGER NOT NULL,
+  title       TEXT,
+  added_at    TEXT,                 -- when it became available (Seerr's timestamp)
+  recs_at     TEXT,                 -- when recommendations were last fetched
+  recs_status TEXT,                 -- ok, missing, error
+  PRIMARY KEY (media_type, tmdb_id)
+);
+CREATE TABLE library_recs (
+  seed_type TEXT NOT NULL,
+  seed_id   INTEGER NOT NULL,
+  rec_type  TEXT NOT NULL,
+  rec_id    INTEGER NOT NULL,
+  rank      INTEGER NOT NULL,       -- 1 = TMDB's strongest recommendation
+  PRIMARY KEY (seed_type, seed_id, rec_type, rec_id),
+  FOREIGN KEY (seed_type, seed_id) REFERENCES library_items (media_type, tmdb_id) ON DELETE CASCADE
+);
+CREATE INDEX library_recs_rec ON library_recs (rec_type, rec_id);
+
+-- Re-fetch everything once for new-season dates and the Netflix-original flag.
+UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
+`,
+  },
 ];

@@ -43,14 +43,15 @@ describe('read API', () => {
   it('/api/home returns the fixed rows, newest first, then theme rows', async () => {
     const { body } = await j<HomeResponse>('/api/home');
     expect(body.showTrackingNotice).toBe(true);
-    expect(body.rows.map((r) => r.slug).slice(0, 4)).toEqual(['new-week', 'new-month', 'popular', 'acclaimed']);
-    expect(body.rows.slice(4).every((r) => r.link?.startsWith('/browse?theme='))).toBe(true);
+    expect(body.rows.map((r) => r.slug).slice(0, 2)).toEqual(['new-week', 'new-month']);
+    expect(body.rows.every((r) => r.link?.startsWith('/browse?theme='))).toBe(true);
+    expect(body.rows.map((r) => r.slug).at(-1)).toBe('popular');            // all-time popular sits at the bottom now
     const week = body.rows[0]!;
     expect(week.total).toBe(10);
     const dates = week.items.map((i) => i.addedAt!);
     expect([...dates].sort().reverse()).toEqual(dates);
     expect(body.rows[1]!.total).toBe(20);
-    expect(body.rows[3]!.items.every((i) => i.voteAverage! >= 7.5 && i.voteCount! >= 1000)).toBe(true);
+    expect(body.rows.find((r) => r.slug === 'acclaimed')!.items.every((i) => i.voteAverage! >= 7.5 && i.voteCount! >= 1000)).toBe(true);
   });
 
   it('home drops empty new rows during the baseline period', async () => {
@@ -58,7 +59,7 @@ describe('read API', () => {
     await a2.pipeline('cli');
     run(a2.db, `UPDATE titles SET original_language = 'en'`);
     const h = (await (await createServer(a2).request('/api/home')).json()) as HomeResponse;
-    expect(h.rows[0]!.slug).toBe('popular');
+    expect(h.rows.map((r) => r.slug)).toContain('popular');
     expect(h.rows.map((r) => r.slug)).not.toContain('new-week');
     expect(h.rows.map((r) => r.slug)).not.toContain('new-month');
     a2.close();

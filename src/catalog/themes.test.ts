@@ -22,7 +22,8 @@ function reset() {
   const db = app.db;
   run(db, `UPDATE titles SET original_language = 'en', vote_average = 6, vote_count = 300, runtime = CASE WHEN watchmode_type LIKE 'tv_%' THEN NULL ELSE 110 END,
            seasons = CASE WHEN watchmode_type LIKE 'tv_%' THEN 3 ELSE NULL END,
-           watchmode_type = CASE WHEN watchmode_type = 'tv_miniseries' THEN 'tv_series' ELSE watchmode_type END`);
+           watchmode_type = CASE WHEN watchmode_type = 'tv_miniseries' THEN 'tv_series' WHEN watchmode_type = 'tv_special' THEN 'movie' ELSE watchmode_type END,
+           release_date = '2001-01-01', last_air_date = NULL, netflix_original = 0`);
   run(db, 'DELETE FROM title_keywords');
   run(db, 'DELETE FROM title_genres');
   run(db, `INSERT OR IGNORE INTO genres (id, name) VALUES (18, 'Drama'), (99, 'Documentary'), (16, 'Animation'), (80, 'Crime')`);
@@ -48,7 +49,12 @@ afterAll(() => app.close());
 
 describe('default themes', () => {
   it('are valid and in Discover order', () => {
-    expect(DEFAULT_THEMES.map((t) => t.slug)).toEqual(['acclaimed', 'hidden-gems', 'true-stories', 'heists', 'limited-series', 'short-movies']);
+    const slugs = DEFAULT_THEMES.map((t) => t.slug);
+    expect(slugs.slice(0, 6)).toEqual(['new-week', 'new-month', 'new-movies', 'new-episodes', 'new-originals', 'for-you']);
+    expect(slugs.indexOf('standup')).toBeLessThan(slugs.indexOf('trending'));         // comedy before the genre rows
+    expect(slugs.at(-1)).toBe('popular');
+    for (const s of ['acclaimed', 'hidden-gems', 'true-stories', 'heists', 'limited-series', 'short-movies']) expect(slugs).toContain(s);
+    expect(DEFAULT_THEMES.filter((t) => t.special === 'because')).toHaveLength(3);
   });
 
   it('true stories: any listed keyword, case-insensitive; documentaries excluded', async () => {
@@ -100,14 +106,59 @@ describe('default themes', () => {
   });
 });
 
+describe('new rule fields', () => {
+  const day = 86_400_000;
+  const date = (daysAgo: number) => new Date(Date.now() - daysAgo * day).toISOString().slice(0, 10);
+
+  it('stand-up: Watchmode specials or stand-up keywords, comedy only, newest first', async () => {
+    reset();
+    run(app.db, `INSERT OR IGNORE INTO genres (id, name) VALUES (35, 'Comedy')`);
+    run(app.db, `INSERT OR IGNORE INTO keywords (id, name) VALUES (9716, 'stand-up comedy')`);
+    set(movies[0]!, `watchmode_type = 'tv_special', release_date = '${date(400)}'`); genre(movies[0]!, 35);
+    set(movies[1]!, `release_date = '${date(10)}'`); genre(movies[1]!, 35); kw(movies[1]!, 9716);
+    set(movies[2]!, `watchmode_type = 'tv_special'`);                     // an awards show: not comedy
+    genre(movies[3]!, 35);                                                // a comedy film: not stand-up
+    expect((await j<BrowseResponse>('/api/titles?theme=standup')).body.items.map((i) => i.id)).toEqual([movies[1]!, movies[0]!]);
+    expect((await j<BrowseResponse>('/api/titles?theme=new-movies')).body.items.map((i) => i.id)).not.toContain(movies[0]!);
+  });
+
+  it('released, aired and originals windows; future dates are ignored', async () => {
+    reset();
+    set(movies[0]!, `release_date = '${date(20)}', netflix_original = 1`);
+    set(movies[1]!, `release_date = '${date(200)}'`);
+    set(movies[2]!, `release_date = '${date(-30)}'`);                   // announced, not out yet
+    set(series[0]!, `release_date = '2015-01-01', last_air_date = '${date(5)}'`);   // old show, new season
+    set(series[1]!, `release_date = '2015-01-01', last_air_date = '2018-06-01'`);
+    expect(await slugsFor('new-movies')).toEqual([movies[0]!]);
+    expect(await slugsFor('new-episodes')).toEqual([series[0]!]);
+    expect(await slugsFor('new-originals')).toEqual([movies[0]!]);
+  });
+
+  it('newest added falls back to the latest release or episode for undated titles', async () => {
+    reset();
+    run(app.db, `UPDATE titles SET release_date = '2001-01-01', popularity = 1`);
+    set(movies[0]!, `release_date = '${date(3)}'`);
+    set(series[0]!, `release_date = '2010-01-01', last_air_date = '${date(1)}'`);
+    set(movies[1]!, 'popularity = 999');                                  // popular but old
+    const items = (await j<BrowseResponse>('/api/titles?sort=added')).body.items.map((i) => i.id);
+    expect(items.slice(0, 2)).toEqual([series[0]!, movies[0]!]);
+    expect(items.indexOf(movies[1]!)).toBeGreaterThan(1);
+  });
+});
+
 describe('theme API and home', () => {
   it('home shows theme rows after the fixed rows and drops empty ones', async () => {
     reset();
     kw(movies[0]!, 10051);
     set(movies[1]!, 'runtime = 80');
     const { body } = await j<HomeResponse>('/api/home');
-    expect(body.rows.map((r) => r.slug)).toEqual(['popular', 'heists', 'short-movies']);
-    expect(body.rows[1]).toMatchObject({ title: 'Heists and cons', total: 1, link: '/browse?theme=heists' });
+    const slugs = body.rows.map((r) => r.slug);
+    expect(body.rows.find((r) => r.slug === 'heists')).toMatchObject({ title: 'Heists and cons', total: 1, link: '/browse?theme=heists' });
+    expect(slugs).toContain('short-movies');
+    expect(slugs).not.toContain('true-stories');        // nothing matches: dropped
+    expect(slugs).not.toContain('for-you');             // no library yet
+    expect(body.rows.every((r) => r.items.length > 0)).toBe(true);
+    expect(slugs.indexOf('heists')).toBeLessThan(slugs.indexOf('short-movies'));
   });
 
   it('/api/themes lists every theme with a count; unknown themes are 404', async () => {
@@ -115,7 +166,8 @@ describe('theme API and home', () => {
     kw(movies[0]!, 10051);
     const { body } = await j<ThemeSummary[]>('/api/themes');
     expect(body.find((t) => t.slug === 'heists')).toMatchObject({ count: 1, kind: null, home: true });
-    expect(body).toHaveLength(6);
+    expect(body).toHaveLength(DEFAULT_THEMES.length - 3);     // "because" rows aren't browseable themes
+    expect((await j('/api/titles?theme=because-1')).status).toBe(404);
     expect((await j('/api/titles?theme=nope')).status).toBe(404);
   });
 

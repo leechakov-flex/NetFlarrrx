@@ -2,6 +2,7 @@ import type { Config } from '../config.js';
 import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere } from './rules.js';
 import { loadThemes, themeWhere, type ThemeRule } from './themes.js';
+import { becauseSeeds, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED } from '../recs/library.js';
 import type {
   BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ThemeSummary, TitleCard, TitleDetail, TopResponse,
 } from '../api/types.js';
@@ -47,7 +48,11 @@ export function themesFor(cfg: Config): ThemeRule[] {
   if (!t) { t = loadThemes(cfg); themeCache.set(cfg, t); }
   return t;
 }
-export const findTheme = (cfg: Config, slug: string | undefined) => (slug ? themesFor(cfg).find((t) => t.slug === slug) : undefined);
+/** A browseable theme. "Because you have" rows aren't: they're reached by `because`. */
+export const findTheme = (cfg: Config, slug: string | undefined) =>
+  (slug ? themesFor(cfg).find((t) => t.slug === slug && t.special !== 'because') : undefined);
+
+const seedParts = (because: string) => { const [type, id] = because.split(':'); return { type: type as 'movie' | 'tv', id: Number(id) }; };
 
 /** Builds WHERE clauses for browse-style filters on top of the eligibility rule. */
 function filters(cfg: Config, q: BrowseQuery, now: Date) {
@@ -56,7 +61,15 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
   const params: (string | number)[] = [...base.params];
   if (q.kind) { where.push('tk.kind = ?'); params.push(q.kind); }
   const theme = findTheme(cfg, q.theme);
-  if (theme) { const t = themeWhere(theme); where.push(t.sql); params.push(...t.params); }
+  if (theme) {
+    const t = themeWhere(theme, now); where.push(t.sql); params.push(...t.params);
+    if (theme.special === 'for-you') where.push(RECOMMENDED);
+  }
+  if (q.because) {
+    const seed = seedParts(q.because);
+    where.push(`EXISTS (SELECT 1 FROM library_recs rb WHERE rb.seed_type = ? AND rb.seed_id = ? AND rb.rec_type = tk.tmdb_type AND rb.rec_id = tk.tmdb_id) AND ${NOT_MINE}`);
+    params.push(seed.type, seed.id);
+  }
   if (q.added) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - q.added * DAY).toISOString()); }
   if (q.minRating) { where.push('tk.vote_average >= ?'); params.push(q.minRating); }
   if (q.maxRating !== undefined && q.maxRating < 10) { where.push('tk.vote_average <= ?'); params.push(q.maxRating); }
@@ -75,12 +88,29 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
 }
 
 const ORDER: Record<NonNullable<BrowseQuery['sort']>, string> = {
-  // Undated (baseline) titles sort after dated ones, by popularity.
-  added: 'a.added_at IS NULL, a.added_at DESC, tk.popularity DESC',
+  // Dated arrivals first. Titles already on Netflix when tracking began have no
+  // date, so they follow by their latest release or episode (a fair proxy for
+  // "recently added"), then popularity. Future dates (pre-announced) count as today.
+  added: `a.added_at IS NULL, a.added_at DESC, min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) DESC, tk.popularity DESC`,
   rating: 'tk.vote_average DESC, tk.vote_count DESC',
   popularity: 'tk.popularity DESC',
-  release: 'tk.release_date IS NULL, tk.release_date DESC',
+  release: `tk.release_date IS NULL, min(tk.release_date, date('now')) DESC, tk.popularity DESC`,
   title: 'COALESCE(tk.tmdb_title, tk.title) COLLATE NOCASE ASC',
+  match: `COALESCE(${MATCH_SCORE}, 0) DESC, tk.popularity DESC`,
+};
+
+/** For "Because you have X": TMDB's own ranking for that title. */
+const becauseOrder = (because: string) => {
+  const seed = seedParts(because);
+  return { sql: `(SELECT min(rank) FROM library_recs ro WHERE ro.seed_type = ? AND ro.seed_id = ? AND ro.rec_type = tk.tmdb_type AND ro.rec_id = tk.tmdb_id), tk.popularity DESC`, params: [seed.type, seed.id] as (string | number)[] };
+};
+function orderBy(q: BrowseQuery) {
+  if (q.because && (!q.sort || q.sort === 'match')) return becauseOrder(q.because);
+  return { sql: ORDER[q.sort ?? 'added'], params: [] as (string | number)[] };
+}
+const seedTitle = (db: Db, because: string) => {
+  const seed = seedParts(because);
+  return get<{ title: string | null }>(db, 'SELECT title FROM library_items WHERE media_type = ? AND tmdb_id = ?', [seed.type, seed.id])?.title ?? null;
 };
 
 export function browse(db: Db, cfg: Config, q: BrowseQuery, now = new Date()): BrowseResponse {
@@ -89,10 +119,13 @@ export function browse(db: Db, cfg: Config, q: BrowseQuery, now = new Date()): B
   const f = filters(cfg, q, now);
   const page = Math.max(1, Math.floor(q.page ?? 1));
   const total = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${f.sql}`, f.params)!.n;
+  const o = orderBy(q);
   const rows = all<CardRow>(db,
-    `SELECT ${CARD_COLUMNS} ${FROM} WHERE ${f.sql} ORDER BY ${ORDER[q.sort ?? 'added']}, tk.id LIMIT ? OFFSET ?`,
-    [...f.params, PAGE_SIZE, (page - 1) * PAGE_SIZE]);
-  return { total, page, pageSize: PAGE_SIZE, items: rows.map(toCard), ...(theme ? { theme: { slug: theme.slug, title: theme.title, sort: theme.sort } } : {}) };
+    `SELECT ${CARD_COLUMNS} ${FROM} WHERE ${f.sql} ORDER BY ${o.sql}, tk.id LIMIT ? OFFSET ?`,
+    [...f.params, ...o.params, PAGE_SIZE, (page - 1) * PAGE_SIZE]);
+  const meta = theme ? { slug: theme.slug, title: theme.title, sort: theme.sort }
+    : q.because ? { slug: 'because', title: `Because you have ${seedTitle(db, q.because) ?? 'this'}`, sort: 'match' as const } : null;
+  return { total, page, pageSize: PAGE_SIZE, items: rows.map(toCard), ...(meta ? { theme: meta } : {}) };
 }
 
 function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: BrowseQuery, link: string | null, extraWhere = '', extraParams: (string | number)[] = []): HomeRow {
@@ -100,7 +133,8 @@ function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: Bro
   const where = extraWhere ? `${f.sql} AND ${extraWhere}` : f.sql;
   const params = [...f.params, ...extraParams];
   const total = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${where}`, params)!.n;
-  const items = all<CardRow>(db, `SELECT ${CARD_COLUMNS} ${FROM} WHERE ${where} ORDER BY ${ORDER[q.sort ?? 'added']}, tk.id LIMIT ?`, [...params, ROW_LIMIT]).map(toCard);
+  const o = orderBy(q);
+  const items = all<CardRow>(db, `SELECT ${CARD_COLUMNS} ${FROM} WHERE ${where} ORDER BY ${o.sql}, tk.id LIMIT ?`, [...params, ...o.params, ROW_LIMIT]).map(toCard);
   return { slug, title, total, link, items };
 }
 
@@ -111,12 +145,23 @@ export function trackingSince(db: Db, cfg: Config): string | null {
 
 export function home(db: Db, cfg: Config, now = new Date()): HomeResponse {
   const since = trackingSince(db, cfg);
-  const rows: HomeRow[] = [
-    row(db, cfg, now, 'new-week', 'New this week', { added: 7, sort: 'added' }, '/browse?added=7'),
-    row(db, cfg, now, 'new-month', 'New this month', { added: 30, sort: 'added' }, '/browse?added=30'),
-    row(db, cfg, now, 'popular', 'Popular on Netflix', { sort: 'popularity' }, '/browse?sort=popularity'),
-    ...themesFor(cfg).filter((t) => t.home).map((t) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort }, `/browse?theme=${t.slug}`)),
-  ];
+  const onHome = themesFor(cfg).filter((t) => t.home);
+  const hasLibrary = libraryCount(db) > 0;
+  const seeds = hasLibrary ? becauseSeeds(db, filters(cfg, {}, now), FROM, onHome.filter((t) => t.special === 'because').length) : [];
+  let nextSeed = 0;
+  const rows: HomeRow[] = [];
+  for (const t of onHome) {
+    if (t.special === 'because') {
+      const seed = seeds[nextSeed++];
+      if (!seed) continue;
+      const because = `${seed.media_type}:${seed.tmdb_id}`;
+      rows.push(row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because }, `/browse?because=${because}`));
+    } else if (t.special === 'for-you' && !hasLibrary) {
+      continue;
+    } else {
+      rows.push(row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort }, `/browse?theme=${t.slug}`));
+    }
+  }
   return {
     trackingSince: since,
     showTrackingNotice: !since || now.getTime() - Date.parse(since) < 7 * DAY,
@@ -179,7 +224,7 @@ export function meta(db: Db, cfg: Config, health: string, now = new Date()): Met
 }
 
 export function themes(db: Db, cfg: Config, now = new Date()): ThemeSummary[] {
-  return themesFor(cfg).map((t) => {
+  return themesFor(cfg).filter((t) => t.special !== 'because').map((t) => {
     const f = filters(cfg, { theme: t.slug }, now);
     const count = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${f.sql}`, f.params)!.n;
     return { slug: t.slug, title: t.title, kind: t.kind ?? null, sort: t.sort, home: t.home, count };
@@ -189,7 +234,7 @@ export function themes(db: Db, cfg: Config, now = new Date()): ThemeSummary[] {
 /** For tuning (CLI): totals, how many each signal catches, and sample titles. */
 export function themePreview(db: Db, cfg: Config, rule: ThemeRule, sample = 12, now = new Date()) {
   const base = filters(cfg, {}, now);
-  const t = themeWhere(rule);
+  const t = themeWhere(rule, now);
   const where = `${base.sql} AND ${t.sql}`;
   const params = [...base.params, ...t.params];
   const counts = get<{ n: number; movies: number; series: number; dated: number }>(db,

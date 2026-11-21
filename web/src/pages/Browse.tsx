@@ -6,8 +6,9 @@ import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
 import { Credits, Empty, PageTitle, Spinner, Tag } from '../components/ui';
 
-const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: string } => ({
+const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: string; because?: string } => ({
   theme: p.get('theme') || undefined,
+  because: p.get('because') || undefined,
   genres: p.get('genres')?.split(',').map(Number).filter((n) => n > 0) || undefined,
   added: ([7, 30, 90] as const).find((n) => String(n) === p.get('added')) ?? undefined,
   minRating: Number(p.get('minRating')) || undefined,
@@ -26,7 +27,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   const genres = useGenres(kind);
   const meta = useMeta();
   const themes = useThemes();
-  const theme = f.theme ? (res.data?.pages[0]?.theme ?? themes.data?.find((t) => t.slug === f.theme)) : undefined;
+  const theme = f.theme || f.because ? (res.data?.pages[0]?.theme ?? themes.data?.find((t) => t.slug === f.theme)) : undefined;
   const defaultSort: SortKey = theme?.sort ?? 'added';
   const sort = f.sort ?? defaultSort;
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -36,6 +37,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
     const p = new URLSearchParams();
     if (q) p.set('q', q);
     if (f.theme) p.set('theme', f.theme);
+    if (f.because) p.set('because', f.because);
     if (merged.sort && merged.sort !== defaultSort) p.set('sort', merged.sort);
     if (merged.added) p.set('added', String(merged.added));
     if (merged.genres?.length) p.set('genres', merged.genres.join(','));
@@ -76,9 +78,9 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   return (
     <>
       <div className="flex flex-col justify-between lg:flex-row lg:items-end">
-        <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme ? '\u00a0' : title}</PageTitle>
+        <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme || f.because ? '\u00a0' : title}</PageTitle>
         <div className="lg:mb-4">
-          <SortFilterBar sort={sort} onSort={(s) => update({ sort: s })} filterCount={activeFilterCount(f)} onOpenFilters={() => setFiltersOpen(true)} />
+          <SortFilterBar sort={sort} withMatch={defaultSort === 'match'} onSort={(s) => update({ sort: s })} filterCount={activeFilterCount(f)} onOpenFilters={() => setFiltersOpen(true)} />
         </div>
       </div>
 
@@ -114,6 +116,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         kind={kind}
         q={q}
         theme={f.theme}
+        because={f.because}
         value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave }}
         onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave })}
       />

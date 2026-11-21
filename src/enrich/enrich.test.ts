@@ -105,8 +105,10 @@ describe('English-only rule and stats', () => {
     run(db, `UPDATE titles SET original_language = 'en' WHERE id % 3 = 0`);
     const en = catalogStats(db, cfg);
     const everything = catalogStats(db, { ...cfg, LANGUAGE_RULE: 'all' });
-    const specials = get<{ n: number }>(db, `SELECT count(*) n FROM titles WHERE watchmode_type = 'tv_special'`)!.n;
-    expect(everything.eligible).toBe(everything.on_service - specials);
+    // Every Watchmode type is shown now (specials count as movies, since migration 3).
+    const specials = get<{ n: number }>(db, `SELECT count(*) n FROM title_kinds WHERE watchmode_type = 'tv_special' AND kind = 'movie'`)!.n;
+    expect(specials).toBeGreaterThan(0);
+    expect(everything.eligible).toBe(everything.on_service);
     expect(en.eligible).toBeLessThan(everything.eligible);
     expect(en.eligible).toBe(get<{ n: number }>(db,
       `SELECT count(*) n FROM title_kinds WHERE original_language = 'en' AND kind IS NOT NULL`)!.n);

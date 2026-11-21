@@ -57,6 +57,8 @@ export class FakeTmdb {
   /** TMDB's own Netflix list for /discover, by type; 20 per page like the real API. */
   discover: Record<'movie' | 'tv', { id: number; title: string; popularity?: number }[]> = { movie: [], tv: [] };
   discoverFailPage: number | null = null;
+  /** TMDB recommendations per title ("movie:123" -> ids), for library seeds. */
+  recs = new Map<string, number[]>();
   private movie = fixture<Record<string, unknown>>('tmdb/movie-detail.json');
   private tv = fixture<Record<string, unknown>>('tmdb/tv-detail.json');
 
@@ -94,7 +96,10 @@ export class FakeTmdb {
           videos: { results: [{ key: 'tvtrailer789', site: 'YouTube', type: 'Trailer', name: 'Season 1 Trailer', official: true, iso_639_1: 'en' }] },
           content_ratings: { results: [{ iso_3166_1: 'GB', rating: '15' }, { iso_3166_1: 'US', rating: 'TV-MA' }] },
         };
-    return json(200, { ...base, ...extras, id: Number(m[2]), ...(this.overrides.get(key) ?? {}) });
+    const recs = (url.searchParams.get('append_to_response') ?? '').includes('recommendations')
+      ? { recommendations: { page: 1, results: (this.recs.get(key) ?? []).map((id) => ({ id, media_type: m[1] })) } }
+      : {};
+    return json(200, { ...base, ...extras, ...recs, id: Number(m[2]), ...(this.overrides.get(key) ?? {}) });
   };
 }
 

@@ -30,8 +30,8 @@ export function ratingLabel(min = 0, max = 10) {
 }
 
 /** Seerr's Discover header: sort select with an icon box, plus a Filters button showing the active count. */
-export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters }:
-  { sort: SortKey; onSort: (s: SortKey) => void; filterCount: number; onOpenFilters: () => void }) {
+export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters, withMatch = false }:
+  { sort: SortKey; onSort: (s: SortKey) => void; filterCount: number; onOpenFilters: () => void; withMatch?: boolean }) {
   return (
     <div className="mb-4 flex flex-col gap-2 sm:flex-row">
       <div className="flex flex-grow sm:flex-grow-0">
@@ -44,6 +44,7 @@ export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters }:
           onChange={(e) => onSort(e.target.value as SortKey)}
           className="w-full rounded-r-md border border-gray-500 bg-gray-700 py-2 pl-3 pr-8 text-sm text-white focus:border-indigo-500 focus:outline-none sm:w-56"
         >
+          {withMatch && <option value="match">Best match for you</option>}
           {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </div>
@@ -58,14 +59,14 @@ export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters }:
   );
 }
 
-export function FiltersPanel({ open, onClose, kind, q, theme, value, onApply }:
-  { open: boolean; onClose: () => void; kind?: Kind; q?: string; theme?: string; value: Filters; onApply: (f: Filters) => void }) {
+export function FiltersPanel({ open, onClose, kind, q, theme, because, value, onApply }:
+  { open: boolean; onClose: () => void; kind?: Kind; q?: string; theme?: string; because?: string; value: Filters; onApply: (f: Filters) => void }) {
   const [draft, setDraft] = useState<Filters>(value);
   // Reset the draft each time the panel opens (not on every parent render).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (open) setDraft(value); }, [open]);
   const genres = useGenres(kind);
-  const count = useBrowseCount({ kind, q, theme, ...draft }, open);
+  const count = useBrowseCount({ kind, q, theme, because, ...draft }, open);
   const noun = kind === 'movie' ? 'movies' : kind === 'series' ? 'series' : 'titles';
   const toggleGenre = (id: number) => {
     const set = new Set(draft.genres ?? []);

@@ -4,7 +4,7 @@ import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { confirmHeldRun, recentRuns } from './sync/catalog.js';
 import { setLogLevel } from './log.js';
-import { keywordSearch, themePreview, themesFor } from './catalog/queries.js';
+import { browse, home, keywordSearch, themePreview, themesFor } from './catalog/queries.js';
 
 const USAGE = `Usage: cli <command>
   status            catalog counts, health and the last 10 sync runs
@@ -17,7 +17,8 @@ const USAGE = `Usage: cli <command>
   backup            take a verified database backup now
   crosscheck        compare our Netflix list with TMDB's (free, ~1 minute)
   alert-test        send a test alert to ALERT_URL
-  alerts            show what would alert right now`;
+  alerts            show what would alert right now
+  recs              refresh your library from Seerr and show the top recommendations`;
 
 async function main() {
   const [cmd, arg] = process.argv.slice(2);
@@ -82,6 +83,15 @@ async function main() {
         if (!app.notifier.enabled) throw new Error('ALERT_URL is not set in netflarrrx.env');
         await app.notifier.send('Test alert', 'If you can read this, NetFlarrrx alerts work.', 'test');
         console.log('Sent.');
+        break;
+      }
+      case 'recs': {
+        console.log(JSON.stringify(await app.library(), null, 2));
+        const top = browse(app.db, cfg, { theme: 'for-you' });
+        console.log(`\nRecommended for you: ${top.total} Netflix titles. Top 20:`);
+        console.table(top.items.slice(0, 20).map((i) => ({ title: i.title.slice(0, 44), year: i.year, kind: i.kind, rating: i.voteAverage })));
+        console.log('\n"Because you have" rows on Discover:');
+        for (const r of home(app.db, cfg).rows.filter((r) => r.slug.startsWith('because-'))) console.log(`  ${r.title} (${r.total} titles)`);
         break;
       }
       case 'alerts': console.log(JSON.stringify({ alertUrlSet: app.notifier.enabled, problems: app.problems() }, null, 2)); break;

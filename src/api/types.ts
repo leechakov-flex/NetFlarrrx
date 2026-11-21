@@ -32,7 +32,7 @@ export interface HomeResponse {
   rows: HomeRow[];
 }
 
-export type SortKey = 'added' | 'rating' | 'popularity' | 'release' | 'title';
+export type SortKey = 'added' | 'rating' | 'popularity' | 'release' | 'title' | 'match';
 export type AddedWithin = 7 | 30 | 90 | null;
 
 export interface BrowseQuery {
@@ -47,6 +47,7 @@ export interface BrowseQuery {
   q?: string;                      // title search
   hideHave?: boolean;              // drop titles already available, partial, processing or requested in Seerr
   theme?: string;                  // thematic row slug
+  because?: string;                // "movie:123": titles TMDB recommends for that library title
 }
 
 export interface BrowseResponse {
