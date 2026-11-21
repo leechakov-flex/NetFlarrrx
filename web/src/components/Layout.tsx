@@ -164,13 +164,23 @@ export function Layout({ children }: { children: ReactNode }) {
     const key = `${location.key}:page`;
     const target = navType === 'POP' ? recallScroll(key) : undefined;
     let raf = 0;
+    let stopRestore = () => {};
     if (target) {
-      // Rows may still be rendering: keep trying for about a second and a half.
-      let tries = 0;
+      // The page may still be rendering or, after a reload, loading more titles as it
+      // nears the bottom: keep scrolling towards the old spot for up to 6 seconds, and
+      // stop as soon as you scroll yourself.
+      const until = performance.now() + 6000;
+      let cancelled = false;
+      const userScroll = () => { cancelled = true; };
+      const events = ['wheel', 'touchstart', 'keydown', 'mousedown'] as const;
+      for (const e of events) window.addEventListener(e, userScroll, { passive: true, once: true });
+      stopRestore = () => { cancelled = true; for (const e of events) window.removeEventListener(e, userScroll); };
       const attempt = () => {
+        if (cancelled) return;
         const max = document.documentElement.scrollHeight - window.innerHeight;
         window.scrollTo(0, Math.min(target, max));
-        if (max < target && ++tries < 90) raf = requestAnimationFrame(attempt);
+        if (max < target && performance.now() < until) raf = requestAnimationFrame(attempt);
+        else stopRestore();
       };
       attempt();
     } else if (lastPath.current !== pathname) {
@@ -180,7 +190,7 @@ export function Layout({ children }: { children: ReactNode }) {
     let pending = 0;
     const save = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(() => rememberScroll(key, window.scrollY)); };
     window.addEventListener('scroll', save, { passive: true });
-    return () => { cancelAnimationFrame(raf); cancelAnimationFrame(pending); window.removeEventListener('scroll', save); };
+    return () => { stopRestore(); cancelAnimationFrame(raf); cancelAnimationFrame(pending); window.removeEventListener('scroll', save); };
   }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
   const [online, setOnline] = useState(() => navigator.onLine);
   useEffect(() => {

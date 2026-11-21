@@ -57,7 +57,11 @@ export function browseParams(q: BrowseQuery, page?: number): string {
 }
 
 export const useMeta = () => useQuery({ queryKey: ['meta'], queryFn: () => getJson<MetaResponse>('/api/meta'), staleTime: 60_000 });
-export const useHome = () => useQuery({ queryKey: ['home'], queryFn: () => getJson<HomeResponse>('/api/home') });
+// Lists stay cached for 30 minutes after you leave them, so Back from a title
+// (even after a long trailer) returns to a page that's already as long as it was.
+const KEEP_LISTS = 30 * 60_000;
+
+export const useHome = () => useQuery({ queryKey: ['home'], queryFn: () => getJson<HomeResponse>('/api/home'), gcTime: KEEP_LISTS });
 export const useGenres = (kind?: Kind) =>
   useQuery({ queryKey: ['genres', kind ?? 'all'], queryFn: () => getJson<Genre[]>(`/api/genres${kind ? `?kind=${kind}` : ''}`), staleTime: 10 * 60_000 });
 export const useTop = (kind: Kind) => useQuery({ queryKey: ['top', kind], queryFn: () => getJson<TopResponse>(`/api/top?kind=${kind}`) });
@@ -69,6 +73,7 @@ export function useBrowse(q: BrowseQuery) {
     queryKey: ['browse', browseParams(q)],
     queryFn: ({ pageParam }) => getJson<BrowseResponse>(`/api/titles?${browseParams(q, pageParam)}`),
     initialPageParam: 1,
+    gcTime: KEEP_LISTS,
     getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
   });
 }
