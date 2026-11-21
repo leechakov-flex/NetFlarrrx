@@ -2,7 +2,7 @@ import type { Config } from '../config.js';
 import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere } from './rules.js';
 import { loadThemes, themeWhere, type ThemeRule } from './themes.js';
-import { becauseSeeds, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR } from '../recs/library.js';
+import { becauseSeeds, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
   BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ThemeSummary, TitleCard, TitleDetail, TopResponse,
 } from '../api/types.js';
@@ -64,14 +64,14 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
   if (theme) {
     const t = themeWhere(theme, now); where.push(t.sql); params.push(...t.params);
     if (theme.special === 'for-you') {
-      where.push(RECOMMENDED, 'tk.vote_average >= ?', 'tk.vote_count >= ?');
+      where.push(RECOMMENDED, 'tk.vote_average >= ?', 'tk.vote_count >= ?', REC_RECENT);
       params.push(REC_FLOOR.minRating, REC_FLOOR.minVotes);
     }
   }
   if (q.because) {
     const seed = seedParts(q.because);
     where.push(`EXISTS (SELECT 1 FROM library_recs rb WHERE rb.seed_type = ? AND rb.seed_id = ? AND rb.rec_type = tk.tmdb_type AND rb.rec_id = tk.tmdb_id) AND ${NOT_MINE}`,
-      'tk.vote_average >= ?', 'tk.vote_count >= ?');
+      'tk.vote_average >= ?', 'tk.vote_count >= ?', REC_RECENT);
     params.push(seed.type, seed.id, REC_FLOOR.minRating, REC_FLOOR.minVotes);
   }
   if (q.added) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - q.added * DAY).toISOString()); }
@@ -151,7 +151,8 @@ export function home(db: Db, cfg: Config, now = new Date()): HomeResponse {
   const since = trackingSince(db, cfg);
   const onHome = themesFor(cfg).filter((t) => t.home);
   const hasLibrary = libraryCount(db) > 0;
-  const seeds = hasLibrary ? becauseSeeds(db, filters(cfg, { ...REC_FLOOR }, now), FROM, onHome.filter((t) => t.special === 'because').length) : [];
+  const seedFilter = filters(cfg, { ...REC_FLOOR }, now);
+  const seeds = hasLibrary ? becauseSeeds(db, { sql: `${seedFilter.sql} AND ${REC_RECENT}`, params: seedFilter.params }, FROM, onHome.filter((t) => t.special === 'because').length) : [];
   let nextSeed = 0;
   const rows: HomeRow[] = [];
   for (const t of onHome) {

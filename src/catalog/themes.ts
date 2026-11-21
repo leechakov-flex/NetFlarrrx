@@ -49,7 +49,7 @@ export type ThemeRule = z.infer<typeof ThemeRule>;
 
 const ThemeFile = z.array(ThemeRule).refine((a) => new Set(a.map((t) => t.slug)).size === a.length, 'theme slugs must be unique');
 
-const STANDUP = ["stand-up comedy", "stand-up special", "stand up comedy", "stand-up comedian", "comedy special"];
+export const STANDUP = ["stand-up comedy", "stand-up special", "stand up comedy", "stand-up comedian", "comedy special"];
 
 /**
  * Every Discover row, in order: new arrivals first, then a long mixed scroll of

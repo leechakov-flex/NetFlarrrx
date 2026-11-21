@@ -177,3 +177,44 @@ describe('ranking', () => {
     expect(ids[0]).toBe(netflix[3]!.id);          // (21-4)/20 x 1.5 = 1.275 beats (21-2)/20 = 0.95
   });
 });
+
+describe('discovery tweaks', () => {
+  const days = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+
+  it('drops titles over 10 years old unless rated 7.5 or higher', async () => {
+    run(app.db, `UPDATE titles SET vote_average = 7, vote_count = 500, release_date = ?, last_air_date = NULL`, [days(400)]);
+    run(app.db, `UPDATE titles SET release_date = '1982-05-14', vote_average = 6.8 WHERE id = ?`, [netflix[0]!.id]);   // Conan
+    run(app.db, `UPDATE titles SET release_date = '1997-02-28', vote_average = 7.5 WHERE id = ?`, [netflix[1]!.id]);   // Donnie Brasco
+    await library([{ n: 1, recs: [0, 1, 2] }]);
+    const ids = (await j<BrowseResponse>('/api/titles?theme=for-you')).items.map((i) => i.id);
+    expect(ids).not.toContain(netflix[0]!.id);
+    expect(ids).toContain(netflix[1]!.id);
+    expect(ids).toContain(netflix[2]!.id);
+  });
+
+  it('mixes "Because you have" rows: at most one stand-up special, then a series and a movie', async () => {
+    run(app.db, `UPDATE titles SET vote_average = 7, vote_count = 500, release_date = ?`, [days(100)]);
+    const recs = (from: number) => Array.from({ length: 7 }, (_, i) => from + i);
+    // Three stand-up specials with the most matches, one series, one film.
+    seerr.media = [
+      ...[1, 2, 3].map((n) => ({ id: n, mediaType: 'movie', tmdbId: LIB(n), status: 5, seasons: [], updatedAt: `2026-11-1${n}T00:00:00Z` })),
+      { id: 4, mediaType: 'tv', tmdbId: LIB(4), status: 5, seasons: [], updatedAt: '2026-11-05T00:00:00Z' },
+      { id: 5, mediaType: 'movie', tmdbId: LIB(5), status: 5, seasons: [], updatedAt: '2026-11-04T00:00:00Z' },
+    ];
+    for (const n of [1, 2, 3]) {
+      tmdb.recs.set(`movie:${LIB(n)}`, recs(0).map((i) => netflix[i]!.tmdb_id));
+      tmdb.overrides.set(`movie:${LIB(n)}`, { title: `Comic ${n}: Live`, genres: [{ id: 35, name: 'Comedy' }], runtime: 62, keywords: { keywords: [{ id: 9716, name: 'stand-up comedy' }] } });
+    }
+    tmdb.overrides.set(`tv:${LIB(4)}`, { name: 'Severance' });
+    tmdb.recs.set(`tv:${LIB(4)}`, recs(0).map((i) => netflix[i]!.tmdb_id));       // same ids, but tv type: no Netflix match
+    tmdb.overrides.set(`movie:${LIB(5)}`, { title: 'Knives Out', genres: [{ id: 80, name: 'Crime' }], runtime: 130, keywords: { keywords: [] } });
+    tmdb.recs.set(`movie:${LIB(5)}`, recs(10).map((i) => netflix[i]!.tmdb_id));
+    await app.mirror();
+    await app.library();
+    expect(all(app.db, 'SELECT title, category FROM library_items ORDER BY title').map((r) => (r as { category: string }).category))
+      .toEqual(['standup', 'standup', 'standup', 'movie', 'series']);
+    const rows = (await j<HomeResponse>('/api/home')).rows.filter((r) => r.slug.startsWith('because-')).map((r) => r.title);
+    expect(rows.filter((t) => t.includes('Comic'))).toHaveLength(1);
+    expect(rows).toContain('Because you have Knives Out');
+  });
+});

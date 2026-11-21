@@ -226,4 +226,12 @@ UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing')
 ALTER TABLE library_items ADD COLUMN source TEXT;   -- radarr, sonarr or seerr (first that has it)
 `,
   },
+  {
+    version: 5,
+    name: 'library_categories',
+    sql: `
+ALTER TABLE library_items ADD COLUMN category TEXT;   -- standup, movie or series, for mixing "Because you have" rows
+UPDATE library_items SET recs_at = NULL;              -- re-fetch once to learn each title's category
+`,
+  },
 ];

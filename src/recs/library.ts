@@ -3,6 +3,7 @@ import { all, get, run, setJobState, tx, type Db } from '../db/db.js';
 import { HttpError, mapLimit } from '../clients/http.js';
 import type { TmdbClient } from '../clients/tmdb.js';
 import type { ArrClient } from '../clients/arr.js';
+import { STANDUP } from '../catalog/themes.js';
 import { log } from '../log.js';
 
 /**
@@ -109,8 +110,8 @@ export async function refreshLibrary(db: Db, cfg: Config, tmdb: TmdbClient, src:
           const ins = db.prepare('INSERT OR IGNORE INTO library_recs (seed_type, seed_id, rec_type, rec_id, rank) VALUES (?, ?, ?, ?, ?)');
           for (const rec of r.recs) ins.run(item.media_type, item.tmdb_id, item.media_type, rec.id, rec.rank);
         }
-        run(db, 'UPDATE library_items SET title = COALESCE(title, ?), recs_at = ?, recs_status = ? WHERE media_type = ? AND tmdb_id = ?',
-          [r?.title ?? null, iso, r ? 'ok' : 'missing', item.media_type, item.tmdb_id]);
+        run(db, 'UPDATE library_items SET title = COALESCE(title, ?), recs_at = ?, recs_status = ?, category = ? WHERE media_type = ? AND tmdb_id = ?',
+          [r?.title ?? null, iso, r ? 'ok' : 'missing', r ? categorize(item.media_type, r) : null, item.media_type, item.tmdb_id]);
       });
       result.fetched += 1;
     } catch (err) {
@@ -137,6 +138,19 @@ export const MATCH_SCORE = `((SELECT sum((21.0 - min(r.rank, 20)) / 20) FROM lib
 /** Recommendations skip weak titles: TMDB rating 6+ with at least 30 votes. */
 export const REC_FLOOR = { minRating: 6, minVotes: 30 } as const;
 
+/** ...and older ones: released or aired in the last 10 years, unless rated 7.5 or higher. */
+export const REC_RECENT = `(min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) >= date('now', '-3650 days') OR tk.vote_average >= 7.5)`;
+
+/** Stand-up specials, other movies and series, so "Because you have" rows can be mixed. */
+function categorize(type: 'movie' | 'tv', r: { title: string | null; genres: string[]; keywords: string[]; runtime: number | null }): 'standup' | 'movie' | 'series' {
+  if (type === 'tv') return 'series';
+  const kws = new Set(r.keywords.map((k) => k.toLowerCase()));
+  if (STANDUP.some((k) => kws.has(k))) return 'standup';
+  // Specials TMDB hasn't keyworded: a short comedy named "Comedian: Title".
+  if (r.genres.includes('Comedy') && (r.runtime ?? 999) <= 90 && /^[^:]{3,40}: /.test(r.title ?? '')) return 'standup';
+  return 'movie';
+}
+
 /** Recommended and not already yours (in the library, requested or on its way). Expects tk and sm. */
 export const NOT_MINE = `NOT EXISTS (SELECT 1 FROM library_items li WHERE li.media_type = tk.tmdb_type AND li.tmdb_id = tk.tmdb_id)
   AND (sm.status IS NULL OR sm.status NOT IN (2, 3, 4, 5))`;
@@ -150,17 +164,30 @@ export const libraryCount = (db: Db) => get<{ n: number }>(db, 'SELECT count(*) 
  * Netflix titles you don't have. Takes the shown-title filter as SQL.
  */
 export function becauseSeeds(db: Db, eligible: { sql: string; params: (string | number)[] }, from: string, count: number, minMatches = 6) {
-  return all<{ media_type: 'movie' | 'tv'; tmdb_id: number; title: string; matches: number }>(db, `
+  const candidates = all<{ media_type: 'movie' | 'tv'; tmdb_id: number; title: string; category: string | null; matches: number }>(db, `
     WITH recent AS (
-      SELECT media_type, tmdb_id, title FROM library_items WHERE recs_status = 'ok' AND title IS NOT NULL
-      ORDER BY added_at DESC LIMIT 60
+      SELECT media_type, tmdb_id, title, category FROM library_items WHERE recs_status = 'ok' AND title IS NOT NULL
+      ORDER BY added_at DESC LIMIT 100
     )
-    SELECT s.media_type, s.tmdb_id, s.title, (
+    SELECT s.media_type, s.tmdb_id, s.title, s.category, (
       SELECT count(DISTINCT tk.id) ${from}
       JOIN library_recs r ON r.rec_type = tk.tmdb_type AND r.rec_id = tk.tmdb_id
       WHERE r.seed_type = s.media_type AND r.seed_id = s.tmdb_id AND ${eligible.sql} AND ${NOT_MINE}
     ) matches
     FROM recent s
-    ORDER BY matches DESC, s.title
-    LIMIT ?`, [...eligible.params, count * 3]).filter((s) => s.matches >= minMatches).slice(0, count);
+    ORDER BY matches DESC, s.title`, eligible.params).filter((s) => s.matches >= minMatches);
+
+  // Mix: the best seed of each kind first (at most one stand-up special), then the
+  // next best non-stand-up seeds. Rows then go in order of how much they match.
+  const kind = (s: (typeof candidates)[number]) => s.category ?? (s.media_type === 'tv' ? 'series' : 'movie');
+  const picked: typeof candidates = [];
+  for (const k of ['standup', 'series', 'movie']) {
+    const best = candidates.find((s) => kind(s) === k);
+    if (best) picked.push(best);
+  }
+  for (const s of candidates) {
+    if (picked.length >= count) break;
+    if (!picked.includes(s) && kind(s) !== 'standup') picked.push(s);
+  }
+  return picked.sort((a, b) => b.matches - a.matches).slice(0, count);
 }

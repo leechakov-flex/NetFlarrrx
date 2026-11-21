@@ -87,6 +87,9 @@ export function pickTrailer(videos: TmdbVideo[]): { key: string; name: string } 
 
 const Recs = z.object({
   title: z.string().optional(), name: z.string().optional(),
+  runtime: z.number().int().nullable().optional(),
+  genres: z.array(Named).optional().default([]),
+  keywords: z.object({ keywords: z.array(Named).optional(), results: z.array(Named).optional() }).optional(),
   recommendations: z.object({ results: z.array(z.object({ id: z.number().int() }).passthrough()).optional().default([]) }).optional(),
 });
 
@@ -116,17 +119,17 @@ export class TmdbClient {
   }
 
   /** A library title's name and TMDB's recommendations for it (one page, about 20). */
-  async recommendations(type: 'movie' | 'tv', id: number): Promise<{ title: string | null; recs: { id: number; rank: number }[] } | null> {
+  async recommendations(type: 'movie' | 'tv', id: number): Promise<{ title: string | null; genres: string[]; keywords: string[]; runtime: number | null; recs: { id: number; rank: number }[] } | null> {
     let raw: unknown;
     try {
-      raw = await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=recommendations&language=en-US`,
+      raw = await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=recommendations,keywords&language=en-US`,
         { headers: { Authorization: `Bearer ${this.token}` } });
     } catch (err) {
       if (err instanceof HttpError && err.isNotFound) return null;
       throw err;
     }
     const d = Recs.parse(raw);
-    return { title: d.title ?? d.name ?? null, recs: (d.recommendations?.results ?? []).map((r, i) => ({ id: r.id, rank: i + 1 })) };
+    return { title: d.title ?? d.name ?? null, genres: d.genres.map((g) => g.name), keywords: (d.keywords?.keywords ?? d.keywords?.results ?? []).map((k) => k.name), runtime: d.runtime ?? null, recs: (d.recommendations?.results ?? []).map((r, i) => ({ id: r.id, rank: i + 1 })) };
   }
 
   /** One page of titles TMDB lists on a streaming service (flat-rate) in a region. */
