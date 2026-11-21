@@ -1,7 +1,7 @@
 import type { Config } from '../config.js';
 import { all, get, type Db } from '../db/db.js';
 import { eligibleWhere } from './rules.js';
-import { loadThemes, themeWhere, type ThemeRule } from './themes.js';
+import { HOME_REPEAT_DEFAULT, MIN_THINNED_ROW, loadThemes, themeWhere, type ThemeRule } from './themes.js';
 import { becauseSeeds, libraryReport, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
   BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ThemeSummary, TitleCard, TitleDetail, TopResponse,
@@ -132,14 +132,26 @@ export function browse(db: Db, cfg: Config, q: BrowseQuery, now = new Date()): B
   return { total, page, pageSize: PAGE_SIZE, items: rows.map(toCard), ...(meta ? { theme: meta } : {}) };
 }
 
-function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: BrowseQuery, link: string | null, extraWhere = '', extraParams: (string | number)[] = []): HomeRow {
+/**
+ * One Discover row. `skip` lists titles other rows have already used up: they're
+ * left out and the row fills from further down its own ranking. `total` still
+ * counts the whole theme (it's what "see all" opens). `thinned` is how many
+ * titles the row has left to show once `skip` is applied, or null if nothing was skipped.
+ */
+function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: BrowseQuery, link: string | null, skip: number[] = []): { row: HomeRow; left: number | null } {
   const f = filters(cfg, q, now);
-  const where = extraWhere ? `${f.sql} AND ${extraWhere}` : f.sql;
-  const params = [...f.params, ...extraParams];
-  const total = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${where}`, params)!.n;
+  const total = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${f.sql}`, f.params)!.n;
+  let where = f.sql;
+  let params = f.params;
+  let left: number | null = null;
+  if (skip.length) {
+    where = `${f.sql} AND tk.id NOT IN (${skip.map(() => '?').join(',')})`;
+    params = [...f.params, ...skip];
+    left = get<{ n: number }>(db, `SELECT count(*) n ${FROM} WHERE ${where}`, params)!.n;
+  }
   const o = orderBy(q);
   const items = all<CardRow>(db, `SELECT ${CARD_COLUMNS} ${FROM} WHERE ${where} ORDER BY ${o.sql}, tk.id LIMIT ?`, [...params, ...o.params, ROW_LIMIT]).map(toCard);
-  return { slug, title, total, link, items };
+  return { row: { slug, title, total, link, items }, left: left !== null && left < total ? left : null };
 }
 
 export function trackingSince(db: Db, cfg: Config): string | null {
@@ -153,20 +165,39 @@ export function home(db: Db, cfg: Config, now = new Date()): HomeResponse {
   const hasLibrary = libraryCount(db) > 0;
   const seedFilter = filters(cfg, { ...REC_FLOOR }, now);
   const seeds = hasLibrary ? becauseSeeds(db, { sql: `${seedFilter.sql} AND ${REC_RECENT}`, params: seedFilter.params }, FROM, onHome.filter((t) => t.special === 'because').length) : [];
+  // Each title counts how many rows it has been shown in. A row skips titles already
+  // shown as many times as its theme allows (`repeat`, default 1), so the page doesn't
+  // repeat the same posters. A row that skipping thins out to a handful is dropped,
+  // and its titles stay free for later rows.
+  //
+  // Rows claim titles in priority order, which is not page order: "because" rows go
+  // first, since a row built from one of your titles is the most specific, and the
+  // broad "for you" and genre rows take what's left. The page keeps its own order.
   let nextSeed = 0;
-  const rows: HomeRow[] = [];
-  for (const t of onHome) {
+  const seedFor = onHome.map((t) => (t.special === 'because' ? seeds[nextSeed++] : undefined));
+  const claimOrder = onHome.map((_, i) => i).sort((a, b) => Number(onHome[b]!.special === 'because') - Number(onHome[a]!.special === 'because') || a - b);
+  const shown = new Map<number, number>();
+  const built: (HomeRow | undefined)[] = onHome.map(() => undefined);
+  for (const i of claimOrder) {
+    const t = onHome[i]!;
+    const cap = t.repeat ?? HOME_REPEAT_DEFAULT;
+    let make: ((skip: number[]) => { row: HomeRow; left: number | null }) | undefined;
     if (t.special === 'because') {
-      const seed = seeds[nextSeed++];
-      if (!seed) continue;
-      const because = `${seed.media_type}:${seed.tmdb_id}`;
-      rows.push(row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because }, `/browse?because=${because}`));
-    } else if (t.special === 'for-you' && !hasLibrary) {
-      continue;
-    } else {
-      rows.push(row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort }, `/browse?theme=${t.slug}`));
+      const seed = seedFor[i];
+      if (seed) {
+        const because = `${seed.media_type}:${seed.tmdb_id}`;
+        make = (skip) => row(db, cfg, now, `because-${seed.media_type}-${seed.tmdb_id}`, `Because you have ${seed.title}`, { because }, `/browse?because=${because}`, skip);
+      }
+    } else if (!(t.special === 'for-you' && !hasLibrary)) {
+      make = (skip) => row(db, cfg, now, t.slug, t.title, { theme: t.slug, sort: t.sort }, `/browse?theme=${t.slug}`, skip);
     }
+    if (!make) continue;
+    const r = make([...shown].filter(([, n]) => n >= cap).map(([id]) => id));
+    if (r.left !== null && r.left < MIN_THINNED_ROW) continue;
+    for (const item of r.row.items) shown.set(item.id, (shown.get(item.id) ?? 0) + 1);
+    built[i] = r.row;
   }
+  const rows = built.filter((r): r is HomeRow => r !== undefined);
   return {
     trackingSince: since,
     showTrackingNotice: !since || now.getTime() - Date.parse(since) < 7 * DAY,
