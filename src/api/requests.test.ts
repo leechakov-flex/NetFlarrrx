@@ -51,6 +51,15 @@ describe('requests', () => {
     expect((await post('/api/passcode/check', {}, 'monkey')).status).toBe(429);
   });
 
+  it('requests a title that is only on another service (not Netflix)', async () => {
+    const movie = pick('movie');
+    // Move it from Netflix to Prime Video, like Madden on Prime.
+    run(app.db, `UPDATE availability SET provider_id = 1026 WHERE title_id = ?`, [movie.id]);
+    const r = await post(`/api/titles/${movie.id}/request`, {}, 'monkey');
+    expect(r.status).toBe(201);
+    expect(seerr.requests).toEqual([expect.objectContaining({ mediaType: 'movie', mediaId: movie.tmdb_id })]);
+  });
+
   it('requests a movie and shows it as requested at once', async () => {
     const movie = pick('movie');
     const r = await post(`/api/titles/${movie.id}/request`, {}, 'monkey');

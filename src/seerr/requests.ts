@@ -45,11 +45,12 @@ export function seasonStates(tv: SeerrTvDetail, settings: SeerrPublicSettings): 
     }));
 }
 
-function titleTmdb(db: Db, cfg: Config, id: number) {
+// Any title MonkeySee knows about can be requested: on any service, rent or buy, coming soon,
+// or only shown as Related. (This used to require a Netflix row, from before multi-service.)
+function titleTmdb(db: Db, _cfg: Config, id: number) {
   return get<{ tmdb_id: number | null; tmdb_type: 'movie' | 'tv' | null; title: string }>(db, `
     SELECT tk.tmdb_id, tk.tmdb_type, COALESCE(tk.tmdb_title, tk.title) AS title
-    FROM title_kinds tk JOIN availability a ON a.title_id = tk.id
-    WHERE tk.id = ? AND a.provider_id = ? AND a.region = ? AND tk.kind IS NOT NULL`, [id, cfg.NETFLIX_SOURCE_ID, cfg.REGION]);
+    FROM title_kinds tk WHERE tk.id = ? AND tk.kind IS NOT NULL`, [id]);
 }
 
 export async function titleSeasons(db: Db, cfg: Config, seerr: SeerrClient, id: number): Promise<SeasonsResponse | null> {
@@ -70,7 +71,7 @@ export class RequestError extends Error {
  */
 export async function requestTitle(db: Db, cfg: Config, seerr: SeerrClient, id: number, seasons?: number[], now = new Date()): Promise<RequestResult> {
   const t = titleTmdb(db, cfg, id);
-  if (!t) throw new RequestError(404, 'not_found', 'That title isn’t in the Netflix catalog.');
+  if (!t) throw new RequestError(404, 'not_found', 'MonkeySee doesn’t know that title.');
   if (!t.tmdb_id || !t.tmdb_type) throw new RequestError(400, 'no_tmdb', 'This title has no TMDB match, so Seerr can’t request it.');
 
   let requestSeasons: number[] | undefined;
