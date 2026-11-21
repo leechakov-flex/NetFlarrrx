@@ -161,6 +161,59 @@ describe('theme API and home', () => {
     expect(slugs.indexOf('heists')).toBeLessThan(slugs.indexOf('short-movies'));
   });
 
+  describe('no repeated titles on Discover', () => {
+    const date = (daysAgo: number) => new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10);
+    const rowsOf = async () => (await j<HomeResponse>('/api/home')).body.rows;
+
+    it('a title shows in one row unless its theme allows repeats', async () => {
+      reset();
+      // Recent dramas fit new-movies, trending, dramas, new-for-you... all at once.
+      for (const id of movies.slice(0, 30)) set(id, `release_date = '${date(10)}'`);
+      const rows = await rowsOf();
+      const seen = new Map<number, string[]>();
+      for (const r of rows) for (const i of r.items) seen.set(i.id, [...(seen.get(i.id) ?? []), r.slug]);
+      const repeatCap = new Map(DEFAULT_THEMES.map((t) => [t.slug, t.repeat ?? 1]));
+      for (const [id, slugs] of seen) {
+        // A title is in at most as many rows as the most permissive of them allows.
+        expect(slugs.length, `title ${id} in ${slugs.join(', ')}`).toBeLessThanOrEqual(Math.max(...slugs.map((s) => repeatCap.get(s) ?? 1)));
+      }
+      expect(rows.find((r) => r.slug === 'new-movies')).toBeTruthy();
+    });
+
+    it('rows fill from further down their ranking instead of shrinking', async () => {
+      reset();
+      for (const id of movies.slice(0, 40)) set(id, `release_date = '${date(10)}'`);
+      const rows = await rowsOf();
+      const newMovies = rows.find((r) => r.slug === 'new-movies')!;
+      const trending = rows.find((r) => r.slug === 'trending')!;
+      expect(newMovies.items.length).toBeGreaterThan(0);
+      const taken = new Set(newMovies.items.map((i) => i.id));
+      expect(trending.items.every((i) => !taken.has(i.id))).toBe(true);       // trending skips what new-movies showed...
+      expect(trending.items.length).toBeGreaterThan(0);                       // ...and still has titles to show
+      expect(trending.total).toBeGreaterThanOrEqual(newMovies.total);         // "see all" still counts the whole theme
+    });
+
+    it('a row that dedupe thins to a handful is dropped, not shown half empty', async () => {
+      reset();
+      const [a, b, c] = movies;
+      for (const id of [a!, b!, c!]) { kw(id, 10051); set(id, `release_date = '${date(10)}'`); }   // heists, and new-movies too
+      const rows = await rowsOf();
+      // new-movies (earlier on the page) shows exactly these three, so heists has nothing left.
+      expect(rows.find((r) => r.slug === 'new-movies')!.items.map((i) => i.id).sort((x, y) => x - y)).toEqual([a!, b!, c!].sort((x, y) => x - y));
+      expect(rows.some((r) => r.slug === 'heists')).toBe(false);
+      // The full theme is still there for "see all".
+      expect((await j<BrowseResponse>('/api/titles?theme=heists')).body.total).toBe(3);
+    });
+
+    it('repeat is an optional positive integer on a theme', () => {
+      expect(ThemeRule.safeParse({ slug: 'x', title: 'X', repeat: 2 }).success).toBe(true);
+      expect(ThemeRule.safeParse({ slug: 'x', title: 'X' }).success).toBe(true);
+      expect(ThemeRule.safeParse({ slug: 'x', title: 'X', repeat: 0 }).success).toBe(false);
+      expect(DEFAULT_THEMES.filter((t) => (t.repeat ?? 1) > 1).map((t) => t.slug).sort())
+        .toEqual(['action', 'crime', 'dramas', 'scifi', 'thrillers', 'true-stories']);
+    });
+  });
+
   it('/api/themes lists every theme with a count; unknown themes are 404', async () => {
     reset();
     kw(movies[0]!, 10051);

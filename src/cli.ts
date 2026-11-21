@@ -52,6 +52,12 @@ async function main() {
         const list = themesFor(cfg).filter((t) => !arg || t.slug === arg);
         if (!list.length) throw new Error(`No theme "${arg}". Themes: ${themesFor(cfg).map((t) => t.slug).join(', ')}`);
         for (const t of list) {
+          if (t.special === 'because') {
+            // A "because" row has no filters of its own: Discover fills it from one of
+            // your titles' TMDB recommendations, so a preview here would list everything.
+            console.log(`\n${t.title} (${t.slug})${t.home ? '' : ' [not on Discover]'}: built per library title on Discover; run "recs" to see which`);
+            continue;
+          }
           const p = themePreview(app.db, cfg, t, arg ? 40 : 12);
           console.log(`\n${t.title} (${t.slug})${t.home ? '' : ' [not on Discover]'}: ${p.n} titles, ${p.movies} movies, ${p.series} series, ${p.dated} dated`);
           if (p.bySignal.length) console.table(p.bySignal);

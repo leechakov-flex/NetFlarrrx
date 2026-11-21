@@ -84,7 +84,7 @@ describe('library and recommendations', () => {
     await library([
       { n: 1, recs: [0, 1, 2, 3, 4, 5, 6], title: 'Older pick', at: '2026-01-01T00:00:00Z' },
       { n: 2, recs: [7, 8, 9, 10, 11, 12, 13, 14], title: 'Severance' },
-      { n: 3, recs: [15, 16], title: 'Too few matches' },
+      { n: 3, recs: [15, 16, 17, 18], title: 'Too few matches' },   // under 5 matches: no row, but "for you" keeps these
     ]);
     const home = await j<HomeResponse>('/api/home');
     const because = home.rows.filter((r) => r.slug.startsWith('because-'));
@@ -95,6 +95,24 @@ describe('library and recommendations', () => {
     expect(page.theme).toMatchObject({ title: 'Because you have Severance' });
     expect(page.total).toBe(8);
     expect(home.rows.map((r) => r.slug)).toContain('for-you');
+  });
+
+  it('"Because you have" rows share no titles with each other or with "for you"', async () => {
+    // Both seeds recommend netflix[5..9]; "for you" would also rank them highly.
+    await library([
+      { n: 1, recs: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], title: 'First' },
+      { n: 2, recs: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14], title: 'Second', at: '2026-11-30T00:00:00Z' },
+      { n: 3, recs: [15, 16, 17, 18, 19, 20], title: 'Only for you' },
+    ]);
+    const home = await j<HomeResponse>('/api/home');
+    const because = home.rows.filter((r) => r.slug.startsWith('because-'));
+    expect(because.length).toBeGreaterThanOrEqual(2);
+    const ids = because.flatMap((r) => r.items.map((i) => i.id));
+    expect(new Set(ids).size).toBe(ids.length);                      // no title in two "because" rows
+    const forYou = home.rows.find((r) => r.slug === 'for-you');
+    for (const i of forYou?.items ?? []) expect(ids).not.toContain(i.id);
+    // Each row's total still counts everything its seed recommends, for "see all".
+    for (const r of because) expect(r.total).toBeGreaterThanOrEqual(r.items.length);
   });
 
   it('drops library titles that are no longer available', async () => {

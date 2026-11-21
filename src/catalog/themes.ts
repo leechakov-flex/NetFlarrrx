@@ -41,6 +41,11 @@ export const ThemeRule = z.object({
   addedWithin: z.number().int().positive().optional(),  // days since it appeared on Netflix (needs tracking history)
   sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match']).default('added'),
   home: z.boolean().default(true),  // show as a row on Discover
+  // The most Discover rows a title may appear in, counting this one. Rows are built
+  // in order and skip titles that are already in `repeat` earlier rows, so 1 (the
+  // default) means "only titles no earlier row has shown". Genre rows that overlap
+  // by nature (a thriller that is also a drama) allow 2.
+  repeat: z.number().int().min(1).max(10).optional(),
   // Rows built from your library instead of filters. "because" rows each take
   // the next of your titles with the most Netflix matches.
   special: z.enum(['for-you', 'because']).optional(),
@@ -49,7 +54,12 @@ export type ThemeRule = z.infer<typeof ThemeRule>;
 
 const ThemeFile = z.array(ThemeRule).refine((a) => new Set(a.map((t) => t.slug)).size === a.length, 'theme slugs must be unique');
 
-export const STANDUP = ["stand-up comedy", "stand-up special", "stand up comedy", "stand-up comedian", "comedy special"];
+/** A title appears in one Discover row unless the row's theme says `repeat`. */
+export const HOME_REPEAT_DEFAULT = 1;
+/** A row that dedupe thinned out below this many titles is dropped, not shown half empty. */
+export const MIN_THINNED_ROW = 4;
+
+export const STANDUP =["stand-up comedy", "stand-up special", "stand up comedy", "stand-up comedian", "comedy special"];
 
 /**
  * Every Discover row, in order: new arrivals first, then a long mixed scroll of
@@ -80,22 +90,22 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
   // Popular now, by genre (recent titles only)
   { slug: 'trending', title: 'Popular right now', aired: { withinDays: 365 }, sort: 'popularity' },
   { slug: 'action', title: 'Action and adventure', require: { genres: ['Action', 'Adventure', 'Action & Adventure'] },
-    aired: { withinDays: 1095 }, exclude: { genres: ['Kids', 'Family'] }, sort: 'popularity' },
+    aired: { withinDays: 1095 }, exclude: { genres: ['Kids', 'Family'] }, sort: 'popularity', repeat: 2 },
   { slug: 'thrillers', title: 'Thrillers and mysteries', require: { genres: ['Thriller', 'Mystery'] },
-    aired: { withinDays: 1095 }, exclude: { genres: ['Documentary', 'Kids'] }, sort: 'popularity' },
+    aired: { withinDays: 1095 }, exclude: { genres: ['Documentary', 'Kids'] }, sort: 'popularity', repeat: 2 },
   { slug: 'crime', title: 'Crime', require: { genres: ['Crime'] }, aired: { withinDays: 1095 },
-    exclude: { genres: ['Documentary'] }, sort: 'popularity' },
+    exclude: { genres: ['Documentary'] }, sort: 'popularity', repeat: 2 },
   { slug: 'new-for-you', title: 'New for you', special: 'for-you', aired: { withinDays: 365 }, sort: 'added' },
   { slug: 'scifi', title: 'Sci-fi and fantasy', require: { genres: ['Science Fiction', 'Fantasy', 'Sci-Fi & Fantasy'] },
-    aired: { withinDays: 1095 }, exclude: { genres: ['Kids'] }, sort: 'popularity' },
+    aired: { withinDays: 1095 }, exclude: { genres: ['Kids'] }, sort: 'popularity', repeat: 2 },
   { slug: 'horror', title: 'Horror', require: { genres: ['Horror'] }, aired: { withinDays: 1095 }, sort: 'popularity' },
   {
     slug: 'true-stories', title: 'Based on a true story',
     signals: { keywords: ['based on true story', 'based on a true story', 'based on real events', 'based on real person', 'true story', 'biography', 'true crime', 'historical figure'] },
-    exclude: { genres: ['Documentary', 'Reality'] },
+    exclude: { genres: ['Documentary', 'Reality'] }, repeat: 2,
   },
   { slug: 'dramas', title: 'Dramas', require: { genres: ['Drama'] }, aired: { withinDays: 730 },
-    exclude: { genres: ['Comedy', 'Kids', 'Soap'] }, sort: 'popularity' },
+    exclude: { genres: ['Comedy', 'Kids', 'Soap'] }, sort: 'popularity', repeat: 2 },
   { slug: 'because-2', title: 'Because you have', special: 'because' },
   { slug: 'romance', title: 'Romance', require: { genres: ['Romance'] }, aired: { withinDays: 1095 }, sort: 'popularity' },
   { slug: 'docs', title: 'Documentaries and docuseries', require: { genres: ['Documentary'] }, aired: { withinDays: 730 }, sort: 'popularity' },
