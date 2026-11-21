@@ -95,7 +95,7 @@ export interface TitleDetail extends TitleCard {
   trailer: { key: string; name: string | null } | null;
   onNetflix: boolean;              // still on any tracked service (or rent or buy)
   firstSeenAt: string | null;
-  cast: { name: string; role: string; profilePath: string | null }[];
+  cast: { id?: number; name: string; role: string; profilePath: string | null }[];
   related: TitleCard[];
   watch: {
     services: ServiceInfo[];       // subscription services it's on now
@@ -221,4 +221,15 @@ export interface LibraryResponse {
   counts: { movie: number; tv: number };
   total: number; page: number; pageSize: number;
   items: LibraryItem[];
+}
+
+/** Person page: someone from Cast & Crew and what else they're in. */
+export interface PersonResponse {
+  id: number;
+  name: string;
+  profilePath: string | null;
+  department: string | null;       // Acting, Directing, Writing...
+  biography: string | null;
+  onServices: (TitleCard & { role: string })[];      // on your services (or rent or buy), most popular first
+  elsewhere: { tmdbType: 'movie' | 'tv'; tmdbId: number; title: string; year: number | null; posterPath: string | null; role: string }[];
 }

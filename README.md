@@ -128,6 +128,18 @@ qBittorrent is only ever read: nothing pauses, resumes or deletes torrents. It r
 
 If Sonarr has a series and a newer season comes out that Sonarr isn't set to grab (and you haven't requested it), the series page shows *Season N is out* with a Request button, and Discover gets a *New seasons of your shows* row. This needs `SONARR_API_KEY`.
 
+### Library (Jellyfin)
+
+More → Library shows everything already in Jellyfin, with search, Movies/Series and sort, to check "do I have this?" before requesting. Titles that are in Jellyfin get an *In your library* badge on their page and are left out of Discover. Create a key in Jellyfin (Dashboard → API Keys, call it MonkeySee) and add `JELLYFIN_API_KEY=<key>` to `monkeysee.env` (and `JELLYFIN_URL` if Jellyfin isn't at `http://jellyfin:8096`). MonkeySee only reads from it, every 15 minutes.
+
+### Studios and networks
+
+Discover's **Studio or network** chip, and the Filters panel on Movies and Series, narrow titles to movie studios (A24, 20th Century, Neon…) or TV networks (NBC, FX, HBO…). Studios TMDB lists under several names over the years (20th Century Fox and 20th Century Studios) count as one. This comes from TMDB, so after this update MonkeySee re-fetches every title once in the background (about an hour); the lists fill in as it goes.
+
+### Cast and crew
+
+Tap anyone in Cast & Crew to see what else they're in: what's on your services first, then the rest of their best-known work.
+
 ## Discover
 
 Discover is a deliberately long page of about 30 rows, newest first:

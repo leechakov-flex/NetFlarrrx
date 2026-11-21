@@ -1,10 +1,10 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type {
-  DownloadsResponse, DownloadItem, RequestItem,
+  DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse,
   BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse,
 } from '../../../src/api/types';
 
-export type { DownloadsResponse, DownloadItem, RequestItem, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
+export type { DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
 export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey } from '../../../src/api/types';
 
 export class ApiError extends Error {
@@ -64,6 +64,8 @@ export function browseParams(q: BrowseQuery, page?: number): string {
   if (q.because) p.set('because', q.because);
   if (q.services?.length) p.set('services', q.services.join(','));
   if (q.how?.length) p.set('how', q.how.join(','));
+  if (q.studios?.length) p.set('studios', q.studios.join(','));
+  if (q.networks?.length) p.set('networks', q.networks.join(','));
   if (page && page > 1) p.set('page', String(page));
   return p.toString();
 }
@@ -73,9 +75,18 @@ export const useMeta = () => useQuery({ queryKey: ['meta'], queryFn: () => getJs
 // (even after a long trailer) returns to a page that's already as long as it was.
 const KEEP_LISTS = 30 * 60_000;
 
-export const useHome = (services: string[] = []) => useQuery({
-  queryKey: ['home', services.join(',')],
-  queryFn: () => getJson<HomeResponse>(`/api/home${services.length ? `?services=${services.join(',')}` : ''}`),
+export interface CompanyPick { studios?: string[]; networks?: string[] }
+const homeParams = (services: string[], co: CompanyPick) => {
+  const p = new URLSearchParams();
+  if (services.length) p.set('services', services.join(','));
+  if (co.studios?.length) p.set('studios', co.studios.join(','));
+  if (co.networks?.length) p.set('networks', co.networks.join(','));
+  const s = p.toString();
+  return s ? `?${s}` : '';
+};
+export const useHome = (services: string[] = [], co: CompanyPick = {}) => useQuery({
+  queryKey: ['home', homeParams(services, co)],
+  queryFn: () => getJson<HomeResponse>(`/api/home${homeParams(services, co)}`),
   gcTime: KEEP_LISTS, placeholderData: (prev) => prev,
 });
 export const useGenres = (kind?: Kind) =>
@@ -114,4 +125,27 @@ export const useThemes = () => useQuery({ queryKey: ['themes'], queryFn: () => g
 export const useDownloads = () => useQuery({
   queryKey: ['downloads'], queryFn: () => getJson<DownloadsResponse>('/api/downloads'),
   refetchInterval: 5_000, refetchIntervalInBackground: false, placeholderData: (prev) => prev,
+});
+
+export const useCompanies = () => useQuery({ queryKey: ['companies'], queryFn: () => getJson<CompaniesResponse>('/api/companies'), staleTime: 10 * 60_000 });
+
+/** Library page (Jellyfin), a page at a time. */
+export function useLibrary(q: { type?: 'movie' | 'tv'; q?: string; sort?: 'added' | 'title' | 'year' }) {
+  const p = new URLSearchParams();
+  if (q.type) p.set('type', q.type);
+  if (q.q) p.set('q', q.q);
+  if (q.sort) p.set('sort', q.sort);
+  return useInfiniteQuery({
+    queryKey: ['library', p.toString()],
+    queryFn: ({ pageParam }) => getJson<LibraryResponse>(`/api/library?${p}${pageParam > 1 ? `&page=${pageParam}` : ''}`),
+    initialPageParam: 1,
+    placeholderData: (prev) => prev,
+    getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
+  });
+}
+
+export const usePerson = (id: number | null, name: string | null) => useQuery({
+  queryKey: ['person', id ?? name],
+  queryFn: () => getJson<PersonResponse>(`/api/people?${id ? `id=${id}` : `name=${encodeURIComponent(name ?? '')}`}`),
+  enabled: !!id || !!name, staleTime: 30 * 60_000, retry: 1,
 });

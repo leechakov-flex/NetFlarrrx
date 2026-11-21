@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { App } from '../app.js';
 import type { MiddlewareHandler } from 'hono';
-import { browse, companies, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
+import { browse, companies, personPage, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
@@ -174,6 +174,28 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   // Lets the UI check a passcode before saving it on the device.
   api.post('/passcode/check', requirePasscode, (c) => c.json({ ok: true }));
+
+  // Person page. By TMDB person ID, or by name for cast lists saved before IDs were. Cached 6 hours.
+  const people = new Map<string, { at: number; value: Awaited<ReturnType<typeof app.tmdb.person>> }>();
+  api.get('/people', async (c) => {
+    const idParam = Number(c.req.query('id'));
+    const name = (c.req.query('name') ?? '').trim().slice(0, 120);
+    if (!(Number.isInteger(idParam) && idParam > 0) && !name) return c.json({ error: 'id or name needed' }, 400);
+    const key = idParam > 0 ? `id:${idParam}` : `name:${name.toLowerCase()}`;
+    let hit = people.get(key);
+    if (!hit || Date.now() - hit.at > (hit.value ? 6 * 3600_000 : 10 * 60_000)) {   // a miss is retried after 10 minutes
+      try {
+        const id = idParam > 0 ? idParam : await app.tmdb.findPerson(name);
+        hit = { at: Date.now(), value: id ? await app.tmdb.person(id) : null };
+      } catch (err) {
+        log.warn('people: TMDB lookup failed', { key, error: (err as Error).message });
+        return c.json({ error: 'Couldn’t reach TMDB. Try again in a moment.' }, 502);
+      }
+      if (people.size > 300) people.delete(people.keys().next().value!);
+      people.set(key, hit);
+    }
+    return hit.value ? c.json(personPage(db, cfg, hit.value)) : c.json({ error: 'not found' }, 404);
+  });
 
   api.get('/companies', (c) => c.json(companies(db, cfg)));
 

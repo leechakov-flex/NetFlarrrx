@@ -6,6 +6,7 @@ import { all, get, run } from '../db/db.js';
 import { FakeJellyfin, FakeSeerr, FakeTmdb, FakeWatchmode, realCatalog } from '../test-support/fakes.js';
 import type { BrowseResponse, CompaniesResponse, HomeResponse, LibraryResponse, TitleDetail } from '../api/types.js';
 import { companyGroup, companyKey } from './companies.js';
+import { personPage } from './queries.js';
 
 let app: App;
 let http: ReturnType<typeof createServer>;
@@ -103,5 +104,17 @@ describe('Jellyfin library', () => {
     expect(all(app.db, 'SELECT 1 FROM jellyfin_items')).toHaveLength(3);
     expect((await j<LibraryResponse>('/api/library')).error).toMatch(/401/);
     jf.key = 'jf-key';
+  });
+});
+
+describe('person page', () => {
+  it('splits credits into on your services (best known first) and elsewhere, one per title', () => {
+    const credit = (tmdbType: 'movie' | 'tv', tmdbId: number, role: string, voteCount: number) => ({ tmdbType, tmdbId, title: `T${tmdbId}`, role, year: 2020, posterPath: null, popularity: 1, voteCount });
+    const p = personPage(app.db, app.cfg, { id: 1, name: 'Someone', profilePath: null, department: 'Acting', biography: null, credits: [
+      credit('movie', movies[0]!.tmdb_id, 'Lead', 10), credit('movie', movies[1]!.tmdb_id, 'Villain', 500),
+      credit('movie', movies[1]!.tmdb_id, 'Director', 500), credit('movie', 999999, 'Cameo', 50),
+    ] });
+    expect(p.onServices.map((c) => [c.id, c.role])).toEqual([[idOf('movie', movies[1]!.tmdb_id), 'Villain'], [idOf('movie', movies[0]!.tmdb_id), 'Lead']]);
+    expect(p.elsewhere.map((c) => c.tmdbId)).toEqual([999999]);
   });
 });

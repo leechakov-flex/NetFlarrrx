@@ -4,6 +4,7 @@ import { useBrowseCount, useGenres, useMeta } from '../lib/api';
 import { Icons } from './icons';
 import { Button, Tag } from './ui';
 import { SlideOver } from './SlideOver';
+import { CompanyList } from './CompanyPicker';
 
 export const SORTS: { value: SortKey; label: string }[] = [
   { value: 'added', label: 'Newest added' },
@@ -17,11 +18,11 @@ const ADDED: { value: BrowseQuery['added']; label: string }[] = [
 ];
 const VOTES = [0, 50, 200, 1000];
 
-export type Filters = Pick<BrowseQuery, 'genres' | 'added' | 'minRating' | 'maxRating' | 'minVotes' | 'hideHave' | 'services' | 'how'>;
+export type Filters = Pick<BrowseQuery, 'genres' | 'added' | 'minRating' | 'maxRating' | 'minVotes' | 'hideHave' | 'services' | 'how' | 'studios' | 'networks'>;
 const ratingSet = (f: Filters) => !!f.minRating || (f.maxRating !== undefined && f.maxRating < 10);
 export const activeFilterCount = (f: Filters) =>
   (f.genres?.length ? 1 : 0) + (f.added ? 1 : 0) + (ratingSet(f) ? 1 : 0) + (f.minVotes ? 1 : 0) + (f.hideHave ? 1 : 0) +
-  (f.services?.length ?? 0) + (f.how?.length ?? 0);
+  (f.services?.length ?? 0) + (f.how?.length ?? 0) + (f.studios?.length ?? 0) + (f.networks?.length ?? 0);
 const HOWS: { value: How; label: string }[] = [{ value: 'sub', label: 'Subscription' }, { value: 'digital', label: 'Rent or buy' }, { value: 'soon', label: 'Coming soon' }];
 const toggle = <T,>(list: T[] | undefined, v: T) => { const s = new Set(list ?? []); if (s.has(v)) s.delete(v); else s.add(v); return s.size ? [...s] : undefined; };
 
@@ -116,6 +117,12 @@ export function FiltersPanel({ open, onClose, kind, q, theme, because, value, on
               }}>{h.label}</Tag>
             ))}
           </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-2 type-heading-group text-white">{kind === 'movie' ? 'Studio' : kind === 'series' ? 'Network' : 'Studio or network'}</legend>
+          <CompanyList value={{ studios: draft.studios, networks: draft.networks }} only={kind === 'movie' ? 'studios' : kind === 'series' ? 'networks' : undefined}
+            onChange={(c) => setDraft({ ...draft, studios: c.studios, networks: c.networks })} />
         </fieldset>
 
         <fieldset>

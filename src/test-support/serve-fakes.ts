@@ -3,7 +3,7 @@
 // FAKE_VARIED=1 makes TMDB answers differ per title (language, ratings, runtime),
 // keeps Watchmode's real titles, and drops image paths so nothing loads remotely.
 import { createServer } from 'node:http';
-import { FakeArrQueue, FakeQbit, FakeSeerr, FakeTmdb, FakeWatchmode } from './fakes.js';
+import { FakeArrQueue, FakeJellyfin, FakeQbit, FakeSeerr, FakeTmdb, FakeWatchmode } from './fakes.js';
 import type { FetchFn } from '../clients/http.js';
 
 function serve(port: number, fetchFn: FetchFn) {
@@ -31,8 +31,19 @@ const tmdb = new FakeTmdb();
     tv: keep.filter((t) => t.tmdb_type === 'tv').map((t) => ({ id: t.tmdb_id!, title: t.title })),
   };
 }
+const people: FetchFn = async (input) => {
+  const u = new URL(String(input));
+  if (u.pathname.endsWith('/search/person')) return new Response(JSON.stringify({ results: [{ id: 501, name: u.searchParams.get('query') }] }), { status: 200 });
+  const films = new FakeWatchmode().catalog.filter((t) => t.tmdb_id && t.tmdb_type === 'movie');
+  return new Response(JSON.stringify({ id: 501, name: 'Morgan Reyes', known_for_department: 'Acting', profile_path: null,
+    biography: 'Morgan Reyes is an actor known for playing quiet, watchful characters in thrillers and slow-burn dramas. Reyes grew up in Albuquerque and started in regional theater before moving to film.',
+    combined_credits: { cast: [...films.filter((_, i) => i % 97 === 3).slice(0, 9).map((t, i) => ({ id: t.tmdb_id, media_type: 'movie', title: t.title, character: ['Ada', 'Detective Vos', 'Narrator'][i % 3], release_date: `${t.year}-01-01`, vote_count: 900 - i * 50 })),
+      { id: 880001, media_type: 'movie', title: 'The Long Field', character: 'June', release_date: '2014-05-01', vote_count: 3000 },
+      { id: 880002, media_type: 'tv', name: 'Harbor Lights', character: 'Sam', first_air_date: '2017-02-01', vote_count: 1200 }], crew: [] } }), { status: 200 });
+};
 const tmdbFetch: FetchFn = varied
   ? async (input, init) => {
+      if (/\/(search\/)?person/.test(new URL(String(input)).pathname)) return people(input, init);
       const res = await tmdb.fetch(input, init);
       if (!res.ok) return res;
       const body = (await res.json()) as Record<string, unknown> & { id: number };
@@ -52,6 +63,11 @@ const tmdbFetch: FetchFn = varied
       ];
       if ('keywords' in body) body.keywords = { keywords: kws, results: kws };
       body.number_of_seasons = 1 + (id % 4);
+      const studios = [[41077, 'A24'], [25, '20th Century Fox'], [127928, '20th Century Studios'], [33, 'Universal Pictures'], [90733, 'NEON'], [174, 'Warner Bros. Pictures'], [3172, 'Blumhouse Productions']];
+      const nets = [[6, 'NBC'], [88, 'FX'], [49, 'HBO'], [174, 'AMC'], [213, 'Netflix'], [2739, 'Disney+']];
+      const n = Math.abs(Math.trunc(Number(id) || 0));
+      body.production_companies = [studios[n % studios.length]!].map(([cid, name]) => ({ id: cid, name }));
+      body.networks = [nets[n % nets.length]!].map(([cid, name]) => ({ id: cid, name }));
       body.credits = { cast: [{ name: 'Morgan Reyes', character: 'Ada', profile_path: null }, { name: 'Sam Okafor', character: 'Theo', profile_path: null }, { name: 'Lena Brandt', character: 'Captain Vos', profile_path: null }], crew: [{ name: 'Iris Kalnins', job: 'Director' }] };
       body['watch/providers'] = { results: { US: { flatrate: [{ provider_id: 8, provider_name: 'Netflix' }], rent: [{ provider_id: 2, provider_name: 'Apple TV' }], buy: [{ provider_id: 2, provider_name: 'Apple TV' }, { provider_id: 10, provider_name: 'Amazon Video' }, { provider_id: 7, provider_name: 'Fandango at Home' }] } } };
       body.overview = 'A lighthouse keeper on a remote island starts receiving radio messages from a ship that sank forty years ago. As the storms close in, she has to decide whether to answer.';
@@ -131,4 +147,11 @@ serve(base + 3, fakeSeerr.fetch);
 serve(base + 4, qbit.fetch);
 serve(base + 5, radarrQ.fetch);
 serve(base + 6, sonarrQ.fetch);
-console.log(`fakes on ${base + 1} (watchmode) ${base + 2} (tmdb) ${base + 3} (seerr) ${base + 4} (qbit) ${base + 5}/${base + 6} (radarr/sonarr queue)${varied ? ' [varied]' : ''}`);
+// Jellyfin (key jf-key): a library of real titles, a few with posters.
+const jellyfin = new FakeJellyfin();
+jellyfin.items = new FakeWatchmode().catalog.filter((t) => t.tmdb_id).filter((_, i) => i % 23 === 0).slice(0, 90).map((t, i) => ({
+  Id: (i + 1).toString(16).padStart(32, '0'), Name: t.title, Type: t.tmdb_type === 'tv' ? 'Series' : 'Movie', ProductionYear: t.year,
+  DateCreated: new Date(Date.now() - i * 7 * 3600_000).toISOString(), ProviderIds: { Tmdb: String(t.tmdb_id) }, ChildCount: t.tmdb_type === 'tv' ? 1 + (i % 5) : null,
+}));
+serve(base + 7, jellyfin.fetch);
+console.log(`fakes on ${base + 1} (watchmode) ${base + 2} (tmdb) ${base + 3} (seerr) ${base + 4} (qbit) ${base + 5}/${base + 6} (radarr/sonarr queue) ${base + 7} (jellyfin)${varied ? ' [varied]' : ''}`);

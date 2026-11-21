@@ -17,6 +17,7 @@ import ChevronRight from 'framework7-icons/react/esm/ChevronRight.js';
 import Clock from 'framework7-icons/react/esm/Clock.js';
 import Ellipsis from 'framework7-icons/react/esm/Ellipsis.js';
 import ExclamationmarkTriangle from 'framework7-icons/react/esm/ExclamationmarkTriangle.js';
+import RectangleStack from 'framework7-icons/react/esm/RectangleStack.js';
 import Film from 'framework7-icons/react/esm/Film.js';
 import LineHorizontal3Decrease from 'framework7-icons/react/esm/LineHorizontal3Decrease.js';
 import Lock from 'framework7-icons/react/esm/Lock.js';
@@ -41,5 +42,5 @@ export const Icons = {
   clock: icon(Clock), bell: icon(Bell), minus: icon(Minus), xmark: icon(Xmark), xmarkCircle: icon(XmarkCircleFill),
   download: icon(ArrowDownToLine), ellipsis: icon(Ellipsis), star: icon(StarFill), trailer: icon(PlayRectangle), plus: icon(Plus),
   warning: icon(ExclamationmarkTriangle), lock: icon(Lock),
-  retry: icon(ArrowClockwise), arrowDown: icon(ArrowDown), arrowUp: icon(ArrowUp),
+  library: icon(RectangleStack), retry: icon(ArrowClockwise), arrowDown: icon(ArrowDown), arrowUp: icon(ArrowUp),
 };

@@ -42,8 +42,28 @@ export function Slider({ row }: { row: HomeRow }) {
             <TitleCard card={card} art={row.art} />
           </div>
         ))}
+        {row.link && row.total > row.items.length && <ViewAllCard to={row.link} more={row.total - row.items.length} />}
       </div>
     </section>
+  );
+}
+
+/** Figma "ViewAllCard": the last card of a row that has more, the size of a poster. */
+function ViewAllCard({ to, more }: { to: string; more: number }) {
+  return (
+    <div className="snap-start">
+      <Link to={to} className="group block w-[7.5rem] flex-shrink-0 outline-none md:w-44">
+        <div className="relative overflow-hidden rounded-xl bg-surface ring-1 ring-line transition group-hover:bg-raised group-focus-visible:ring-2 group-focus-visible:ring-indigo-400" style={{ paddingBottom: '150%' }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-raised ring-1 ring-line-strong transition group-hover:bg-inverse group-hover:text-ink-inverse">
+              <Icons.chevronRight className="h-5 w-5" />
+            </span>
+            <span className="type-label-strong text-white">View all</span>
+            <span className="type-caption-default text-ink-muted">{more.toLocaleString()} more</span>
+          </div>
+        </div>
+      </Link>
+    </div>
   );
 }
 

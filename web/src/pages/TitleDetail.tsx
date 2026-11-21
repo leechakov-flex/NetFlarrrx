@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useMeta, useTitle, type TitleDetail as Detail } from '../lib/api';
 import { languageName, longDate, runtime, SERVICE_NAMES, shortDate, tmdbImage } from '../lib/format';
 import { Badge, Button, Credits, Empty, Spinner } from '../components/ui';
@@ -41,7 +41,12 @@ export function TitleDetail() {
           </h1>
         )}
         <p className="mt-3 type-body-lead text-ink-secondary">{genreLine}</p>
-        {d.soon && <div className="mt-3 flex justify-center lg:justify-start"><Badge type="primary">Coming {shortDate(d.soon.date)}</Badge></div>}
+        {(d.soon || d.inLibrary) && (
+          <div className="mt-3 flex justify-center gap-2 lg:justify-start">
+            {d.inLibrary && <Badge type="success">In your library</Badge>}
+            {d.soon && !d.inLibrary && <Badge type="primary">Coming {shortDate(d.soon.date)}</Badge>}
+          </div>
+        )}
         <div className="mt-4 flex justify-center gap-3 lg:justify-start">
           <RequestButton d={d} />
           {d.trailer && (
@@ -163,15 +168,16 @@ function Person({ p }: { p: Detail['cast'][number] }) {
   const [broken, setBroken] = useState(false);
   const photo = broken ? null : tmdbImage.profile(p.profilePath);
   const initials = p.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  const to = p.id ? `/person?id=${p.id}` : `/person?name=${encodeURIComponent(p.name)}`;
   return (
-    <div className="w-[5.75rem] flex-shrink-0 text-center">
-      <div className="mx-auto flex h-[5.5rem] w-[5.5rem] items-center justify-center overflow-hidden rounded-full bg-raised ring-1 ring-line">
-        {photo ? <img src={photo} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover" />
+    <Link to={to} className="group w-[5.75rem] flex-shrink-0 text-center outline-none">
+      <div className="mx-auto flex h-[5.5rem] w-[5.5rem] items-center justify-center overflow-hidden rounded-full bg-raised ring-1 ring-line group-hover:ring-line-strong group-focus-visible:ring-2 group-focus-visible:ring-indigo-400">
+        {photo ? <img src={photo} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover transition group-hover:scale-105" />
           : <span className="type-heading-section text-ink-secondary">{initials}</span>}
       </div>
       <div className="mt-2 type-caption-strong text-white" style={{ WebkitLineClamp: 2, display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical' }}>{p.name}</div>
       {p.role && <div className="type-body-xsmall text-ink-muted" style={{ WebkitLineClamp: 2, display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical' }}>{p.role}</div>}
-    </div>
+    </Link>
   );
 }
 

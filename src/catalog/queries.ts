@@ -4,10 +4,11 @@ import { eligibleWhere, providerKeys, scopeFrom, soonService, type Scope } from 
 import { enabledServices, serviceByKey } from '../services.js';
 import { NEW_SEASON_CANDIDATES, newSeason, newSeasonSince } from './newSeasons.js';
 import { companyCounts, companyWhere } from './companies.js';
+import type { PersonCreditItem, TmdbPerson } from '../clients/tmdb.js';
 import { HOME_REPEAT_DEFAULT, MIN_THINNED_ROW, loadThemes, themeWhere, type ThemeRule } from './themes.js';
 import { becauseSeeds, libraryReport, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
-  BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ServiceKey, ThemeSummary, TitleCard, TitleDetail, TopResponse,
+  BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ServiceKey, ThemeSummary, TitleCard, TitleDetail, TopResponse, PersonResponse,
 } from '../api/types.js';
 
 export const PAGE_SIZE = 40;
@@ -438,4 +439,34 @@ export function companies(db: Db, cfg: Config, now = new Date()) {
   const value = { studios: companyCounts(db, 'studio', eligible), networks: companyCounts(db, 'network', eligible) };
   companiesCache = { at: now.getTime(), value };
   return value;
+}
+
+/** Person page: their credits split into on your services (cards) and elsewhere, best known first. */
+export function personPage(db: Db, cfg: Config, p: TmdbPerson, now = new Date()): PersonResponse {
+  // One entry per title (an actor-director is credited twice); keep the first role given.
+  const seen = new Map<string, PersonCreditItem>();
+  for (const c of p.credits) {
+    const k = `${c.tmdbType}:${c.tmdbId}`;
+    if (!seen.has(k) || (!seen.get(k)!.role && c.role)) seen.set(k, c);
+  }
+  const credits = [...seen.values()].sort((a, b) => b.voteCount - a.voteCount || b.popularity - a.popularity);
+  const rank = new Map(credits.map((c, i) => [`${c.tmdbType}:${c.tmdbId}`, i]));
+  const hits = new Map<string, TitleCard & { role: string }>();
+  const f = filters(cfg, { how: ['sub', 'digital', 'soon'] }, now);
+  for (let i = 0; i < credits.length; i += 300) {
+    const chunk = credits.slice(i, i + 300);
+    const rows = all<CardRow & { tmdb_type: string; tmdb_id: number }>(db,
+      `SELECT ${CARD_COLUMNS}, tk.tmdb_type, tk.tmdb_id ${f.from} WHERE ${f.sql} AND (${chunk.map(() => '(tk.tmdb_type = ? AND tk.tmdb_id = ?)').join(' OR ')})`,
+      [...f.params, ...chunk.flatMap((c) => [c.tmdbType, c.tmdbId])]);
+    for (const r of rows) {
+      const k = `${r.tmdb_type}:${r.tmdb_id}`;
+      if (!hits.has(k)) hits.set(k, { ...cardFor(cfg)(r), role: seen.get(k)?.role ?? '' });
+    }
+  }
+  return {
+    id: p.id, name: p.name, profilePath: p.profilePath, department: p.department, biography: p.biography,
+    onServices: [...hits.entries()].sort(([a], [b]) => rank.get(a)! - rank.get(b)!).map(([, c]) => c),
+    elsewhere: credits.filter((c) => !hits.has(`${c.tmdbType}:${c.tmdbId}`)).slice(0, 40)
+      .map((c) => ({ tmdbType: c.tmdbType, tmdbId: c.tmdbId, title: c.title, year: c.year, posterPath: c.posterPath, role: c.role })),
+  };
 }

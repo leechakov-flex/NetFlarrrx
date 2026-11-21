@@ -10,6 +10,8 @@ import { TopRated } from './pages/TopRated';
 import { TitleDetail } from './pages/TitleDetail';
 import { More } from './pages/More';
 import { Downloads } from './pages/Downloads';
+import { Library } from './pages/Library';
+import { Person } from './pages/Person';
 import { Empty } from './components/ui';
 import { FeedbackProvider } from './components/Feedback';
 
@@ -39,6 +41,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/title/:id" element={<TitleDetail />} />
             <Route path="/more" element={<More />} />
             <Route path="/downloads" element={<Downloads />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/person" element={<Person />} />
             <Route path="*" element={<Empty>Page not found.</Empty>} />
           </Routes>
         </Layout>

@@ -5,7 +5,7 @@ const Named = z.object({ id: z.number().int(), name: z.string() });
 const ImageRef = z.object({ file_path: z.string(), iso_639_1: z.string().nullable().optional(), vote_average: z.number().optional().default(0), vote_count: z.number().optional().default(0) });
 type ImageRef = z.infer<typeof ImageRef>;
 
-export interface Person { name: string; role: string; profilePath: string | null }
+export interface Person { id?: number; name: string; role: string; profilePath: string | null }
 export interface WatchOptions { flatrate: string[]; rent: string[]; buy: string[]; providerIds: number[] }
 
 const Video = z.object({
@@ -18,6 +18,20 @@ const Video = z.object({
   published_at: z.string().nullable().optional(),
 });
 export type TmdbVideo = z.infer<typeof Video>;
+
+const PersonCredit = z.object({
+  id: z.number().int(), media_type: z.string().optional(), title: z.string().optional(), name: z.string().optional(),
+  character: z.string().nullable().optional(), job: z.string().optional(),
+  release_date: z.string().nullable().optional(), first_air_date: z.string().nullable().optional(),
+  poster_path: z.string().nullable().optional(), popularity: z.number().nullable().optional(), vote_count: z.number().nullable().optional(),
+}).passthrough();
+const PersonDetails = z.object({
+  id: z.number().int(), name: z.string(), profile_path: z.string().nullable().optional(),
+  known_for_department: z.string().nullable().optional(), biography: z.string().nullable().optional(),
+  combined_credits: z.object({ cast: z.array(PersonCredit).optional().default([]), crew: z.array(PersonCredit).optional().default([]) }).optional(),
+}).passthrough();
+export interface PersonCreditItem { tmdbType: 'movie' | 'tv'; tmdbId: number; title: string; role: string; year: number | null; posterPath: string | null; popularity: number; voteCount: number }
+export interface TmdbPerson { id: number; name: string; profilePath: string | null; department: string | null; biography: string | null; credits: PersonCreditItem[] }
 
 const Details = z.object({
   id: z.number().int(),
@@ -54,17 +68,17 @@ const Details = z.object({
       })).optional().default([]),
     })).optional().default([]),
   }).optional(),
-  created_by: z.array(z.object({ name: z.string(), profile_path: z.string().nullable().optional() })).optional().default([]),
+  created_by: z.array(z.object({ id: z.number().int().optional(), name: z.string(), profile_path: z.string().nullable().optional() })).optional().default([]),
   images: z.object({
     logos: z.array(ImageRef).optional().default([]),
     posters: z.array(ImageRef).optional().default([]),
   }).optional(),
   credits: z.object({                      // movie
-    cast: z.array(z.object({ name: z.string(), character: z.string().nullable().optional(), profile_path: z.string().nullable().optional(), order: z.number().optional() })).optional().default([]),
-    crew: z.array(z.object({ name: z.string(), job: z.string().optional().default(''), profile_path: z.string().nullable().optional() })).optional().default([]),
+    cast: z.array(z.object({ id: z.number().int().optional(), name: z.string(), character: z.string().nullable().optional(), profile_path: z.string().nullable().optional(), order: z.number().optional() })).optional().default([]),
+    crew: z.array(z.object({ id: z.number().int().optional(), name: z.string(), job: z.string().optional().default(''), profile_path: z.string().nullable().optional() })).optional().default([]),
   }).optional(),
   aggregate_credits: z.object({            // tv
-    cast: z.array(z.object({ name: z.string(), profile_path: z.string().nullable().optional(), order: z.number().optional(),
+    cast: z.array(z.object({ id: z.number().int().optional(), name: z.string(), profile_path: z.string().nullable().optional(), order: z.number().optional(),
       roles: z.array(z.object({ character: z.string().nullable().optional() })).optional().default([]) })).optional().default([]),
   }).optional(),
   'watch/providers': z.object({
@@ -225,6 +239,39 @@ export class TmdbClient {
   }
 
   /** Details, keywords, videos and US rating in one call. Returns null if TMDB has no such record. */
+  /** A person and everything they're credited in (acting and key crew jobs). */
+  async person(id: number): Promise<TmdbPerson | null> {
+    let raw: unknown;
+    try {
+      raw = await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/person/${id}?append_to_response=combined_credits&language=en-US`,
+        { headers: { Authorization: `Bearer ${this.token}` } });
+    } catch (err) {
+      if (err instanceof HttpError && err.isNotFound) return null;
+      throw err;
+    }
+    const p = PersonDetails.parse(raw);
+    const credit = (c: z.infer<typeof PersonCredit>, role: string): PersonCreditItem | null =>
+      c.media_type === 'movie' || c.media_type === 'tv' ? {
+        tmdbType: c.media_type, tmdbId: c.id, title: c.title ?? c.name ?? '', role,
+        year: Number((c.release_date ?? c.first_air_date ?? '').slice(0, 4)) || null, posterPath: c.poster_path ?? null,
+        popularity: c.popularity ?? 0, voteCount: c.vote_count ?? 0,
+      } : null;
+    const credits = [
+      ...(p.combined_credits?.cast ?? []).map((c) => credit(c, c.character || '')),
+      ...(p.combined_credits?.crew ?? []).filter((c) => CREW_JOBS.includes(c.job ?? '') || c.job === 'Creator').map((c) => credit(c, c.job ?? '')),
+    ].filter((x): x is PersonCreditItem => !!x && !!x.title);
+    return { id: p.id, name: p.name, profilePath: p.profile_path ?? null, department: p.known_for_department ?? null, biography: p.biography || null, credits };
+  }
+
+  /** The best TMDB match for a person's name (for cast lists saved before person IDs were). */
+  async findPerson(name: string): Promise<number | null> {
+    const q = new URLSearchParams({ query: name, include_adult: 'false', language: 'en-US' });
+    const body = z.object({ results: z.array(z.object({ id: z.number().int(), name: z.string(), popularity: z.number().optional() })).optional().default([]) })
+      .parse(await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/search/person?${q}`, { headers: { Authorization: `Bearer ${this.token}` } }));
+    const exact = body.results.filter((r) => r.name.toLowerCase() === name.toLowerCase());
+    return (exact[0] ?? body.results[0])?.id ?? null;
+  }
+
   async details(type: 'movie' | 'tv', id: number): Promise<TmdbDetails | null> {
     const appends = ['keywords', 'videos', type === 'movie' ? 'release_dates' : 'content_ratings', 'images',
       type === 'movie' ? 'credits' : 'aggregate_credits', 'watch/providers', 'recommendations'].join(',');
@@ -250,12 +297,12 @@ export class TmdbClient {
     const digitalRow = usRelease.filter((r) => r.type === 4 && r.release_date).sort((a, b) => a.release_date!.localeCompare(b.release_date!))[0];
     const digital = digitalRow?.release_date?.slice(0, 10) ?? null;
     const cast: Person[] = type === 'movie'
-      ? (d.credits?.cast ?? []).slice(0, 12).map((c) => ({ name: c.name, role: c.character || '', profilePath: c.profile_path ?? null }))
-      : (d.aggregate_credits?.cast ?? []).slice(0, 12).map((c) => ({ name: c.name, role: c.roles[0]?.character || '', profilePath: c.profile_path ?? null }));
+      ? (d.credits?.cast ?? []).slice(0, 12).map((c) => ({ id: c.id, name: c.name, role: c.character || '', profilePath: c.profile_path ?? null }))
+      : (d.aggregate_credits?.cast ?? []).slice(0, 12).map((c) => ({ id: c.id, name: c.name, role: c.roles[0]?.character || '', profilePath: c.profile_path ?? null }));
     const crewSeen = new Set<string>();
     const crew: Person[] = [
-      ...d.created_by.map((c) => ({ name: c.name, role: 'Creator', profilePath: c.profile_path ?? null })),
-      ...(d.credits?.crew ?? []).filter((c) => CREW_JOBS.includes(c.job)).map((c) => ({ name: c.name, role: c.job, profilePath: c.profile_path ?? null })),
+      ...d.created_by.map((c) => ({ id: c.id, name: c.name, role: 'Creator', profilePath: c.profile_path ?? null })),
+      ...(d.credits?.crew ?? []).filter((c) => CREW_JOBS.includes(c.job)).map((c) => ({ id: c.id, name: c.name, role: c.job, profilePath: c.profile_path ?? null })),
     ].filter((p) => (crewSeen.has(p.name) ? false : (crewSeen.add(p.name), true))).slice(0, 4);
     const us = d['watch/providers']?.results.US;
     const names = (l?: { provider_name: string }[]) => [...new Set((l ?? []).map((p) => p.provider_name))];

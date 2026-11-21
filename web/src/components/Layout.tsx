@@ -82,7 +82,7 @@ function Sidebar() {
         <p className="mt-1 type-caption-default text-ink-muted">What’s new on your services</p>
       </div>
       <nav className="mt-8 flex-1 space-y-1 px-4">
-        {[...nav, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }].map((item) => {
+        {[...nav, { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') }, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }].map((item) => {
           const on = item.match(pathname);
           const Icon = item.icon;
           return (
@@ -121,7 +121,7 @@ function Sidebar() {
  */
 function MobileMenu() {
   const { pathname } = useLocation();
-  const items = [...nav, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') || p.startsWith('/downloads') }];
+  const items = [...nav, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') || p.startsWith('/downloads') || p.startsWith('/library') }];
   const attention = useMeta().data?.downloads?.attention ?? 0;
   const onSearch = pathname.startsWith('/search');
   return (

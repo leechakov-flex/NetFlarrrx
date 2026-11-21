@@ -8,6 +8,7 @@ import { Credits, Empty, PageTitle, Spinner, Tag } from '../components/ui';
 import { SearchInput } from '../components/Layout';
 import type { How, ServiceKey } from '../lib/api';
 import { SERVICE_NAMES } from '../lib/format';
+import { useCompanyNames } from '../components/CompanyPicker';
 
 const HOW_LABEL: Record<How, string> = { sub: 'Subscription', digital: 'Rent or buy', soon: 'Coming soon' };
 
@@ -23,6 +24,8 @@ const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: s
   sort: (p.get('sort') as SortKey) || undefined,
   services: (p.get('services')?.split(',').filter((k) => k in SERVICE_NAMES) as ServiceKey[]) || undefined,
   how: (p.get('how')?.split(',').filter((k) => k in HOW_LABEL) as How[]) || undefined,
+  studios: p.get('studios')?.split(',').filter(Boolean) || undefined,
+  networks: p.get('networks')?.split(',').filter(Boolean) || undefined,
 });
 
 export function Browse({ kind, title, search = false }: { kind?: Kind; title: string; search?: boolean }) {
@@ -55,6 +58,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
     if (merged.minVotes) p.set('minVotes', String(merged.minVotes));
     if (merged.services?.length) p.set('services', merged.services.join(','));
     if (merged.how?.length) p.set('how', merged.how.join(','));
+    if (merged.studios?.length) p.set('studios', merged.studios.join(','));
+    if (merged.networks?.length) p.set('networks', merged.networks.join(','));
     setParams(p, { replace: true });
   };
 
@@ -73,6 +78,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   const items = res.data?.pages.flatMap((p) => p.items) ?? [];
   const total = res.data?.pages[0]?.total;
   const noun = kind === 'movie' ? 'movies' : kind === 'series' ? 'series' : 'titles';
+  const companyName = useCompanyNames();
   const genreName = (id: number) => genres.data?.find((g) => g.id === id)?.name ?? 'Genre';
 
   const chips: { label: string; clear: () => void }[] = [];
@@ -86,6 +92,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   if (f.minVotes) chips.push({ label: `${f.minVotes.toLocaleString()}+ votes`, clear: () => update({ minVotes: undefined }) });
   for (const k of f.services ?? []) chips.push({ label: SERVICE_NAMES[k], clear: () => update({ services: f.services!.filter((x) => x !== k) }) });
   for (const h of f.how ?? []) chips.push({ label: HOW_LABEL[h], clear: () => update({ how: f.how!.filter((x) => x !== h) }) });
+  for (const k of f.studios ?? []) chips.push({ label: companyName(k), clear: () => update({ studios: f.studios!.filter((x) => x !== k) }) });
+  for (const k of f.networks ?? []) chips.push({ label: companyName(k), clear: () => update({ networks: f.networks!.filter((x) => x !== k) }) });
 
   return (
     <>
@@ -134,8 +142,8 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         q={q}
         theme={f.theme}
         because={f.because}
-        value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave, services: f.services, how: f.how }}
-        onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave, services: next.services, how: next.how })}
+        value={{ genres: f.genres, added: f.added, minRating: f.minRating, maxRating: f.maxRating, minVotes: f.minVotes, hideHave: f.hideHave, services: f.services, how: f.how, studios: f.studios, networks: f.networks }}
+        onApply={(next) => update({ genres: next.genres, added: next.added ?? undefined, minRating: next.minRating, maxRating: next.maxRating, minVotes: next.minVotes, hideHave: next.hideHave, services: next.services, how: next.how, studios: next.studios, networks: next.networks })}
       />
     </>
   );
