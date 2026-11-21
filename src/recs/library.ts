@@ -146,7 +146,7 @@ const isWatchmodeSpecial = (db: Db, type: string, id: number) =>
 
 /**
  * TMDB recommends specials alongside specials. Among a movie's recommendations
- * that are on Netflix, 60%+ specials makes it a stand-up special, under 30%
+ * that are on Netflix, 50%+ specials makes it a stand-up special, under 30%
  * makes a title-pattern guess a regular movie. Keyword matches are kept as they are.
  */
 function refineByRecs(db: Db, type: 'movie' | 'tv', id: number, r: { keywords: string[] }, guess: 'standup' | 'movie' | 'series') {
@@ -159,7 +159,7 @@ function refineByRecs(db: Db, type: 'movie' | 'tv', id: number, r: { keywords: s
     WHERE lr.seed_type = 'movie' AND lr.seed_id = ?`, [id])!;
   if (m.n < 4) return guess;
   const share = m.specials / m.n;
-  if (share >= 0.6) return 'standup';
+  if (share >= 0.5) return 'standup';
   if (guess === 'standup' && share < 0.3) return 'movie';
   return guess;
 }
@@ -190,8 +190,12 @@ export const libraryCount = (db: Db) => get<{ n: number }>(db, 'SELECT count(*) 
  */
 /** For the CLI: every library title with its category and Netflix matches, best first. */
 export function libraryReport(db: Db, eligible: { sql: string; params: (string | number)[] }, from: string) {
-  return all<{ title: string; category: string | null; source: string | null; matches: number }>(db, `
+  return all<{ title: string; category: string | null; source: string | null; matches: number; specials_pct: number | null }>(db, `
     SELECT s.title, s.category, s.source, (
+      SELECT CAST(round(100.0 * avg(t.watchmode_type = 'tv_special')) AS INTEGER)
+      FROM library_recs lr JOIN titles t ON t.tmdb_type = lr.rec_type AND t.tmdb_id = lr.rec_id
+      WHERE lr.seed_type = s.media_type AND lr.seed_id = s.tmdb_id
+    ) specials_pct, (
       SELECT count(DISTINCT tk.id) ${from}
       JOIN library_recs r ON r.rec_type = tk.tmdb_type AND r.rec_id = tk.tmdb_id
       WHERE r.seed_type = s.media_type AND r.seed_id = s.tmdb_id AND ${eligible.sql} AND ${NOT_MINE}

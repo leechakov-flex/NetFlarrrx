@@ -101,7 +101,7 @@ async function main() {
         const rows = libraryOverview(app.db, cfg);
         const by = (c: string) => rows.filter((r) => r.category === c).length;
         console.log(`${rows.length} titles: ${by('standup')} stand-up, ${by('movie')} movies, ${by('series')} series. Rows need 5+ matches.`);
-        console.table(rows.slice(0, 40).map((r) => ({ title: r.title.slice(0, 44), category: r.category, source: r.source, matches: r.matches })));
+        console.table(rows.slice(0, 40).map((r) => ({ title: r.title.slice(0, 44), category: r.category, source: r.source, matches: r.matches, 'specials %': r.specials_pct })));
         break;
       }
       case 'alerts': console.log(JSON.stringify({ alertUrlSet: app.notifier.enabled, problems: app.problems() }, null, 2)); break;

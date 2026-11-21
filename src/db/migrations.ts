@@ -244,4 +244,9 @@ UPDATE library_items SET recs_at = NULL;              -- re-fetch once to learn 
     name: 'library_categories_by_recs',
     sql: `UPDATE library_items SET recs_at = NULL;   -- re-sort library titles using what TMDB recommends alongside them`,
   },
+  {
+    version: 8,
+    name: 'library_categories_threshold',
+    sql: `UPDATE library_items SET recs_at = NULL;   -- re-sort with the 50% specials line`,
+  },
 ];
