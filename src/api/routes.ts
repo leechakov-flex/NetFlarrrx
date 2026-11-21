@@ -5,6 +5,10 @@ import type { MiddlewareHandler } from 'hono';
 import { browse, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
+import { SERVICES } from '../services.js';
+import type { How, ServiceKey } from './types.js';
+
+const SERVICE_KEYS = new Set<string>(SERVICES.map((s) => s.key));
 
 const kind = z.enum(['movie', 'series']);
 const intList = z.string().transform((s) => s.split(',').map(Number).filter((n) => Number.isInteger(n) && n > 0));
@@ -16,7 +20,9 @@ const BrowseParams = z.object({
   minRating: z.coerce.number().min(0).max(10).optional(),
   maxRating: z.coerce.number().min(0).max(10).optional(),
   minVotes: z.coerce.number().int().min(0).optional(),
-  sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match']).optional(),
+  sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match', 'soon']).optional(),
+  services: z.string().transform((v) => v.split(',').filter((k) => SERVICE_KEYS.has(k)) as ServiceKey[]).optional(),
+  how: z.string().transform((v) => v.split(',').filter((k) => k === 'sub' || k === 'digital' || k === 'soon') as How[]).optional(),
   because: z.string().regex(/^(movie|tv):\d{1,9}$/).optional(),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
   q: z.string().max(100).optional(),

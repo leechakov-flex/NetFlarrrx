@@ -27,6 +27,9 @@ export class FakeWatchmode {
   flakyPages = new Set<number>();     // these pages fail once with 429, then work
   authFail = false;
   calls: string[] = [];
+  /** Catalogs for other services, by Watchmode source id. */
+  otherSources = new Map<number, WatchmodeTitle[]>();
+  sourceList = [{ id: 203, name: 'Netflix', type: 'sub' }, { id: 387, name: 'Max', type: 'sub' }, { id: 157, name: 'Hulu', type: 'sub' }];
   constructor(catalog: WatchmodeTitle[] = realCatalog()) { this.catalog = catalog; }
 
   fetch: FetchFn = async (input) => {
@@ -34,13 +37,17 @@ export class FakeWatchmode {
     this.calls.push(url.pathname + url.search);
     if (this.authFail) return json(401, { success: false, statusMessage: 'Invalid API key' });
     if (url.pathname.endsWith('/status/')) return json(200, { quota: this.quota, quotaUsed: this.used });
+    if (url.pathname.endsWith('/sources/')) return json(200, this.sourceList);
     if (url.pathname.endsWith('/list-titles/')) {
       const page = Number(url.searchParams.get('page'));
       const limit = Number(url.searchParams.get('limit'));
       if (this.failPages.has(page)) return json(500, { statusMessage: 'boom' });
       if (this.flakyPages.has(page)) { this.flakyPages.delete(page); return json(429, {}, { 'retry-after': '0' }); }
       this.used += 1;
-      const sorted = [...this.catalog].sort((a, b) => a.title.localeCompare(b.title) || a.id - b.id);
+      const types = url.searchParams.get('types')?.split(',');
+      const source = Number(url.searchParams.get('source_ids'));
+      const base = this.otherSources.get(source) ?? this.catalog;
+      const sorted = [...base].filter((t) => !types || types.includes(t.type)).sort((a, b) => a.title.localeCompare(b.title) || a.id - b.id);
       const totalPages = Math.max(1, Math.ceil(sorted.length / limit));
       return json(200, { titles: sorted.slice((page - 1) * limit, page * limit), page, total_results: sorted.length, total_pages: totalPages });
     }
@@ -57,6 +64,8 @@ export class FakeTmdb {
   /** TMDB's own Netflix list for /discover, by type; 20 per page like the real API. */
   discover: Record<'movie' | 'tv', { id: number; title: string; popularity?: number }[]> = { movie: [], tv: [] };
   discoverFailPage: number | null = null;
+  /** Answer discover queries by their parameters (overrides `discover`). Items may carry a date. */
+  discoverBy: ((type: 'movie' | 'tv', params: URLSearchParams) => { id: number; title: string; date?: string; popularity?: number }[] | undefined) | null = null;
   /** TMDB recommendations per title ("movie:123" -> ids), for library seeds. */
   recs = new Map<string, number[]>();
   /** TVDB -> TMDB series IDs for /find. */
@@ -76,12 +85,13 @@ export class FakeTmdb {
     if (disc) {
       const page = Number(url.searchParams.get('page') ?? 1);
       if (page === this.discoverFailPage) return json(500, {});
-      const list = this.discover[disc[1] as 'movie' | 'tv'];
+      const list: { id: number; title: string; date?: string; popularity?: number }[] =
+        this.discoverBy?.(disc[1] as 'movie' | 'tv', url.searchParams) ?? this.discover[disc[1] as 'movie' | 'tv'];
       return json(200, {
         page, total_pages: Math.max(1, Math.ceil(list.length / 20)), total_results: list.length,
         results: list.slice((page - 1) * 20, page * 20).map((r) => disc[1] === 'movie'
-          ? { id: r.id, title: r.title, release_date: '2020-01-01', popularity: r.popularity ?? 1 }
-          : { id: r.id, name: r.title, first_air_date: '2020-01-01', popularity: r.popularity ?? 1 }),
+          ? { id: r.id, title: r.title, release_date: r.date ?? '2020-01-01', popularity: r.popularity ?? 1 }
+          : { id: r.id, name: r.title, first_air_date: r.date ?? '2020-01-01', popularity: r.popularity ?? 1 }),
       });
     }
     const m = url.pathname.match(/\/(movie|tv)\/(\d+)$/);

@@ -34,6 +34,10 @@ const schema = z.object({
   TZ: z.preprocess(clean, z.string().default('America/New_York')),
 
   NETFLIX_SOURCE_ID: num(203),
+  // Services to track (comma list; Netflix is always on). See src/services.ts.
+  SERVICES: z.preprocess(clean, z.string().default('netflix,prime,hbomax,hulu,disney,paramount,peacock')),
+  TRACK_DIGITAL: bool(true),        // "New to rent or buy" from TMDB (free)
+  TRACK_UPCOMING: bool(true),       // "Coming soon" from TMDB (free)
   REGION: z.preprocess(clean, z.string().default('US')),
   LANGUAGE_RULE: z.preprocess(clean, z.enum(['en', 'all']).default('en')),
 
@@ -98,6 +102,9 @@ export function testConfig(overrides: Partial<Record<keyof Config, string>> = {}
     DATA_DIR: ':memory:',
     RUN_SCHEDULER: 'false',
     WATCHMODE_MIN_INTERVAL_MS: '0',
+    SERVICES: 'netflix',
+    TRACK_DIGITAL: 'false',
+    TRACK_UPCOMING: 'false',
     ...overrides,
   });
 }

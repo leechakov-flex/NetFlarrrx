@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { HttpError, requestJson, type FetchFn } from './http.js';
 
 const Named = z.object({ id: z.number().int(), name: z.string() });
+const ImageRef = z.object({ file_path: z.string(), iso_639_1: z.string().nullable().optional(), vote_average: z.number().optional().default(0), vote_count: z.number().optional().default(0) });
+type ImageRef = z.infer<typeof ImageRef>;
+
+export interface Person { name: string; role: string; profilePath: string | null }
+export interface WatchOptions { flatrate: string[]; rent: string[]; buy: string[]; providerIds: number[] }
 
 const Video = z.object({
   key: z.string(),
@@ -38,12 +43,38 @@ const Details = z.object({
     results: z.array(Named).optional(),    // tv
   }).optional(),
   videos: z.object({ results: z.array(z.unknown()).optional().default([]) }).optional(),
-  release_dates: z.object({                // movie certification
+  release_dates: z.object({                // movie certification and US digital date
     results: z.array(z.object({
       iso_3166_1: z.string(),
-      release_dates: z.array(z.object({ certification: z.string().optional().default('') })).optional().default([]),
+      release_dates: z.array(z.object({
+        certification: z.string().optional().default(''),
+        type: z.number().int().optional(),
+        release_date: z.string().optional(),
+        note: z.string().optional().default(''),
+      })).optional().default([]),
     })).optional().default([]),
   }).optional(),
+  created_by: z.array(z.object({ name: z.string(), profile_path: z.string().nullable().optional() })).optional().default([]),
+  images: z.object({
+    logos: z.array(ImageRef).optional().default([]),
+    posters: z.array(ImageRef).optional().default([]),
+  }).optional(),
+  credits: z.object({                      // movie
+    cast: z.array(z.object({ name: z.string(), character: z.string().nullable().optional(), profile_path: z.string().nullable().optional(), order: z.number().optional() })).optional().default([]),
+    crew: z.array(z.object({ name: z.string(), job: z.string().optional().default(''), profile_path: z.string().nullable().optional() })).optional().default([]),
+  }).optional(),
+  aggregate_credits: z.object({            // tv
+    cast: z.array(z.object({ name: z.string(), profile_path: z.string().nullable().optional(), order: z.number().optional(),
+      roles: z.array(z.object({ character: z.string().nullable().optional() })).optional().default([]) })).optional().default([]),
+  }).optional(),
+  'watch/providers': z.object({
+    results: z.record(z.string(), z.object({
+      flatrate: z.array(z.object({ provider_id: z.number().int(), provider_name: z.string() })).optional(),
+      rent: z.array(z.object({ provider_id: z.number().int(), provider_name: z.string() })).optional(),
+      buy: z.array(z.object({ provider_id: z.number().int(), provider_name: z.string() })).optional(),
+    }).passthrough()).optional().default({}),
+  }).optional(),
+  recommendations: z.object({ results: z.array(z.object({ id: z.number().int(), media_type: z.string().optional() }).passthrough()).optional().default([]) }).optional(),
   content_ratings: z.object({              // tv certification
     results: z.array(z.object({ iso_3166_1: z.string(), rating: z.string().optional().default('') })).optional().default([]),
   }).optional(),
@@ -67,7 +98,19 @@ export interface TmdbDetails {
   keywords: { id: number; name: string }[];
   lastAirDate: string | null;
   netflixOriginal: boolean;
+  logoPath: string | null;
+  textlessPosterPath: string | null;
+  credits: Person[];
+  watch: WatchOptions | null;
+  recommendations: { type: 'movie' | 'tv'; id: number }[];
+  digitalDate: string | null;
+  /** TMDB's note on the US digital release, often the service ("Netflix", "Max"). */
+  digitalNote: string | null;
 }
+
+/** Best-voted image, ties to more votes. TMDB lists images unsorted. */
+const bestImage = (list: ImageRef[]) => [...list].sort((a, b) => b.vote_average - a.vote_average || b.vote_count - a.vote_count)[0]?.file_path ?? null;
+const CREW_JOBS = ['Director', 'Screenplay', 'Writer', 'Creator'];
 
 /**
  * Picks the trailer to show: YouTube only (the player embeds YouTube), then
@@ -150,13 +193,29 @@ export class TmdbClient {
     };
   }
 
+  /**
+   * One page of any TMDB discover query (20 results). `params` are TMDB's own
+   * discover filters, e.g. with_watch_providers or with_release_type.
+   */
+  async discoverPage(type: 'movie' | 'tv', params: Record<string, string>, page: number) {
+    const q = new URLSearchParams({ include_adult: 'false', ...params, page: String(page) });
+    const d = DiscoverPage.parse(await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/discover/${type}?${q}`,
+      { headers: { Authorization: `Bearer ${this.token}` } }));
+    return {
+      totalPages: d.total_pages,
+      totalResults: d.total_results,
+      results: d.results.map((r) => ({ id: r.id, title: r.title ?? r.name ?? `#${r.id}`, date: (r.release_date || r.first_air_date || null) as string | null })),
+    };
+  }
+
   /** Details, keywords, videos and US rating in one call. Returns null if TMDB has no such record. */
   async details(type: 'movie' | 'tv', id: number): Promise<TmdbDetails | null> {
-    const appends = ['keywords', 'videos', type === 'movie' ? 'release_dates' : 'content_ratings'].join(',');
+    const appends = ['keywords', 'videos', type === 'movie' ? 'release_dates' : 'content_ratings', 'images',
+      type === 'movie' ? 'credits' : 'aggregate_credits', 'watch/providers', 'recommendations'].join(',');
     let raw: unknown;
     try {
       raw = await requestJson<unknown>(this.fetchFn, 'tmdb',
-        `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=${appends}&language=en-US`,
+        `${this.base.replace(/\/$/, '')}/${type}/${id}?append_to_response=${appends}&language=en-US&include_image_language=en,null`,
         { headers: { Authorization: `Bearer ${this.token}` } });
     } catch (err) {
       if (err instanceof HttpError && err.isNotFound) return null;
@@ -171,7 +230,31 @@ export class TmdbClient {
     } else {
       certification = d.content_ratings?.results.find((r) => r.iso_3166_1 === 'US')?.rating.trim() || null;
     }
+    const usRelease = d.release_dates?.results.find((r) => r.iso_3166_1 === 'US')?.release_dates ?? [];
+    const digitalRow = usRelease.filter((r) => r.type === 4 && r.release_date).sort((a, b) => a.release_date!.localeCompare(b.release_date!))[0];
+    const digital = digitalRow?.release_date?.slice(0, 10) ?? null;
+    const cast: Person[] = type === 'movie'
+      ? (d.credits?.cast ?? []).slice(0, 12).map((c) => ({ name: c.name, role: c.character || '', profilePath: c.profile_path ?? null }))
+      : (d.aggregate_credits?.cast ?? []).slice(0, 12).map((c) => ({ name: c.name, role: c.roles[0]?.character || '', profilePath: c.profile_path ?? null }));
+    const crewSeen = new Set<string>();
+    const crew: Person[] = [
+      ...d.created_by.map((c) => ({ name: c.name, role: 'Creator', profilePath: c.profile_path ?? null })),
+      ...(d.credits?.crew ?? []).filter((c) => CREW_JOBS.includes(c.job)).map((c) => ({ name: c.name, role: c.job, profilePath: c.profile_path ?? null })),
+    ].filter((p) => (crewSeen.has(p.name) ? false : (crewSeen.add(p.name), true))).slice(0, 4);
+    const us = d['watch/providers']?.results.US;
+    const names = (l?: { provider_name: string }[]) => [...new Set((l ?? []).map((p) => p.provider_name))];
+    const watch: WatchOptions | null = us ? {
+      flatrate: names(us.flatrate), rent: names(us.rent), buy: names(us.buy),
+      providerIds: [...new Set([...(us.flatrate ?? []), ...(us.rent ?? []), ...(us.buy ?? [])].map((p) => p.provider_id))],
+    } : null;
     return {
+      logoPath: bestImage((d.images?.logos ?? []).filter((l) => l.iso_639_1 === 'en' && !l.file_path.endsWith('.svg'))),
+      textlessPosterPath: bestImage((d.images?.posters ?? []).filter((p) => p.iso_639_1 == null)),
+      credits: [...crew.filter((p) => p.role === 'Director' || p.role === 'Creator'), ...cast, ...crew.filter((p) => p.role !== 'Director' && p.role !== 'Creator')],
+      watch,
+      recommendations: (d.recommendations?.results ?? []).slice(0, 20).map((r) => ({ type: (r.media_type === 'tv' ? 'tv' : r.media_type === 'movie' ? 'movie' : type) as 'movie' | 'tv', id: r.id })),
+      digitalDate: type === 'movie' ? digital : null,
+      digitalNote: type === 'movie' ? (digitalRow?.note || null) : null,
       tmdbTitle: d.title ?? d.name ?? null,
       originalLanguage: d.original_language ?? null,
       overview: d.overview || null,

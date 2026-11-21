@@ -249,4 +249,52 @@ UPDATE library_items SET recs_at = NULL;              -- re-fetch once to learn 
     name: 'library_categories_threshold',
     sql: `UPDATE library_items SET recs_at = NULL;   -- re-sort with the 50% specials line`,
   },
+  {
+    version: 9,
+    name: 'multi_service',
+    sql: `
+-- Which part of a catalog a run listed: all, movies or series.
+ALTER TABLE sync_runs ADD COLUMN slice TEXT NOT NULL DEFAULT 'all';
+-- Where the list came from: watchmode or tmdb.
+ALTER TABLE sync_runs ADD COLUMN source TEXT NOT NULL DEFAULT 'watchmode';
+DROP INDEX sync_runs_recent;
+CREATE INDEX sync_runs_recent ON sync_runs (provider_id, region, slice, started_at);
+
+-- Weekly slices see a new title up to a week late. The previous run's time is
+-- kept so the date added can move back to the premiere once TMDB says when it was.
+ALTER TABLE availability ADD COLUMN added_window_start TEXT;
+CREATE INDEX availability_title ON availability (title_id, removed_at);
+
+-- Extra TMDB detail for the new title page and cards.
+ALTER TABLE titles ADD COLUMN logo_path TEXT;              -- English title logo (transparent PNG)
+ALTER TABLE titles ADD COLUMN textless_poster_path TEXT;   -- poster with no lettering
+ALTER TABLE titles ADD COLUMN credits_json TEXT;           -- top cast and key crew
+ALTER TABLE titles ADD COLUMN watch_json TEXT;             -- US rent/buy stores (JustWatch via TMDB)
+ALTER TABLE titles ADD COLUMN recs_json TEXT;              -- TMDB recommendations, for "Related"
+ALTER TABLE titles ADD COLUMN digital_date TEXT;           -- US digital release (movies)
+ALTER TABLE titles ADD COLUMN digital_note TEXT;           -- TMDB's note on it, often the service
+
+-- Upcoming premieres for "Coming soon", rebuilt daily from TMDB.
+CREATE TABLE upcoming (
+  title_id   INTEGER NOT NULL REFERENCES titles (id) ON DELETE CASCADE,
+  date       TEXT NOT NULL,            -- YYYY-MM-DD
+  service    TEXT,                     -- service key, or NULL for rent or buy
+  PRIMARY KEY (title_id)
+);
+CREATE INDEX upcoming_date ON upcoming (date);
+
+DROP VIEW title_kinds;
+CREATE VIEW title_kinds AS
+SELECT t.*,
+  CASE t.watchmode_type
+    WHEN 'movie' THEN 'movie' WHEN 'tv_movie' THEN 'movie' WHEN 'short_film' THEN 'movie' WHEN 'tv_special' THEN 'movie'
+    WHEN 'tv_series' THEN 'series' WHEN 'tv_miniseries' THEN 'series'
+    ELSE NULL
+  END AS kind
+FROM titles t;
+
+-- Re-fetch everything once for logos, textless posters, cast and stores.
+UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
+`,
+  },
 ];

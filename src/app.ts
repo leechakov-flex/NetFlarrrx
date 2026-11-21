@@ -4,7 +4,8 @@ import type { FetchFn } from './clients/http.js';
 import { WatchmodeClient } from './clients/watchmode.js';
 import { TmdbClient } from './clients/tmdb.js';
 import { SeerrClient } from './clients/seerr.js';
-import { runCatalogSync, recentRuns, type SyncRunRow, type Trigger } from './sync/catalog.js';
+import { recentRuns, type SyncRunRow, type Trigger } from './sync/catalog.js';
+import { syncServices, type ServicesResult } from './sync/services.js';
 import { enrichTitles, type EnrichResult } from './enrich/tmdb.js';
 import { mirrorSeerrMedia, type MirrorResult } from './seerr/mirror.js';
 import { catalogStats } from './catalog/rules.js';
@@ -25,7 +26,8 @@ export interface App {
   tmdb: TmdbClient;
   seerr: SeerrClient;
   /** Sync, then enrich, then refresh the Seerr mirror. Never runs twice at once. */
-  pipeline(trigger: Trigger): Promise<{ sync: SyncRunRow; enrich: EnrichResult; mirror: MirrorResult } | { busy: true }>;
+  /** `sync` is Netflix's movies run, the one health watches; `services` has every run. */
+  pipeline(trigger: Trigger, opts?: { forceSeries?: boolean }): Promise<{ sync: SyncRunRow; services: ServicesResult; enrich: EnrichResult; mirror: MirrorResult } | { busy: true }>;
   enrich(): Promise<EnrichResult>;
   mirror(): Promise<MirrorResult>;
   backup(): Promise<BackupState>;
@@ -69,16 +71,17 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   const app: App = {
     cfg, db, startedAt, watchmode, tmdb, seerr,
 
-    async pipeline(trigger) {
+    async pipeline(trigger, opts = {}) {
       if (running) return { busy: true };
       running = true;
       try {
-        const sync = await runCatalogSync({ db, cfg, watchmode }, trigger);
+        const services = await syncServices({ db, cfg, watchmode, tmdb }, trigger, opts);
+        const sync = services.runs.find((r) => r.provider_id === cfg.NETFLIX_SOURCE_ID && r.slice === 'movies') ?? services.runs[0]!;
         const enrich = await enrichTitles(db, cfg, tmdb);   // also catches up on titles a failed run left pending
         const mirror = await mirrorSeerrMedia(db, seerr);
         await safely('library', app.library());
         await safely('alerts', app.checkAlerts());
-        return { sync, enrich, mirror };
+        return { sync, services, enrich, mirror };
       } catch (err) {
         log.error('pipeline: unexpected error', { error: (err as Error).stack ?? String(err) });
         throw err;

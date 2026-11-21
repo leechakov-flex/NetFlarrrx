@@ -49,13 +49,20 @@ export class WatchmodeClient {
     });
   }
 
+  /** Streaming sources Watchmode knows in a region (to find each service's id). */
+  async sources(region: string): Promise<{ id: number; name: string; type: string }[]> {
+    const raw = await this.get(`/sources/?regions=${encodeURIComponent(region)}`);
+    return z.array(z.object({ id: z.number().int(), name: z.string(), type: z.string().optional().default('') }).passthrough()).parse(raw)
+      .map((s) => ({ id: s.id, name: s.name, type: s.type }));
+  }
+
   /** Quota check. Costs 0 credits. */
   async status(): Promise<WatchmodeStatus> {
     return Status.parse(await this.get('/status/'));
   }
 
   /** One page of a source's catalog. Costs 1 credit. Sorted by title for stable paging. */
-  async listTitlesPage(sourceId: number, region: string, page: number): Promise<ListPage> {
+  async listTitlesPage(sourceId: number, region: string, page: number, types?: readonly string[]): Promise<ListPage> {
     const q = new URLSearchParams({
       source_ids: String(sourceId),
       regions: region,
@@ -63,6 +70,7 @@ export class WatchmodeClient {
       limit: '250',
       page: String(page),
     });
+    if (types?.length) q.set('types', types.join(','));
     const body = ListTitlesPage.parse(await this.get(`/list-titles/?${q}`));
     const titles: WatchmodeTitle[] = [];
     let invalid = 0;

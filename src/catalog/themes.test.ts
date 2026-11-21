@@ -50,7 +50,7 @@ afterAll(() => app.close());
 describe('default themes', () => {
   it('are valid and in Discover order', () => {
     const slugs = DEFAULT_THEMES.map((t) => t.slug);
-    expect(slugs.slice(0, 6)).toEqual(['new-week', 'new-month', 'new-movies', 'new-episodes', 'new-originals', 'for-you']);
+    expect(slugs.slice(0, 8)).toEqual(['new-week', 'new-digital', 'coming-soon', 'new-month', 'new-movies', 'new-episodes', 'new-originals', 'for-you']);
     expect(slugs.indexOf('standup')).toBeLessThan(slugs.indexOf('trending'));         // comedy before the genre rows
     expect(slugs.at(-1)).toBe('popular');
     for (const s of ['acclaimed', 'hidden-gems', 'true-stories', 'heists', 'limited-series', 'short-movies']) expect(slugs).toContain(s);
@@ -127,10 +127,10 @@ describe('new rule fields', () => {
     set(movies[0]!, `release_date = '${date(20)}', netflix_original = 1`);
     set(movies[1]!, `release_date = '${date(200)}'`);
     set(movies[2]!, `release_date = '${date(-30)}'`);                   // announced, not out yet
-    set(series[0]!, `release_date = '2015-01-01', last_air_date = '${date(5)}'`);   // old show, new season
-    set(series[1]!, `release_date = '2015-01-01', last_air_date = '2018-06-01'`);
+    set(series[0]!, `release_date = '2015-01-01', last_air_date = '${date(5)}'`);   // old show, new season: not a new series
+    set(series[1]!, `release_date = '${date(10)}', last_air_date = '${date(3)}'`);  // premiered 10 days ago
     expect(await slugsFor('new-movies')).toEqual([movies[0]!]);
-    expect(await slugsFor('new-episodes')).toEqual([series[0]!]);
+    expect(await slugsFor('new-episodes')).toEqual([series[1]!]);
     expect(await slugsFor('new-originals')).toEqual([movies[0]!]);
   });
 
@@ -210,7 +210,7 @@ describe('theme API and home', () => {
       expect(ThemeRule.safeParse({ slug: 'x', title: 'X' }).success).toBe(true);
       expect(ThemeRule.safeParse({ slug: 'x', title: 'X', repeat: 0 }).success).toBe(false);
       expect(DEFAULT_THEMES.filter((t) => (t.repeat ?? 1) > 1).map((t) => t.slug).sort())
-        .toEqual(['action', 'crime', 'dramas', 'scifi', 'thrillers', 'true-stories']);
+        .toEqual(['action', 'crime', 'dramas', 'new-disney', 'new-hbomax', 'new-hulu', 'new-paramount', 'new-peacock', 'new-prime', 'scifi', 'thrillers', 'true-stories']);
     });
   });
 

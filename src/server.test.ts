@@ -6,6 +6,7 @@ import { createApp, type App } from './app.js';
 import { createServer } from './server.js';
 import { testConfig } from './config.js';
 import { run } from './db/db.js';
+import { MOVIE_TYPES } from './services.js';
 import { FakeSeerr, FakeTmdb, FakeWatchmode, realCatalog } from './test-support/fakes.js';
 
 let app: App;
@@ -83,12 +84,15 @@ describe('admin endpoints', () => {
   it('confirm releases a held run', async () => {
     const http = make('pw');
     await app.pipeline('cli');
+    const isMovie = (t: { type: string }) => (MOVIE_TYPES as readonly string[]).includes(t.type);
+    const moviesBefore = wm.catalog.filter(isMovie).length;
     wm.catalog = wm.catalog.slice(0, 300);
     const out = await app.pipeline('cli');
     const heldId = 'sync' in out ? out.sync.id : -1;
+    expect('sync' in out && out.sync.slice).toBe('movies');
     const res = await http.request(`/api/admin/sync-runs/${heldId}/confirm`, { method: 'POST', headers: { 'x-passcode': 'pw' } });
     expect(res.status).toBe(200);
-    expect(await j(res)).toMatchObject({ status: 'complete', applied: 1, missed: 300 });
+    expect(await j(res)).toMatchObject({ status: 'complete', applied: 1, missed: moviesBefore - wm.catalog.filter(isMovie).length });
     expect(app.health().status).toBe('ok');
   });
 

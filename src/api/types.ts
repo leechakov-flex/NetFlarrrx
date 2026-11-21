@@ -2,6 +2,10 @@
 
 export type Kind = 'movie' | 'series';
 
+export type ServiceKey = 'netflix' | 'prime' | 'hbomax' | 'hulu' | 'disney' | 'paramount' | 'peacock';
+export type How = 'sub' | 'digital' | 'soon';
+export interface ServiceInfo { key: ServiceKey; name: string }
+
 /** Seerr media status, collapsed to what the UI shows. */
 export type SeerrState = 'available' | 'partial' | 'requested' | 'processing' | null;
 
@@ -16,6 +20,11 @@ export interface TitleCard {
   voteAverage: number | null;
   voteCount: number | null;
   seerr: SeerrState;
+  services: ServiceKey[];          // subscription services it's on, in scope
+  digital: boolean;                // new to rent or buy
+  soon: { date: string; service: ServiceKey | null } | null;   // not out yet; service null = rent or buy
+  logoPath: string | null;         // English title logo
+  textlessPosterPath: string | null;
 }
 
 export interface HomeRow {
@@ -24,6 +33,8 @@ export interface HomeRow {
   total: number;                   // titles matching the row, not just those returned
   link: string | null;             // browse URL for "see all"
   items: TitleCard[];
+  /** "logo": textless posters with the title logo (Apple TV style), when nearly every card has both. */
+  art: 'logo' | 'poster';
 }
 
 export interface HomeResponse {
@@ -32,7 +43,7 @@ export interface HomeResponse {
   rows: HomeRow[];
 }
 
-export type SortKey = 'added' | 'rating' | 'popularity' | 'release' | 'title' | 'match';
+export type SortKey = 'added' | 'rating' | 'popularity' | 'release' | 'title' | 'match' | 'soon';
 export type AddedWithin = 7 | 30 | 90 | null;
 
 export interface BrowseQuery {
@@ -48,6 +59,8 @@ export interface BrowseQuery {
   hideHave?: boolean;              // drop titles already available, partial, processing or requested in Seerr
   theme?: string;                  // thematic row slug
   because?: string;                // "movie:123": titles TMDB recommends for that library title
+  services?: ServiceKey[];         // only these services (default: all tracked)
+  how?: How[];                     // subscription, rent or buy, coming soon (default: subscription)
 }
 
 export interface BrowseResponse {
@@ -74,8 +87,15 @@ export interface TitleDetail extends TitleCard {
   originalLanguage: string | null;
   genres: { id: number; name: string }[];
   trailer: { key: string; name: string | null } | null;
-  onNetflix: boolean;
+  onNetflix: boolean;              // still on any tracked service (or rent or buy)
   firstSeenAt: string | null;
+  cast: { name: string; role: string; profilePath: string | null }[];
+  related: TitleCard[];
+  watch: {
+    services: ServiceInfo[];       // subscription services it's on now
+    stores: string[];              // where it can be rented or bought (JustWatch via TMDB)
+    soon: { date: string; service: ServiceKey | null } | null;
+  };
   tmdbId: number | null;
   tmdbType: 'movie' | 'tv' | null;
   seerrSeasons: { seasonNumber: number; status: number }[];
@@ -89,6 +109,7 @@ export interface MetaResponse {
   newThisWeek: number;
   languageRule: 'en' | 'all';
   passcodeRequired: boolean;       // requests need APP_PASSCODE
+  services: ServiceInfo[];         // tracked services, in display order
   ops?: {
     lastBackupAt: string | null;   // null with backups on = none yet; undefined section = backups off
     backupError: string | null;

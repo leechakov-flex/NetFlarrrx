@@ -3,12 +3,15 @@
 import { loadConfig } from './config.js';
 import { createApp } from './app.js';
 import { confirmHeldRun, recentRuns } from './sync/catalog.js';
+import { creditForecast } from './sync/services.js';
+import { serviceById, DIGITAL_ID } from './services.js';
 import { setLogLevel } from './log.js';
 import { browse, home, keywordSearch, libraryOverview, themePreview, themesFor } from './catalog/queries.js';
 
 const USAGE = `Usage: cli <command>
   status            catalog counts, health and the last 10 sync runs
-  sync              run sync -> enrich -> Seerr mirror now (uses ~29 Watchmode credits)
+  sync [--series]   sync every service -> enrich -> Seerr mirror now (movies daily; --series also lists series)
+  services          each service: titles, new ones, and Watchmode credits a month
   confirm <run-id>  apply a held sync run
   enrich            fetch TMDB details for titles that need them
   seerr-mirror      refresh the Seerr status mirror
@@ -32,13 +35,29 @@ async function main() {
       case 'status': {
         const h = app.health();
         console.log(JSON.stringify({ status: h.status, reason: h.reason, last_applied_sync_at: h.last_applied_sync_at, stats: h.stats }, null, 2));
-        console.table(recentRuns(app.db, 10).map((r) => ({
-          id: r.id, status: r.status, started: r.started_at.slice(0, 16), titles: r.titles_seen, added: r.added,
+        console.table(recentRuns(app.db, 16).map((r) => ({
+          id: r.id, service: r.provider_id === DIGITAL_ID ? 'rent or buy' : serviceById(r.provider_id)?.name ?? r.provider_id, slice: r.slice,
+          status: r.status, started: r.started_at.slice(0, 16), titles: r.titles_seen, added: r.added,
           missed: r.missed, removed: r.removed, note: (r.note ?? '').slice(0, 60),
         })));
         break;
       }
-      case 'sync': console.log(JSON.stringify(await app.pipeline('cli'), null, 2)); break;
+      case 'sync': {
+        const out = await app.pipeline('cli', { forceSeries: arg === '--series' });
+        if ('busy' in out) { console.log('A sync is already running.'); break; }
+        console.table(out.services.runs.map((r) => ({ id: r.id, service: r.provider_id === DIGITAL_ID ? 'rent or buy' : serviceById(r.provider_id)?.name, slice: r.slice, status: r.status, titles: r.titles_seen, added: r.added, removed: r.removed, note: (r.note ?? '').slice(0, 50) })));
+        for (const s of out.services.skipped) console.log(`Skipped: ${s}`);
+        console.log(JSON.stringify({ coming_soon: out.services.upcoming, enrich: out.enrich, mirror: out.mirror }, null, 2));
+        break;
+      }
+      case 'services': {
+        const st = app.health().stats;
+        console.table([...st.services.map((x) => ({ service: x.name, titles: x.on_service, dated: x.dated })), { service: 'Rent or buy (TMDB)', titles: st.digital, dated: st.digital }, { service: 'Coming soon (TMDB)', titles: st.upcoming, dated: null }]);
+        const f = creditForecast(app.db, cfg);
+        console.table(f.rows);
+        console.log(`About ${f.total} Watchmode credits a month at this schedule (free plan: 2,500). Prime Video, rent or buy and coming soon come from TMDB and cost none.`);
+        break;
+      }
       case 'confirm': {
         const id = Number(arg);
         if (!Number.isInteger(id)) throw new Error('confirm needs a run id');

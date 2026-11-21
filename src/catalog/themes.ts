@@ -37,9 +37,12 @@ export const ThemeRule = z.object({
   seasons: range.optional(),        // season count; applies to series only
   released: z.object({ withinDays: z.number().int().positive() }).strict().optional(),  // first release (movie) or premiere (series)
   aired: z.object({ withinDays: z.number().int().positive() }).strict().optional(),     // movie release, or a series' latest episode
-  originals: z.boolean().optional(),  // true = Netflix originals only, false = none
-  addedWithin: z.number().int().positive().optional(),  // days since it appeared on Netflix (needs tracking history)
-  sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match']).default('added'),
+  originals: z.boolean().optional(),  // true = Netflix originals only (TMDB network or studio), false = none
+  addedWithin: z.number().int().positive().optional(),  // days since it arrived on a service in scope (needs tracking history)
+  sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match', 'soon']).default('added'),
+  // Which availability the row looks at. Default: every tracked service, subscription only.
+  services: z.array(z.enum(['netflix', 'prime', 'hbomax', 'hulu', 'disney', 'paramount', 'peacock'])).min(1).optional(),
+  how: z.array(z.enum(['sub', 'digital', 'soon'])).min(1).optional(),
   home: z.boolean().default(true),  // show as a row on Discover
   // The most Discover rows a title may appear in, counting this one. Rows are built
   // in order and skip titles that are already in `repeat` earlier rows, so 1 (the
@@ -69,13 +72,16 @@ export const STANDUP =["stand-up comedy", "stand-up special", "stand up comedy",
  * tracking history builds; "for you" needs titles available in Seerr).
  */
 export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
-  // New on Netflix
-  { slug: 'new-week', title: 'New on Netflix this week', addedWithin: 7 },
+  // New on your services
+  { slug: 'new-week', title: 'New on your services', addedWithin: 7 },
+  { slug: 'new-digital', title: 'New to rent or buy', kind: 'movie', how: ['digital'], addedWithin: 45, sort: 'added' },
+  { slug: 'coming-soon', title: 'Coming soon', how: ['soon'], sort: 'soon' },
   { slug: 'new-month', title: 'New this month', addedWithin: 30 },
   { slug: 'new-movies', title: 'New movies', kind: 'movie', released: { withinDays: 120 }, sort: 'release',
     exclude: { types: ['tv_special'] } },
-  { slug: 'new-episodes', title: 'New episodes and seasons', kind: 'series', aired: { withinDays: 45 } },
-  { slug: 'new-originals', title: 'New Netflix originals', originals: true, aired: { withinDays: 180 } },
+  // Sonarr follows new episodes of shows you have; this row is for shows that are new.
+  { slug: 'new-episodes', title: 'New series', kind: 'series', released: { withinDays: 120 }, sort: 'release' },
+  { slug: 'new-originals', title: 'New Netflix originals', services: ['netflix'], originals: true, aired: { withinDays: 180 } },
   { slug: 'for-you', title: 'Recommended for you', special: 'for-you', sort: 'match' },
 
   // Comedy, up top
@@ -86,6 +92,14 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
   { slug: 'comedy-series', title: 'Comedy series', kind: 'series', require: { genres: ['Comedy'] }, aired: { withinDays: 730 },
     exclude: { genres: ['Kids', 'Talk', 'News'] }, sort: 'popularity' },
   { slug: 'because-1', title: 'Because you have', special: 'because' },
+
+  // One row per other service: what's new there.
+  { slug: 'new-hbomax', title: 'New on HBO Max', services: ['hbomax'], addedWithin: 30, repeat: 2 },
+  { slug: 'new-prime', title: 'New on Prime Video', services: ['prime'], addedWithin: 30, repeat: 2 },
+  { slug: 'new-hulu', title: 'New on Hulu', services: ['hulu'], addedWithin: 30, repeat: 2 },
+  { slug: 'new-disney', title: 'New on Disney+', services: ['disney'], addedWithin: 30, repeat: 2 },
+  { slug: 'new-paramount', title: 'New on Paramount+', services: ['paramount'], addedWithin: 30, repeat: 2 },
+  { slug: 'new-peacock', title: 'New on Peacock', services: ['peacock'], addedWithin: 30, repeat: 2 },
 
   // Popular now, by genre (recent titles only)
   { slug: 'trending', title: 'Popular right now', aired: { withinDays: 365 }, sort: 'popularity' },
@@ -141,7 +155,7 @@ export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
     exclude: { genres: ['Documentary'], types: ['tv_special'] },
   },
   { slug: 'acclaimed', title: 'Critically acclaimed', rating: { min: 7.5 }, votes: { min: 1000 }, sort: 'rating' },
-  { slug: 'popular', title: 'All-time popular on Netflix', sort: 'popularity' },
+  { slug: 'popular', title: 'All-time popular', sort: 'popularity' },
 ]);
 
 /**
