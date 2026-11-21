@@ -79,6 +79,22 @@ describe('downloads', () => {
     expect(d.requests).toHaveLength(3);
   });
 
+  it('says when the qBittorrent password is wrong, and backs off instead of retrying', async () => {
+    qbit.password = 'something-else';
+    const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;
+    expect(d.qbit.error).toMatch(/username or password is wrong/);
+    resetDownloadsCache();
+    await http.request('/api/downloads');
+    expect(qbit.logins).toBe(1);    // second look didn't try again (qBittorrent bans after 5 failures)
+  });
+
+  it('logs in with Referer when qBittorrent’s cross-site check wants it', async () => {
+    qbit.requireReferer = true;
+    const d = (await (await http.request('/api/downloads')).json()) as DownloadsResponse;
+    expect(d.qbit.connected).toBe(true);
+    expect(qbit.logins).toBe(2);
+  });
+
   it('shows download progress on the title page', async () => {
     run(app.db, `INSERT INTO seerr_media (media_type, tmdb_id, seerr_id, status, updated_at, mirrored_at) VALUES ('movie', ?, 1, 3, '', '')`, [movie.tmdb_id]);
     const t = (await (await http.request(`/api/titles/${movie.id}`)).json()) as TitleDetail;

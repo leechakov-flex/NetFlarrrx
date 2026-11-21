@@ -58,7 +58,7 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
   const errors: string[] = [];
   const soft = async <T>(name: string, p: Promise<T> | undefined, fallback: T): Promise<T> => {
     if (!p) return fallback;
-    try { return await p; } catch (err) { errors.push(name); log.warn(`downloads: ${name} unreachable`, { error: (err as Error).message }); return fallback; }
+    try { return await p; } catch (err) { if (!errors.includes(name)) log.warn(`downloads: ${name} unreachable`, { error: (err as Error).message, ...(typeof (err as { body?: unknown }).body === 'string' && (err as { body: string }).body ? { detail: (err as { body: string }).body.slice(0, 200) } : {}) }); errors.push(name); return fallback; }
   };
   const [torrents, transfer, rq, sq, reqs] = await Promise.all([
     soft('qBittorrent', d.qbit?.torrents(), [] as QbitTorrent[]),
@@ -135,7 +135,7 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
   const value: DownloadsResponse = {
     at: now.toISOString(),
     qbit: {
-      configured: !!d.qbit, connected: !!d.qbit && !errors.includes('qBittorrent'), error: errors.includes('qBittorrent') ? 'Can’t reach qBittorrent' : null,
+      configured: !!d.qbit, connected: !!d.qbit && !errors.includes('qBittorrent'), error: errors.includes('qBittorrent') ? d.qbit?.loginProblem ?? 'Can’t reach qBittorrent' : null,
       downSpeed: transfer?.dl_info_speed ?? 0, upSpeed: transfer?.up_info_speed ?? 0, seeding: torrents.filter(isSeeding).length,
       vpn: transfer ? transfer.connection_status : null,
     },

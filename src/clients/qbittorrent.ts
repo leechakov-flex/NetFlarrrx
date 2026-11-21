@@ -34,24 +34,41 @@ export type QbitTransfer = z.infer<typeof Transfer>;
 export class QbitClient {
   private cookie: string | null = null;
   private loggingIn: Promise<void> | null = null;   // one login at a time; parallel calls share it
-  constructor(private base: string, private username: string, private password: string, private fetchFn: FetchFn = fetch) {}
+  // qBittorrent bans an address for an hour after 5 failed logins, so after a refusal
+  // don't try again for a while. Restarting the container (or the CLI) tries at once.
+  private refused: { until: number; reason: string } | null = null;
+  // Headers that passed qBittorrent's cross-site check at login, reused for every call.
+  private extra: Record<string, string> = {};
+  constructor(private base: string, private username: string, private password: string, private fetchFn: FetchFn = fetch, private backoffMs = 30 * 60_000) {}
   private url(p: string) { return `${this.base.replace(/\/$/, '')}${p}`; }
 
+  /** Why the last login failed, in plain words (or null). */
+  get loginProblem() { return this.refused?.reason ?? null; }
+
   private async login() {
-    const res = await this.fetchFn(this.url('/api/v2/auth/login'), {
-      method: 'POST',
-      // qBittorrent checks Referer/Origin against its own address (CSRF protection).
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', Referer: this.base, Origin: this.base },
-      body: new URLSearchParams({ username: this.username, password: this.password }).toString(),
-      signal: AbortSignal.timeout(10_000),
-    });
-    const text = await res.text();
-    if (!res.ok || text.trim() !== 'Ok.') {
-      throw new HttpError('qbittorrent', res.ok ? 401 : res.status, this.url('/api/v2/auth/login'), text.slice(0, 100));
+    if (this.refused && Date.now() < this.refused.until) {
+      throw new HttpError('qbittorrent', 401, this.url('/api/v2/auth/login'), this.refused.reason);
     }
-    const sid = res.headers.get('set-cookie')?.match(/SID=[^;]+/)?.[0];
-    if (!sid) throw new HttpError('qbittorrent', 401, this.url('/api/v2/auth/login'), 'no session cookie');
-    this.cookie = sid;
+    const body = new URLSearchParams({ username: this.username, password: this.password }).toString();
+    // Plain first; some setups' cross-site check only passes with Referer/Origin set to its address.
+    for (const extra of [{}, { Referer: this.base, Origin: this.base }] as Record<string, string>[]) {
+      const res = await this.fetchFn(this.url('/api/v2/auth/login'), {
+        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...extra }, body, signal: AbortSignal.timeout(10_000),
+      });
+      const text = (await res.text()).trim();
+      const sid = res.headers.get('set-cookie')?.match(/SID=[^;]+/)?.[0];
+      if (res.ok && text === 'Ok.' && sid) {
+        this.cookie = sid; this.extra = extra; this.refused = null;
+        return;
+      }
+      if (res.status === 401 && Object.keys(extra).length === 0) continue;   // try with Referer/Origin
+      const reason = res.ok && text === 'Fails.' ? 'qBittorrent says the username or password is wrong (check QBIT_USERNAME and QBIT_PASSWORD)'
+        : res.status === 403 ? 'qBittorrent has blocked MonkeySee for too many failed logins (it lifts after an hour by default)'
+        : res.status === 401 ? 'qBittorrent refused the login (its cross-site or host check)'
+        : res.ok ? `qBittorrent answered the login with “${text.slice(0, 40)}”` : `qBittorrent login failed (HTTP ${res.status})`;
+      this.refused = { until: Date.now() + this.backoffMs, reason };
+      throw new HttpError('qbittorrent', res.ok ? 401 : res.status, this.url('/api/v2/auth/login'), reason);
+    }
   }
 
   private async get(path: string): Promise<unknown> {
@@ -60,7 +77,7 @@ export class QbitClient {
         this.loggingIn ??= this.login().finally(() => { this.loggingIn = null; });
         await this.loggingIn;
       }
-      const res = await this.fetchFn(this.url(path), { headers: { Cookie: this.cookie!, Referer: this.base }, signal: AbortSignal.timeout(10_000) });
+      const res = await this.fetchFn(this.url(path), { headers: { Cookie: this.cookie!, ...this.extra }, signal: AbortSignal.timeout(10_000) });
       if (res.status === 403 && attempt === 0) { this.cookie = null; continue; }
       if (!res.ok) throw new HttpError('qbittorrent', res.status, this.url(path), await res.text().catch(() => ''));
       return res.json();

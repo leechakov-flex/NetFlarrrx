@@ -212,11 +212,15 @@ export class FakeQbit {
   password = 'qbit-pass';
   logins = 0;
   down = false;
+  /** Like a qBittorrent whose cross-site check only passes with a matching Referer. */
+  requireReferer = false;
   fetch: FetchFn = async (input, init) => {
     const url = new URL(String(input));
     if (this.down) throw new TypeError('fetch failed');
     if (url.pathname === '/api/v2/auth/login') {
       this.logins++;
+      const lh = Object.fromEntries(Object.entries((init?.headers ?? {}) as Record<string, string>).map(([k, v]) => [k.toLowerCase(), v]));
+      if (this.requireReferer && !lh.referer) return new Response('Unauthorized', { status: 401 });
       const body = new URLSearchParams(String(init?.body));
       if (body.get('password') !== this.password) return new Response('Fails.', { status: 200 });
       return new Response('Ok.', { status: 200, headers: { 'set-cookie': 'SID=abc123; HttpOnly; path=/' } });

@@ -37,6 +37,7 @@ export function Downloads() {
       ) : (
         <p className="type-body-default text-ink-tertiary">Set QBIT_USERNAME and QBIT_PASSWORD to see what qBittorrent is doing.</p>
       )}
+      {d.qbit.configured && d.qbit.error && <p className="mt-3 type-body-default text-yellow-200">{d.qbit.error}.</p>}
       {d.errors.filter((e) => e !== 'qBittorrent').map((e) => (
         <p key={e} className="mt-3 type-body-default text-yellow-200">Couldn’t reach {e}, so some details are missing.</p>
       ))}
