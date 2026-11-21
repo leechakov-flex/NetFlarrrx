@@ -67,6 +67,12 @@ const schema = z.object({
   CROSSCHECK_MAX_DROP: num(10),     // or if that share falls this many points since the last run
   TMDB_NETFLIX_PROVIDER_ID: num(8),
 
+  // Library for recommendations: Radarr and Sonarr when their keys are set (read only), plus Seerr.
+  RADARR_URL: z.preprocess(clean, z.url().default('http://radarr:7878')),
+  RADARR_API_KEY: optStr(),
+  SONARR_URL: z.preprocess(clean, z.url().default('http://sonarr:8989')),
+  SONARR_API_KEY: optStr(),
+
   WATCHMODE_MIN_INTERVAL_MS: num(600),
   TMDB_CONCURRENCY: num(8),
   LOG_LEVEL: z.preprocess(clean, z.enum(['debug', 'info', 'warn', 'error']).default('info')),

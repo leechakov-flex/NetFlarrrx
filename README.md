@@ -110,7 +110,7 @@ Discover is a deliberately long page of about 30 rows, newest first:
 
 ### Recommended for you
 
-Your library is what Seerr shows as available, which mirrors Plex and so what Sonarr and Radarr fetched. After each daily sync NetFlarrrx copies it and asks TMDB, once per title, what people who liked it also liked (free; cached for 60 days). A Netflix title scores higher the more of your titles recommend it and the higher it ranks; anything you already have or requested is left out. *Because you have X* rows use your most recently added titles with the most Netflix matches.
+Your library is every movie Radarr has a file for and every series Sonarr has episodes of, plus anything Seerr shows as available. Set `RADARR_API_KEY` and `SONARR_API_KEY` in `netflarrrx.env` (each app: Settings → General → API Key); without them only Seerr's list is used, which can be much smaller. NetFlarrrx only reads from them. After each daily sync it refreshes the library and asks TMDB, once per title, what people who liked it also liked (free; cached for 60 days). A Netflix title scores higher the more of your titles recommend it and the higher it ranks; anything you already have or requested is left out, as is anything rated under 6 or with fewer than 30 votes. Titles from the last two years get a 1.5× boost. *Because you have X* rows use your most recently added titles with the most Netflix matches.
 
 ```bash
 docker exec netflarrrx node dist/cli.js recs     # refresh now and show the top picks

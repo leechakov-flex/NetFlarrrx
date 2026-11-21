@@ -4,6 +4,21 @@ import { createServer } from '../server.js';
 import { testConfig } from '../config.js';
 import { all, get, run } from '../db/db.js';
 import { FakeSeerr, FakeTmdb, FakeWatchmode, realCatalog } from '../test-support/fakes.js';
+import type { FetchFn } from '../clients/http.js';
+
+/** Radarr or Sonarr answering GET /api/v3/movie or /series; counts calls and checks the key. */
+class FakeArr {
+  items: unknown[] = [];
+  fail = false;
+  calls: string[] = [];
+  fetch: FetchFn = async (input, init) => {
+    const url = new URL(String(input));
+    this.calls.push(`${init?.method ?? 'GET'} ${url.pathname}`);
+    if ((init?.headers as Record<string, string>)?.['X-Api-Key'] !== 'arr-key') return new Response('{}', { status: 401 });
+    if (this.fail) return new Response('{}', { status: 503 });
+    return new Response(JSON.stringify(this.items), { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+}
 import type { BrowseResponse, HomeResponse } from '../api/types.js';
 
 // Library titles live outside the Netflix catalog: TMDB ids from 5,000,000 up.
@@ -93,5 +108,72 @@ describe('library and recommendations', () => {
   it('shows no recommendation rows without a library', async () => {
     const home = await j<HomeResponse>('/api/home');
     expect(home.rows.some((r) => r.slug === 'for-you' || r.slug.startsWith('because-'))).toBe(false);
+  });
+});
+
+describe('Radarr and Sonarr as the library', () => {
+  let radarr: FakeArr;
+  let sonarr: FakeArr;
+  async function withArr() {
+    app.close();
+    radarr = new FakeArr(); sonarr = new FakeArr();
+    const catalog = realCatalog().filter((t) => t.tmdb_id && t.tmdb_type === 'movie').filter((_, i) => i % 40 === 0).slice(0, 30);
+    app = createApp(testConfig({ RADARR_API_KEY: 'arr-key', SONARR_API_KEY: 'arr-key' }), {
+      watchmode: new FakeWatchmode(catalog).fetch, tmdb: tmdb.fetch, seerr: seerr.fetch, radarr: radarr.fetch, sonarr: sonarr.fetch,
+    });
+    http = createServer(app, { webDir: null });
+    await app.pipeline('cli');
+    run(app.db, `UPDATE titles SET original_language = 'en'`);
+  }
+
+  it('reads movies with files and series with episodes, read-only', async () => {
+    await withArr();
+    radarr.items = [
+      { title: 'Knives Out', tmdbId: LIB(1), hasFile: true, added: '2026-10-01T00:00:00Z' },
+      { title: 'Wanted, not downloaded', tmdbId: LIB(2), hasFile: false },
+    ];
+    sonarr.items = [
+      { title: 'The Bear', tmdbId: LIB(3), tvdbId: 1, added: '2026-11-01T00:00:00Z', statistics: { episodeFileCount: 18 } },
+      { title: 'Monitored only', tmdbId: LIB(4), tvdbId: 2, statistics: { episodeFileCount: 0 } },
+    ];
+    tmdb.recs.set(`movie:${LIB(1)}`, [netflix[0]!.tmdb_id]);
+    const r = await app.library();
+    expect(r).toMatchObject({ library: 2, sources: { radarr: 1, sonarr: 1, seerr: 0 } });
+    expect(all(app.db, 'SELECT media_type, title, source FROM library_items ORDER BY title')).toEqual([
+      { media_type: 'movie', title: 'Knives Out', source: 'radarr' },
+      { media_type: 'tv', title: 'The Bear', source: 'sonarr' },
+    ]);
+    expect([...radarr.calls, ...sonarr.calls].every((c) => c.startsWith('GET '))).toBe(true);
+  });
+
+  it('finds TMDB IDs for series Sonarr only knows by TVDB ID', async () => {
+    await withArr();
+    sonarr.items = [{ title: 'Old Sonarr show', tvdbId: 81189, statistics: { episodeFileCount: 3 } }];
+    tmdb.find.set(81189, LIB(9));
+    expect((await app.library()).library).toBe(1);
+    expect(get<{ tmdb_id: number }>(app.db, `SELECT tmdb_id FROM library_items WHERE source = 'sonarr'`)!.tmdb_id).toBe(LIB(9));
+  });
+
+  it('keeps the last known library when Radarr is down', async () => {
+    await withArr();
+    radarr.items = [{ title: 'Knives Out', tmdbId: LIB(1), hasFile: true }];
+    await app.library();
+    radarr.fail = true;
+    const r = await app.library();
+    expect(r.sources.radarr).toBe('error');
+    expect(r).toMatchObject({ library: 1, removed: 0 });
+  });
+});
+
+describe('ranking', () => {
+  it('skips weak titles and favours recent ones', async () => {
+    const recent = new Date(Date.now() - 100 * 86_400_000).toISOString().slice(0, 10);
+    run(app.db, `UPDATE titles SET vote_average = 7, vote_count = 500, release_date = '2005-01-01', last_air_date = NULL`);
+    run(app.db, 'UPDATE titles SET vote_average = 5.8 WHERE id = ?', [netflix[0]!.id]);              // rank 1, but weak
+    run(app.db, 'UPDATE titles SET release_date = ? WHERE id = ?', [recent, netflix[3]!.id]);       // rank 3, but new
+    await library([{ n: 1, recs: [0, 1, 2, 3] }]);
+    const ids = (await j<BrowseResponse>('/api/titles?theme=for-you')).items.map((i) => i.id);
+    expect(ids).not.toContain(netflix[0]!.id);
+    expect(ids[0]).toBe(netflix[3]!.id);          // (21-4)/20 x 1.5 = 1.275 beats (21-2)/20 = 0.95
   });
 });

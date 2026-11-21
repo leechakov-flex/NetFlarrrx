@@ -86,7 +86,9 @@ async function main() {
         break;
       }
       case 'recs': {
-        console.log(JSON.stringify(await app.library(), null, 2));
+        const lib = await app.library();
+        console.log(`Library: ${lib.library} titles (Radarr ${lib.sources.radarr}, Sonarr ${lib.sources.sonarr}, Seerr ${lib.sources.seerr}); ${lib.added} new, ${lib.removed} gone, ${lib.fetched} fetched from TMDB, ${lib.errors} errors.`);
+        if (lib.sources.radarr === 'off' || lib.sources.sonarr === 'off') console.log('Tip: add RADARR_API_KEY and SONARR_API_KEY to netflarrrx.env so the whole library counts.');
         const top = browse(app.db, cfg, { theme: 'for-you' });
         console.log(`\nRecommended for you: ${top.total} Netflix titles. Top 20:`);
         console.table(top.items.slice(0, 20).map((i) => ({ title: i.title.slice(0, 44), year: i.year, kind: i.kind, rating: i.voteAverage })));

@@ -107,6 +107,14 @@ const DiscoverPage = z.object({
 export class TmdbClient {
   constructor(private base: string, private token: string, private fetchFn: FetchFn = fetch) {}
 
+  /** TMDB series ID for a TVDB ID (Sonarr v3 lists only TVDB IDs). */
+  async tvByTvdb(tvdbId: number): Promise<number | null> {
+    const d = z.object({ tv_results: z.array(z.object({ id: z.number().int() }).passthrough()).optional().default([]) }).parse(
+      await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/find/${tvdbId}?external_source=tvdb_id`,
+        { headers: { Authorization: `Bearer ${this.token}` } }));
+    return d.tv_results[0]?.id ?? null;
+  }
+
   /** A library title's name and TMDB's recommendations for it (one page, about 20). */
   async recommendations(type: 'movie' | 'tv', id: number): Promise<{ title: string | null; recs: { id: number; rank: number }[] } | null> {
     let raw: unknown;

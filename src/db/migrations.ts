@@ -219,4 +219,11 @@ CREATE INDEX library_recs_rec ON library_recs (rec_type, rec_id);
 UPDATE titles SET tmdb_status = 'pending' WHERE tmdb_status IN ('ok', 'missing');
 `,
   },
+  {
+    version: 4,
+    name: 'library_sources',
+    sql: `
+ALTER TABLE library_items ADD COLUMN source TEXT;   -- radarr, sonarr or seerr (first that has it)
+`,
+  },
 ];

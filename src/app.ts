@@ -13,8 +13,9 @@ import { backupDir, lastBackup, runBackup, type BackupState } from './ops/backup
 import { lastCrossCheck, runCrossCheck, type CrossCheckState } from './ops/crosscheck.js';
 import { Notifier, reconcileAlerts, type Problem } from './ops/alerts.js';
 import { refreshLibrary, libraryCount, type LibraryResult } from './recs/library.js';
+import { ArrClient } from './clients/arr.js';
 
-export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn }
+export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn }
 
 export interface App {
   cfg: Config;
@@ -89,7 +90,10 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     enrich: () => enrichTitles(db, cfg, tmdb),
     mirror: () => mirrorSeerrMedia(db, seerr),
 
-    library: () => refreshLibrary(db, cfg, tmdb),
+    library: () => refreshLibrary(db, cfg, tmdb, {
+      radarr: cfg.RADARR_API_KEY ? new ArrClient(cfg.RADARR_URL, cfg.RADARR_API_KEY, fetchers.radarr, 'radarr') : undefined,
+      sonarr: cfg.SONARR_API_KEY ? new ArrClient(cfg.SONARR_URL, cfg.SONARR_API_KEY, fetchers.sonarr, 'sonarr') : undefined,
+    }),
 
     async backup() {
       const r = runBackup(db, cfg);

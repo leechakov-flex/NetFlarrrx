@@ -59,12 +59,19 @@ export class FakeTmdb {
   discoverFailPage: number | null = null;
   /** TMDB recommendations per title ("movie:123" -> ids), for library seeds. */
   recs = new Map<string, number[]>();
+  /** TVDB -> TMDB series IDs for /find. */
+  find = new Map<number, number>();
   private movie = fixture<Record<string, unknown>>('tmdb/movie-detail.json');
   private tv = fixture<Record<string, unknown>>('tmdb/tv-detail.json');
 
   fetch: FetchFn = async (input) => {
     this.calls += 1;
     const url = new URL(String(input));
+    const find = url.pathname.match(/\/find\/(\d+)$/);
+    if (find) {
+      const id = this.find.get(Number(find[1]));
+      return json(200, { movie_results: [], tv_results: id ? [{ id }] : [] });
+    }
     const disc = url.pathname.match(/\/discover\/(movie|tv)$/);
     if (disc) {
       const page = Number(url.searchParams.get('page') ?? 1);
