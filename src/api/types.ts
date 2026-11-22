@@ -187,6 +187,9 @@ export interface RequestItem {
   seasons: number[];
   detail: string | null;           // the line under the title, e.g. "Out Dec 12" or "Radarr hasn’t found a copy in 15 days"
   releaseDate: string | null;      // not out yet: when it is
+  missingSeasons?: number[];       // series: requested seasons Sonarr has no files for
+  check?: { at: string; headline: string; total: number; accepted: number } | null;   // last release search (Not found)
+  retried?: { at: string; count: number } | null;                                     // the daily retry asked Radarr/Sonarr to search
 }
 
 export interface DownloadsResponse {
@@ -232,4 +235,28 @@ export interface PersonResponse {
   biography: string | null;
   onServices: (TitleCard & { role: string })[];      // on your services (or rent or buy), most popular first
   elsewhere: { tmdbType: 'movie' | 'tv'; tmdbId: number; title: string; year: number | null; posterPath: string | null; role: string }[];
+}
+
+/** Summary of an interactive search: how many results, how many would be taken, and why not. */
+export interface ReleaseCheck {
+  at: string;
+  total: number;
+  accepted: number;
+  headline: string;                // "14 found (all 720p), none wanted: quality isn’t in your profile"
+  reasons: { reason: string; count: number }[];
+  qualities: { quality: string; count: number }[];
+}
+export interface ReleaseItem {
+  guid: string; indexerId: number; indexer: string; title: string;
+  quality: string; resolution: number | null; size: number; ageDays: number | null;
+  seeders: number | null; leechers: number | null; protocol: string; languages: string[];
+  rejected: boolean; rejections: string[]; customFormatScore: number | null;
+}
+export interface ReleasesResponse {
+  requestId: number;
+  title: string;
+  arr: 'Radarr' | 'Sonarr';
+  season: number | null;
+  check: ReleaseCheck;
+  releases: ReleaseItem[];         // ones it would take first, then rejected, most seeders first
 }

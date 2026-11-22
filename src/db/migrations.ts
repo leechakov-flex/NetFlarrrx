@@ -394,4 +394,21 @@ SELECT t.*,
 FROM titles t;
 `,
   },
+  {
+    version: 15,
+    name: 'release_checks',
+    sql: `
+-- Not found: the last interactive search per Seerr request (why nothing was taken), and
+-- when the daily retry last asked Radarr/Sonarr to search for it.
+CREATE TABLE release_checks (
+  request_id   INTEGER PRIMARY KEY,
+  tmdb_type    TEXT NOT NULL,
+  tmdb_id      INTEGER NOT NULL,
+  checked_at   TEXT NOT NULL,
+  summary_json TEXT NOT NULL,
+  searched_at  TEXT,
+  search_count INTEGER NOT NULL DEFAULT 0
+);
+`,
+  },
 ];

@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import type { App } from '../app.js';
-import type { MiddlewareHandler } from 'hono';
+import type { Context, MiddlewareHandler } from 'hono';
 import { browse, personPage, findTheme, genres, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
+import { forgetCheck } from '../downloads/releases.js';
 import { inJellyfin, lastJellyfin, libraryPage } from '../library/jellyfin.js';
 import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
@@ -121,13 +122,37 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   api.get('/downloads', async (c) => c.json(await app.downloads()));
 
+  // Not found: what Radarr/Sonarr's indexers have for a request and why nothing was taken.
+  // ?fresh=1 searches again (otherwise the last search within 30 minutes is reused).
+  const httpError = (c: Context, err: unknown) => {
+    const status = (err as { status?: number }).status;
+    if (status) return c.json({ error: (err as Error).message }, status as 404);
+    log.warn('releases: failed', { error: (err as Error).message });
+    return c.json({ error: 'Couldn’t reach Radarr or Sonarr. Try again in a moment.' }, 502);
+  };
+  api.get('/requests/:id/releases', async (c) => {
+    const id = Number(c.req.param('id'));
+    if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+    try { return c.json(await app.releases(id, c.req.query('fresh') === '1')); } catch (err) { return httpError(c, err); }
+  });
+  // Grab one result, including ones Radarr/Sonarr would skip. Passcode-protected like requests.
+  api.post('/requests/:id/grab', requirePasscode, async (c) => {
+    const id = Number(c.req.param('id'));
+    const body = z.object({ guid: z.string().min(1).max(2000), indexerId: z.number().int() }).safeParse(await c.req.json().catch(() => null));
+    if (!Number.isInteger(id) || id < 1 || !body.success) return c.json({ error: 'bad request' }, 400);
+    try {
+      const r = await app.grab(id, body.data.guid, body.data.indexerId);
+      return c.json({ ok: true, title: r.title });
+    } catch (err) { return httpError(c, err); }
+  });
+
   // Cancel (delete) or retry a Seerr request. Single-user app, so no approve/decline.
   for (const action of ['cancel', 'retry'] as const) {
     api.post(`/requests/:id/${action}`, requirePasscode, async (c) => {
       const id = Number(c.req.param('id'));
       if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
       try {
-        if (action === 'cancel') await app.seerr.deleteRequest(id); else await app.seerr.retryRequest(id);
+        if (action === 'cancel') { await app.seerr.deleteRequest(id); forgetCheck(db, id); } else await app.seerr.retryRequest(id);
       } catch (err) {
         if (err instanceof HttpError && err.status === 404) return c.json({ error: 'Seerr doesn’t have that request any more.', code: 'not_found' }, 404);
         log.warn(`requests: ${action} failed`, { id, error: (err as Error).message });

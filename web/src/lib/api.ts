@@ -1,10 +1,10 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type {
-  DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse,
+  DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, ReleasesResponse, ReleaseItem,
   BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse,
 } from '../../../src/api/types';
 
-export type { DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
+export type { DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, ReleasesResponse, ReleaseItem, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
 export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey } from '../../../src/api/types';
 
 export class ApiError extends Error {
@@ -148,4 +148,11 @@ export const usePerson = (id: number | null, name: string | null) => useQuery({
   queryKey: ['person', id ?? name],
   queryFn: () => getJson<PersonResponse>(`/api/people?${id ? `id=${id}` : `name=${encodeURIComponent(name ?? '')}`}`),
   enabled: !!id || !!name, staleTime: 30 * 60_000, retry: 1,
+});
+
+/** Not found: interactive search results for a request (can take up to a minute). */
+export const useReleases = (requestId: number | null, fresh: number) => useQuery({
+  queryKey: ['releases', requestId, fresh],
+  queryFn: () => getJson<ReleasesResponse>(`/api/requests/${requestId}/releases${fresh ? '?fresh=1' : ''}`),
+  enabled: requestId !== null, staleTime: 30 * 60_000, retry: false,
 });

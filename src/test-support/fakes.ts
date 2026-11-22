@@ -240,9 +240,19 @@ export class FakeArrQueue {
   records: Record<string, unknown>[] = [];
   /** What GET /api/v3/movie or /series answers. */
   library: Record<string, unknown>[] = [];
-  fetch: FetchFn = async (input) => {
+  /** Interactive search results (GET /api/v3/release), and what was grabbed or searched. */
+  releaseList: Record<string, unknown>[] = [];
+  grabbed: unknown[] = [];
+  commands: unknown[] = [];
+  releaseQueries: string[] = [];
+  fetch: FetchFn = async (input, init) => {
     const url = new URL(String(input));
     if (url.pathname === '/api/v3/queue') return json(200, { page: 1, totalRecords: this.records.length, records: this.records });
+    if (url.pathname === '/api/v3/release' && init?.method === 'POST') { this.grabbed.push(JSON.parse(String(init.body))); return json(200, {}); }
+    if (url.pathname === '/api/v3/release') { this.releaseQueries.push(url.search); return json(200, this.releaseList); }
+    if (url.pathname === '/api/v3/command') { this.commands.push(JSON.parse(String(init?.body))); return json(201, { id: 1 }); }
+    const tmdb = url.searchParams.get('tmdbId');
+    if (tmdb) return json(200, this.library.filter((x) => x.tmdbId === Number(tmdb)));
     return json(200, this.library);
   };
 }

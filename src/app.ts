@@ -20,6 +20,8 @@ import { HomeService } from './catalog/homeService.js';
 import { JellyfinClient } from './clients/jellyfin.js';
 import { syncJellyfin, type JellyfinSync } from './library/jellyfin.js';
 import { downloadsSnapshot, lastDownloads, watchDownloads, type DownloadDeps } from './downloads/downloads.js';
+import { grabRelease, requestReleases, retryNotFound, type RetryResult } from './downloads/releases.js';
+import type { ReleasesResponse } from './api/types.js';
 import type { DownloadsResponse } from './api/types.js';
 
 export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn; qbit?: FetchFn; jellyfin?: FetchFn }
@@ -44,6 +46,10 @@ export interface App {
   downloads(now?: Date): Promise<DownloadsResponse>;
   /** Every few minutes: note what's stuck and alert on downloads stuck for STALL_ALERT_HOURS. */
   watchDownloads(now?: Date): Promise<void>;
+  /** Not found: interactive search (grabs nothing), grab a picked result, daily retry. */
+  releases(requestId: number, fresh?: boolean): Promise<ReleasesResponse>;
+  grab(requestId: number, guid: string, indexerId: number): Promise<{ title: string }>;
+  retryNotFound(now?: Date): Promise<RetryResult>;
   /** Jellyfin, when JELLYFIN_API_KEY is set: the Library page. */
   jellyfin?: JellyfinClient;
   syncJellyfin(): Promise<JellyfinSync | null>;
@@ -119,6 +125,9 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     library: async () => { const r = await refreshLibrary(db, cfg, tmdb, { radarr, sonarr }); homes.invalidate(); return r; },
 
     downloads: (now = new Date()) => downloadsSnapshot(dl, now),
+    releases: (requestId, fresh = false) => requestReleases(dl, requestId, { fresh }),
+    grab: (requestId, guid, indexerId) => grabRelease(dl, requestId, guid, indexerId),
+    retryNotFound: (now = new Date()) => retryNotFound(dl, now),
     jellyfin,
     syncJellyfin: async () => (jellyfin ? syncJellyfin(db, jellyfin) : null),
     async watchDownloads(now = new Date()) {

@@ -9,6 +9,7 @@ import type { SeerrClient, SeerrRequest } from '../clients/seerr.js';
 import type { TmdbClient } from '../clients/tmdb.js';
 import type { DownloadItem, DownloadState, DownloadsResponse, RequestItem, RequestState, TitleDownload } from '../api/types.js';
 import { log } from '../log.js';
+import { lastChecks } from './releases.js';
 
 export interface DownloadDeps { db: Db; cfg: Config; qbit?: QbitClient; radarr?: ArrClient; sonarr?: ArrClient; seerr: SeerrClient; tmdb: TmdbClient }
 
@@ -144,6 +145,7 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
   }
 
   const requests: RequestItem[] = [];
+  const checks = lastChecks(d.db);
   for (const r of reqs) {
     const key = `${r.media.mediaType}:${r.media.tmdbId}`;
     let tk = titles.get(key);
@@ -158,6 +160,9 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
       id: r.id, tmdbType: r.media.mediaType, tmdbId: r.media.tmdbId, title: name?.title ?? `TMDB ${r.media.tmdbId}`, year: name?.year ?? null,
       titleId: tk?.id ?? null, posterUrl: poster(name?.posterPath ?? null), state: v.state, progress: dl ? dl.progress : null, detail: v.detail, releaseDate: v.releaseDate,
       requestedAt: r.createdAt ?? null, updatedAt: r.updatedAt ?? null, seasons: r.seasons.map((s) => s.seasonNumber),
+      missingSeasons: r.media.mediaType === 'tv' ? missingSeasons(r, arr) : undefined,
+      check: checks.get(r.id) ? { at: checks.get(r.id)!.check.at, headline: checks.get(r.id)!.check.headline, total: checks.get(r.id)!.check.total, accepted: checks.get(r.id)!.check.accepted } : null,
+      retried: checks.get(r.id)?.searchedAt ? { at: checks.get(r.id)!.searchedAt!, count: checks.get(r.id)!.searches } : null,
     });
   }
 
@@ -179,6 +184,13 @@ export async function downloadsSnapshot(d: DownloadDeps, now = new Date()): Prom
   return value;
 }
 const db = (d: DownloadDeps) => d.db;
+
+/** A series request's seasons that Sonarr has no files for (aired or not), in order. */
+function missingSeasons(r: SeerrRequest, arr: { shows: Map<number, Map<number, SeasonStatus>> }): number[] {
+  const show = arr.shows.get(r.media.tmdbId);
+  const wanted = r.seasons.length ? r.seasons.map((x) => x.seasonNumber) : show ? [...show.keys()] : [];
+  return wanted.filter((n) => !show?.get(n) || show.get(n)!.files === 0).sort((a, b) => a - b);
+}
 
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 

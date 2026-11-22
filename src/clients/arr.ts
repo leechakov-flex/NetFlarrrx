@@ -38,6 +38,25 @@ export interface ArrItem {
   haveSeason?: number | null; haveSeasons?: number[]; monitoredSeasons?: number[];
 }
 
+/** One result of an interactive search (what Radarr/Sonarr's "Interactive Search" shows). */
+export interface Release {
+  guid: string; indexerId: number; indexer: string; title: string;
+  quality: string; resolution: number | null; size: number; ageDays: number | null;
+  seeders: number | null; leechers: number | null; protocol: string; languages: string[];
+  rejected: boolean; rejections: string[]; customFormatScore: number | null;
+}
+const ReleaseSchema = z.object({
+  guid: z.string(), indexerId: z.number().int(), indexer: z.string().nullable().optional(), title: z.string().nullable().optional(),
+  quality: z.object({ quality: z.object({ name: z.string().optional(), resolution: z.number().optional() }).passthrough().optional() }).passthrough().optional(),
+  size: z.number().optional(), age: z.number().optional(), ageHours: z.number().optional(),
+  seeders: z.number().nullable().optional(), leechers: z.number().nullable().optional(), protocol: z.string().optional(),
+  languages: z.array(z.object({ name: z.string().optional() }).passthrough()).optional(),
+  rejected: z.boolean().optional(), downloadAllowed: z.boolean().optional(),
+  // Strings in Radarr/Sonarr v4-v5; objects ({ reason }) in some builds.
+  rejections: z.array(z.union([z.string(), z.object({ reason: z.string().optional(), message: z.string().optional() }).passthrough()])).optional(),
+  customFormatScore: z.number().nullable().optional(),
+}).passthrough();
+
 /** Release and file state per title, for request statuses. */
 export interface MovieStatus { hasFile: boolean; isAvailable: boolean; nextRelease: string | null; releasedAt: string | null }
 export interface SeasonStatus { files: number; aired: boolean; nextAiring: string | null; lastAired: string | null }
@@ -122,6 +141,51 @@ export class ArrClient {
       }])));
     }
     return out;
+  }
+
+  /** Radarr's or Sonarr's own ID for a TMDB title, or null if it isn't in there. */
+  async findId(tmdbId: number): Promise<number | null> {
+    const path = this.name === 'radarr' ? `/api/v3/movie?tmdbId=${tmdbId}` : '/api/v3/series';
+    const raw = await requestJson<unknown[]>(this.fetchFn, this.name, this.url(path), { headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 60_000 });
+    const hit = z.array(z.object({ id: z.number().int(), tmdbId: z.number().int().nullable().optional() }).passthrough()).parse(raw)
+      .find((x) => x.tmdbId === tmdbId);
+    return hit?.id ?? null;
+  }
+
+  /**
+   * Interactive search: asks every indexer and returns what it found, with the reasons
+   * Radarr/Sonarr would skip each result. Grabs nothing. Can take a minute.
+   */
+  async releases(arrId: number, season?: number): Promise<Release[]> {
+    const q = this.name === 'radarr' ? `movieId=${arrId}` : `seriesId=${arrId}${season != null ? `&seasonNumber=${season}` : ''}`;
+    const raw = await requestJson<unknown[]>(this.fetchFn, this.name, this.url(`/api/v3/release?${q}`), { headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 150_000, retries: 0 });
+    return z.array(z.unknown()).parse(raw).flatMap((r) => {
+      const x = ReleaseSchema.safeParse(r);
+      if (!x.success) return [];
+      const d = x.data;
+      const rejections = (d.rejections ?? []).map((j) => (typeof j === 'string' ? j : j.reason ?? j.message ?? '')).filter(Boolean);
+      return [{
+        guid: d.guid, indexerId: d.indexerId, indexer: d.indexer ?? '', title: d.title ?? '',
+        quality: d.quality?.quality?.name ?? 'Unknown', resolution: d.quality?.quality?.resolution ?? null, size: d.size ?? 0,
+        ageDays: d.age ?? (d.ageHours != null ? d.ageHours / 24 : null), seeders: d.seeders ?? null, leechers: d.leechers ?? null,
+        protocol: d.protocol ?? 'torrent', languages: (d.languages ?? []).map((l) => l.name ?? '').filter(Boolean),
+        rejected: d.rejected ?? rejections.length > 0, rejections, customFormatScore: d.customFormatScore ?? null,
+      }];
+    });
+  }
+
+  /** Grab one release from an interactive search (even one it would skip). */
+  async grab(guid: string, indexerId: number): Promise<void> {
+    await requestJson<unknown>(this.fetchFn, this.name, this.url('/api/v3/release'),
+      { method: 'POST', body: { guid, indexerId }, headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 60_000, retries: 0 });
+  }
+
+  /** The normal automatic search: grabs the best release it would accept, if any. */
+  async search(arrId: number, season?: number): Promise<void> {
+    const body = this.name === 'radarr' ? { name: 'MoviesSearch', movieIds: [arrId] }
+      : season != null ? { name: 'SeasonSearch', seriesId: arrId, seasonNumber: season } : { name: 'SeriesSearch', seriesId: arrId };
+    await requestJson<unknown>(this.fetchFn, this.name, this.url('/api/v3/command'),
+      { method: 'POST', body, headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 30_000, retries: 1 });
   }
 
   /** Series with at least one episode on disk. */

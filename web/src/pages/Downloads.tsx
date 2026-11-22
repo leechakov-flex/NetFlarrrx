@@ -7,6 +7,7 @@ import { useGuardedPost } from '../lib/guardedPost';
 import { useToast } from '../components/Feedback';
 import { Credits, Empty, PageTitle, Spinner } from '../components/ui';
 import { Icons } from '../components/icons';
+import { ReleasesSheet } from '../components/ReleasesSheet';
 
 /**
  * Downloads (Figma Build screen 8): what qBittorrent is doing, matched to the
@@ -155,6 +156,7 @@ function RequestRow({ r }: { r: RequestItem }) {
   const toast = useToast();
   const qc = useQueryClient();
   const [busy, setBusy] = useState<null | 'cancel' | 'retry'>(null);
+  const [releases, setReleases] = useState(false);
   const [badgeCls, badgeLabel] = REQ_BADGE[r.state];
   const name = `${r.title}${r.year ? ` (${r.year})` : ''}${r.tmdbType === 'tv' && r.seasons.length ? ` · ${r.seasons.length === 1 ? `Season ${r.seasons[0]}` : `${r.seasons.length} seasons`}` : ''}`;
   const line = r.state === 'downloading' ? `Requested ${ago(r.requestedAt)}${r.progress !== null ? ` · ${Math.floor(r.progress * 100)}%` : ''}`
@@ -183,7 +185,16 @@ function RequestRow({ r }: { r: RequestItem }) {
         <span className={`inline-block rounded-[10px] px-2 py-0.5 type-badge-tag ${badgeCls}`}>{badgeLabel}</span>
         <div className="mt-2 truncate type-label-strong text-ink-primary">{name}</div>
         <div className="mt-1 truncate type-body-xsmall text-ink-muted">{line}</div>
+        {r.state === 'missing' && (
+          // Figma "Not found row": the last search's summary, and the Releases sheet.
+          <button type="button" onClick={() => setReleases(true)} className="mt-1.5 flex max-w-full items-center gap-1 text-left type-body-xsmall text-ink-on-warning hover:text-ink-primary">
+            <span className="truncate">{r.check ? r.check.headline : 'See why: search your indexers'}</span>
+            <Icons.chevronRight className="h-3.5 w-3.5 flex-shrink-0" />
+          </button>
+        )}
+        {r.state === 'missing' && r.retried && <div className="mt-0.5 type-body-xsmall text-ink-muted">Searched again {ago(r.retried.at)}{r.retried.count > 1 ? ` · ${r.retried.count} times` : ''}</div>}
       </div>
+      {releases && <ReleasesSheet r={r} open={releases} onClose={() => setReleases(false)} />}
       {r.state === 'failed' && (
         <IconButton label={`Retry ${r.title}`} busy={busy === 'retry'} onClick={() => void act('retry')}><Icons.retry className="h-6 w-6" /></IconButton>
       )}

@@ -129,9 +129,17 @@ const qbit = new FakeQbit(), radarrQ = new FakeArrQueue(), sonarrQ = new FakeArr
   sonarrQ.records = [{ downloadId: 'B2', status: 'downloading', trackedDownloadStatus: 'ok', size: 1.8e9, sizeleft: 1e9,
     series: { title: shows[0]!.title, year: shows[0]!.year, tmdbId: shows[0]!.tmdb_id, images: [] }, episode: { seasonNumber: 7, episodeNumber: 3, title: 'Joan Is Awful' } }];
   const hrs = (h: number) => new Date(Date.now() - h * 3600_000).toISOString();
+  const rr = (guid: string, title: string, res: number, name: string, seeders: number, size: number, rejections: string[]) =>
+    ({ guid, indexerId: 1, indexer: ['TorrentLeech', 'IPTorrents', 'Nyaa'][seeders % 3], title, size, age: seeders % 9, seeders, quality: { quality: { name, resolution: res } }, rejected: rejections.length > 0, rejections });
+  radarrQ.releaseList = [
+    rr('r1', 'Heart.of.the.Beast.2026.720p.WEB-DL.DDP5.1.H.264-FLUX', 720, 'WEBDL-720p', 212, 2.4e9, ['WEBDL-720p is not wanted in profile']),
+    rr('r2', 'Heart.of.the.Beast.2026.720p.AMZN.WEB-DL.DDP5.1-NTb', 720, 'WEBDL-720p', 96, 2.9e9, ['WEBDL-720p is not wanted in profile']),
+    rr('r3', 'Heart.of.the.Beast.2026.HDCAM.x264-TGx', 480, 'CAM', 41, 1.1e9, ['CAM is not wanted in profile', 'Language is unknown']),
+    rr('r4', 'Heart.of.the.Beast.2026.2160p.WEB-DL.DV.HDR.H.265-FLUX', 2160, 'WEBDL-2160p', 12, 58e9, ['Size: 58.0 GB is greater than maximum allowed 40.0 GB']),
+  ];
   radarrQ.library = [
     { title: 'x', tmdbId: films[4]!.tmdb_id, hasFile: false, isAvailable: false, digitalRelease: new Date(Date.now() + 20 * 86_400_000).toISOString() },
-    { title: 'y', tmdbId: films[6]!.tmdb_id, hasFile: false, isAvailable: true, digitalRelease: hrs(24 * 30) },
+    { id: 66, title: 'y', tmdbId: films[6]!.tmdb_id, hasFile: false, isAvailable: true, digitalRelease: hrs(24 * 30) },
     { title: 'z', tmdbId: films[7]!.tmdb_id, hasFile: false, isAvailable: true, digitalRelease: hrs(24 * 30) },
   ];
   fakeSeerr.requestList = [

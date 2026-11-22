@@ -83,7 +83,13 @@ const schema = z.object({
   QBIT_USERNAME: optStr(),
   QBIT_PASSWORD: optStr(),
   DOWNLOADS_CRON: z.preprocess(clean, z.string().default('*/5 * * * *')),
-  STALL_ALERT_HOURS: num(2),        // push an alert when a download has been stuck this long
+  STALL_ALERT_HOURS: num(2),
+  // Not found: once a day, re-check up to NOT_FOUND_RETRY_MAX titles that have been Not found
+  // NOT_FOUND_RETRY_AFTER_DAYS+, each at most every NOT_FOUND_RETRY_DAYS; search if anything is now acceptable.
+  NOT_FOUND_RETRY_CRON: z.preprocess(clean, z.string().default('13 4 * * *')),
+  NOT_FOUND_RETRY_MAX: num(5),
+  NOT_FOUND_RETRY_DAYS: num(7),
+  NOT_FOUND_RETRY_AFTER_DAYS: num(2),        // push an alert when a download has been stuck this long
 
   // Jellyfin (read only), for the Library page and to leave what you have out of Discover.
   // Create a key in Jellyfin: Dashboard -> API Keys. Unset = no library view.
