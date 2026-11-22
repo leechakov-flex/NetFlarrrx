@@ -76,12 +76,11 @@ function Sidebar() {
   const { pathname } = useLocation();
   const meta = useMeta();
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
-      <div className="px-4 pt-5">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col gap-1 bg-panel px-4 pb-5 pt-5 lg:flex">
+      <div className="pb-4">
         <Link to="/" className="block type-display-logo"><span className="text-overseerr">MonkeySee</span></Link>
-        <p className="mt-1 type-caption-default text-ink-muted">What’s new on your services</p>
       </div>
-      <nav className="mt-7 flex-1 space-y-1 px-4">
+      <nav className="flex-1 space-y-1">
         {[...nav, { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') }, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }].map((item) => {
           const on = item.match(pathname);
           const Icon = item.icon;
@@ -90,7 +89,7 @@ function Sidebar() {
               key={item.to}
               to={item.to}
               className={`flex items-center gap-3 rounded-md p-2 type-nav-sidebar text-ink-primary transition duration-150 ease-in-out ${
-                on ? 'bg-gradient-to-br from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500' : 'hover:bg-gray-700'
+                on ? 'bg-black' : 'hover:bg-white/5'
               }`}
             >
               <Icon className="h-6 w-6" />
@@ -103,10 +102,10 @@ function Sidebar() {
         })}
       </nav>
       {meta.data && (
-        <Link to="/more" className="m-4 rounded-md border border-line px-3 py-2.5 transition hover:border-line-strong">
+        <Link to="/more" className="rounded-md border border-line px-3 py-2.5 transition hover:border-line-strong">
           <div className="type-caption-strong text-ink-secondary">Last sync: {relativeTime(meta.data.lastSyncAt) ?? 'not yet'}</div>
           <div className="mt-0.5 type-body-xsmall text-ink-muted">
-            {meta.data.eligible.toLocaleString()} titles · {meta.data.newThisWeek.toLocaleString()} new this week
+            {meta.data.eligible.toLocaleString()} titles{meta.data.trackingSince ? ` · tracking since ${new Date(meta.data.trackingSince).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
           </div>
         </Link>
       )}

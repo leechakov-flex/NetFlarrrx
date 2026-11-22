@@ -11,7 +11,7 @@ module.exports = {
       fontFamily: { sans: ['Inter Variable', ...defaultTheme.fontFamily.sans] },
       screens: { '3xl': '1920px' },
       colors: {
-        app: v('bg-app'), surface: v('bg-surface'), raised: v('bg-raised'), inverse: v('bg-inverse'),
+        app: v('bg-app'), surface: v('bg-surface'), panel: v('bg-panel'), raised: v('bg-raised'), inverse: v('bg-inverse'),
         danger: v('bg-danger'), unreleased: v('bg-unreleased'), 'not-found': v('bg-not-found'), warning: v('bg-warning'), success: v('bg-success'), 'accent-subtle': v('bg-accent-subtle'),
         accent: { DEFAULT: v('bg-accent'), strong: v('bg-accent-strong') },
         ink: {

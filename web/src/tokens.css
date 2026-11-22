@@ -3,6 +3,7 @@
 :root {
   --bg-app: #000000;
   --bg-surface: #1f2937;
+  --bg-panel: #14171f;          /* canvas/panel: desktop sidebar */
   --bg-raised: #374151;
   --bg-inverse: #f3f4f6;
   --bg-accent: #6366f1;

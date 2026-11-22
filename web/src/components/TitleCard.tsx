@@ -71,13 +71,13 @@ export function TitleCard({ card, fill = false, art = 'poster' }: { card: Card; 
           </div>
         </div>
       </div>
-      <div className={`mt-1.5 truncate type-caption-default ${line ? toneClass[line.tone] : 'text-transparent'}`}>{line?.text ?? '·'}</div>
-      <div className="flex h-[18px] items-center gap-1 type-caption-default" title={score ? `TMDB ${score} from ${card.voteCount!.toLocaleString()} votes` : undefined}>
+      <div className="mt-1.5 flex h-[18px] items-center gap-1.5 type-badge-tag">
+        <span className={`min-w-0 flex-1 truncate ${line ? toneClass[line.tone] : 'text-transparent'}`}>{line?.text ?? '·'}</span>
         {score && (
-          <>
-            <Icons.star className="h-3 w-3 flex-shrink-0 text-rating" />
-            <span className="type-caption-strong text-ink-strong">{score}</span>
-          </>
+          <span className="flex flex-shrink-0 items-center gap-1" title={`TMDB ${score} from ${card.voteCount!.toLocaleString()} votes`}>
+            <Icons.star className="h-2 w-2 text-white" />
+            <span className="text-ink-strong">{score}</span>
+          </span>
         )}
       </div>
     </Link>
@@ -88,7 +88,7 @@ export function TitleCardPlaceholder({ fill = false }: { fill?: boolean }) {
   return (
     <div className={`${fill ? 'w-full' : 'w-[7.5rem] md:w-44'} flex-shrink-0`}>
       <div className="relative animate-pulse rounded-xl bg-raised ring-1 ring-line" style={{ paddingBottom: '150%' }} />
-      <div className="mt-1.5 h-9" />
+      <div className="mt-1.5 h-[18px]" />
     </div>
   );
 }
