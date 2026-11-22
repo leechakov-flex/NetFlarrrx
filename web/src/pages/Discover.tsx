@@ -23,7 +23,9 @@ function FilterChips({ value, onChange, co, onCo }: { value: ServiceKey[]; onCha
   const none = value.length === 0 && picked.length === 0;
   return (
     <>
-      <div className="scrollbar-none -mx-4 lg:-mx-8 mt-4 flex gap-2 overflow-x-auto px-4 lg:mb-1 lg:mt-0 lg:px-8" role="group" aria-label="Filter Discover">
+      {/* Sticky under the status bar (phone) or the search bar (desktop), on the same frosted background. */}
+      <div className="sticky top-[env(safe-area-inset-top)] z-10 -mx-4 mt-2 bg-app/80 py-2 backdrop-blur lg:-mx-8 lg:mt-0 lg:top-[68px] lg:py-0 lg:pb-2">
+      <div className="scrollbar-none flex gap-2 overflow-x-auto px-4 lg:px-8" role="group" aria-label="Filter Discover">
         <button type="button" className={chip(none)} aria-pressed={none} onClick={() => { onChange([]); onCo({}); }}>All</button>
         {services.length > 1 && services.map((s) => (
           <button key={s.key} type="button" className={chip(value.includes(s.key))} aria-pressed={value.includes(s.key)} onClick={() => toggle(s.key)}>{s.name}</button>
@@ -37,6 +39,7 @@ function FilterChips({ value, onChange, co, onCo }: { value: ServiceKey[]; onCha
         <button type="button" className={chip(false)} onClick={() => setPicker(true)}>
           <Icons.plus className="h-3.5 w-3.5" />Studio or network
         </button>
+      </div>
       </div>
       <CompanyPickerSheet open={picker} onClose={() => setPicker(false)} value={co} onApply={onCo} />
     </>
