@@ -3,7 +3,7 @@ import { Icons } from '../components/icons';
 const ChevronRightIcon = Icons.chevronRight;
 import { useMeta, useThemes } from '../lib/api';
 import { longDate, relativeTime } from '../lib/format';
-import { Badge, Credits, PageTitle, Spinner } from '../components/ui';
+import { Badge, PageTitle, Spinner } from '../components/ui';
 
 const healthBadge: Record<string, ['success' | 'warning' | 'default', string]> = {
   ok: ['success', 'Healthy'], starting: ['default', 'Starting'], held: ['warning', 'Sync held'], failing: ['warning', 'Sync failing'], stale: ['warning', 'Sync overdue'],
@@ -79,7 +79,6 @@ export function More() {
         MonkeySee checks your services’ movies every morning at 6:23 and their series once a week. A title’s date added is the first day it appeared after tracking began (for a new series, its premiere). Prime Video, rent or buy and coming soon come from JustWatch via TMDB.
         Every Sunday it compares the list with TMDB’s, which comes from JustWatch.
       </p>
-      <Credits />
     </>
   );
 }

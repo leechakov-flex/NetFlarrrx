@@ -97,17 +97,6 @@ export function Spinner({ className = 'h-8 w-8' }: { className?: string }) {
   );
 }
 
-export function Credits() {
-  return (
-    <p className="mt-10 text-xs text-gray-500">
-      Data from <a className="underline hover:text-gray-300" href="https://www.watchmode.com" target="_blank" rel="noreferrer">Watchmode</a> and{' '}
-      <a className="underline hover:text-gray-300" href="https://www.themoviedb.org" target="_blank" rel="noreferrer">TMDB</a>.
-      {' '}Prime Video, rent or buy and coming soon from <a className="underline hover:text-gray-300" href="https://www.justwatch.com" target="_blank" rel="noreferrer">JustWatch</a> via TMDB.
-      {' '}This product uses the TMDB API but is not endorsed or certified by TMDB.
-    </p>
-  );
-}
-
 export function PageTitle({ children }: { children: ReactNode }) {
   // Figma Heading/Page, text/primary; the page's content starts 16px below.
   return <h1 className="mb-4 mt-4 truncate type-heading-page text-ink-primary">{children}</h1>;

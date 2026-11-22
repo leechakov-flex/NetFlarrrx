@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useLibrary, type LibraryItem } from '../lib/api';
 import { relativeTime } from '../lib/format';
-import { Credits, Empty, PageTitle, Spinner } from '../components/ui';
+import { Empty, PageTitle, Spinner } from '../components/ui';
 import { Icons } from '../components/icons';
 import { BackButton } from '../components/Layout';
 
@@ -100,7 +100,6 @@ export function Library() {
       )}
       <div ref={sentinel} />
       {res.isFetchingNextPage && <div className="flex justify-center py-6"><Spinner /></div>}
-      <Credits />
     </div>
   );
 }

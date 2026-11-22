@@ -5,7 +5,7 @@ import { ApiError, useDownloads, type DownloadItem, type RequestItem } from '../
 import { ago, bytes, duration, speed } from '../lib/format';
 import { useGuardedPost } from '../lib/guardedPost';
 import { useToast } from '../components/Feedback';
-import { Credits, Empty, PageTitle, Spinner } from '../components/ui';
+import { Empty, PageTitle, Spinner } from '../components/ui';
 import { Icons } from '../components/icons';
 import { ReleasesSheet } from '../components/ReleasesSheet';
 
@@ -63,7 +63,6 @@ export function Downloads() {
       )}
 
       <Requests items={d.requests} />
-      <Credits />
     </div>
   );
 }

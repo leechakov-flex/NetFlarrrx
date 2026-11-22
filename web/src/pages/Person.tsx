@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePerson, type PersonResponse } from '../lib/api';
 import { tmdbImage } from '../lib/format';
-import { Credits, Empty, Spinner } from '../components/ui';
+import { Empty, Spinner } from '../components/ui';
 import { TitleCard } from '../components/TitleCard';
 import { Icons } from '../components/icons';
 import { BackButton } from '../components/Layout';
@@ -56,7 +56,6 @@ export function Person() {
       </section>
 
       {p.elsewhere.length > 0 && <Elsewhere items={p.elsewhere} />}
-      <Credits />
     </div>
   );
 }

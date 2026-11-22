@@ -5,7 +5,7 @@ const FilmIcon = Icons.film, StarIcon = Icons.star;
 import type { Kind } from '../lib/api';
 import { useTop } from '../lib/api';
 import { runtime, tmdbImage } from '../lib/format';
-import { Credits, Empty, PageTitle, Spinner, StatusBadgeMini } from '../components/ui';
+import { Empty, PageTitle, Spinner, StatusBadgeMini } from '../components/ui';
 
 export function TopRated() {
   const [kind, setKind] = useState<Kind>('movie');
@@ -65,7 +65,6 @@ export function TopRated() {
           })}
         </ol>
       )}
-      <Credits />
     </>
   );
 }

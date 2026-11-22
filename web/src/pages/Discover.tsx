@@ -4,7 +4,7 @@ import { useHome, useMeta, type CompanyPick, type ServiceKey } from '../lib/api'
 import { CompanyPickerSheet, useCompanyNames } from '../components/CompanyPicker';
 import { Icons } from '../components/icons';
 import { Slider, SliderPlaceholder } from '../components/Slider';
-import { Credits, Empty, Spinner } from '../components/ui';
+import { Empty, Spinner } from '../components/ui';
 
 const chip = (on: boolean) =>
   `flex flex-shrink-0 items-center gap-1 rounded-full px-3 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
@@ -65,7 +65,6 @@ export function Discover() {
         ? ['Just released', 'Available from theaters', 'Coming soon', 'Stand-up specials'].map((t) => <SliderPlaceholder key={t} title={t} />)
         : <div className={`transition-opacity ${home.isPlaceholderData ? 'pointer-events-none opacity-40' : ''}`}>{home.data.rows.map((row) => <Slider key={row.slug} row={row} />)}</div>}
       {home.data && home.data.rows.length === 0 && <Empty>No titles yet. The first sync is still running.</Empty>}
-      <Credits />
     </>
   );
 }

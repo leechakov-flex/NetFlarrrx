@@ -4,7 +4,7 @@ import type { BrowseQuery, Kind, SortKey } from '../lib/api';
 import { useBrowse, useGenres, useMeta, useThemes } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
-import { Credits, Empty, PageTitle, Spinner, Tag } from '../components/ui';
+import { Empty, PageTitle, Spinner, Tag } from '../components/ui';
 import { SearchInput } from '../components/Layout';
 import type { How, ServiceKey } from '../lib/api';
 import { SERVICE_NAMES } from '../lib/format';
@@ -133,7 +133,6 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         </ul>
       )}
       <div ref={sentinel} className="flex justify-center py-8">{res.isFetchingNextPage && <Spinner />}</div>
-      <Credits />
 
       <FiltersPanel
         open={filtersOpen}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMeta, useTitle, type TitleDetail as Detail } from '../lib/api';
 import { languageName, longDate, runtime, SERVICE_NAMES, shortDate, tmdbImage } from '../lib/format';
-import { Badge, Button, Credits, Empty, Spinner } from '../components/ui';
+import { Badge, Button, Empty, Spinner } from '../components/ui';
 import { TrailerModal } from '../components/TrailerModal';
 import { RequestButton } from '../components/RequestButton';
 import { TitleCard } from '../components/TitleCard';
@@ -82,7 +82,6 @@ export function TitleDetail() {
         </div>
         <Facts d={d} />
       </div>
-      <div className="px-4 lg:px-8"><Credits /></div>
       {trailer && d.trailer && <TrailerModal videoKey={d.trailer.key} title={d.trailer.name ? `${d.title} · ${d.trailer.name}` : d.title} onClose={() => setTrailer(false)} />}
     </div>
   );
