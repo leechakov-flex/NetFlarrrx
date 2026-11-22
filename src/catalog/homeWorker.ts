@@ -4,14 +4,15 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import type { Config } from '../config.js';
 import { openDb } from '../db/db.js';
-import { home, type CompanyPick } from './queries.js';
+import { companies, home, type CompanyPick } from './queries.js';
 import type { ServiceKey } from '../services.js';
 
 const cfg = workerData.cfg as Config;
 const db = openDb(cfg.DATA_DIR);
-parentPort!.on('message', (m: { id: number; now: string; only: ServiceKey[]; co: CompanyPick }) => {
+parentPort!.on('message', (m: { id: number; job?: 'home' | 'companies'; now: string; only: ServiceKey[]; co: CompanyPick }) => {
   try {
-    parentPort!.postMessage({ id: m.id, value: home(db, cfg, new Date(m.now), m.only, m.co) });
+    const now = new Date(m.now);
+    parentPort!.postMessage({ id: m.id, value: m.job === 'companies' ? companies(db, cfg, now) : home(db, cfg, now, m.only, m.co) });
   } catch (err) {
     parentPort!.postMessage({ id: m.id, error: (err as Error).message });
   }

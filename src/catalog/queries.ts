@@ -435,9 +435,12 @@ let companiesCache: { at: number; value: import('../api/types.js').CompaniesResp
 export const resetCompaniesCache = () => { companiesCache = null; };
 export function companies(db: Db, cfg: Config, now = new Date()) {
   if (companiesCache && now.getTime() - companiesCache.at < 10 * 60_000) return companiesCache.value;
-  const f = filters(cfg, { how: ['sub', 'digital'] }, now);
-  const eligible = { from: f.from, sql: f.sql, params: f.params };
-  const value = { studios: companyCounts(db, 'studio', eligible), networks: companyCounts(db, 'network', eligible) };
+  // Inside withScopes, so the services' availability is a temp table built once, not a subquery.
+  const value = withScopes(db, () => {
+    const f = filters(cfg, { how: ['sub', 'digital'] }, now);
+    const eligible = { from: f.from, sql: f.sql, params: f.params };
+    return { studios: companyCounts(db, 'studio', eligible), networks: companyCounts(db, 'network', eligible) };
+  });
   companiesCache = { at: now.getTime(), value };
   return value;
 }

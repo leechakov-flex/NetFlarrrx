@@ -54,9 +54,12 @@ export interface CompanyCount { key: string; name: string; count: number }
 
 /** Studios or networks with titles on your services, most titles first. */
 export function companyCounts(db: Db, kind: CompanyKind, eligible: { from: string; sql: string; params: (string | number)[] }, limit = 400): CompanyCount[] {
+  // MATERIALIZED: work out the eligible titles once. Without it SQLite could re-run the whole
+  // scope for every studio link (82k of them), which never finished on a full catalog.
   return all<CompanyCount>(db, `
+    WITH e AS MATERIALIZED (SELECT DISTINCT tk.id ${eligible.from} WHERE ${eligible.sql})
     SELECT c.group_key AS key, c.group_name AS name, count(DISTINCT e.id) AS count
-    FROM (SELECT DISTINCT tk.id ${eligible.from} WHERE ${eligible.sql}) e
+    FROM e
     JOIN title_companies tc ON tc.title_id = e.id AND tc.kind = ?
     JOIN companies c ON c.kind = tc.kind AND c.id = tc.company_id
     GROUP BY c.group_key ORDER BY count DESC, name LIMIT ?`, [...eligible.params, kind, limit]);

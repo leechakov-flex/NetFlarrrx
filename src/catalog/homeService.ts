@@ -5,7 +5,8 @@ import type { Config } from '../config.js';
 import type { Db } from '../db/db.js';
 import type { HomeResponse } from '../api/types.js';
 import type { ServiceKey } from '../services.js';
-import { home, type CompanyPick } from './queries.js';
+import { companies, home, type CompanyPick } from './queries.js';
+import type { CompaniesResponse } from '../api/types.js';
 import { enabledServices } from '../services.js';
 import { log } from '../log.js';
 
@@ -16,7 +17,10 @@ export class HomeService {
   private cache = new Map<string, { at: number; value: HomeResponse }>();
   private inflight = new Map<string, Promise<HomeResponse>>();
   private worker: Worker | null = null;
-  private pending = new Map<number, { resolve: (v: HomeResponse) => void; reject: (e: Error) => void }>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private pending = new Map<number, { resolve: (v: any) => void; reject: (e: Error) => void }>();
+  private companiesCache: { at: number; value: CompaniesResponse } | null = null;
+  private companiesInflight: Promise<CompaniesResponse> | null = null;
   private seq = 0;
 
   constructor(private db: Db, private cfg: Config) {
@@ -44,16 +48,32 @@ export class HomeService {
     this.worker = w;
   }
 
-  private build(only: ServiceKey[], co: CompanyPick): Promise<HomeResponse> {
+  private run<T>(job: 'home' | 'companies', only: ServiceKey[], co: CompanyPick, inline: () => T): Promise<T> {
     if (!this.worker && this.cfg.DATA_DIR !== ':memory:' && import.meta.url.endsWith('.js')) {
       try { this.startWorker(); } catch { /* inline below */ }
     }
-    if (!this.worker) return Promise.resolve(home(this.db, this.cfg, new Date(), only, co));
+    if (!this.worker) return Promise.resolve(inline());
     const id = ++this.seq;
-    return new Promise((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      this.worker!.postMessage({ id, now: new Date().toISOString(), only, co });
+      this.worker!.postMessage({ id, job, now: new Date().toISOString(), only, co });
     });
+  }
+
+  private build(only: ServiceKey[], co: CompanyPick): Promise<HomeResponse> {
+    return this.run('home', only, co, () => home(this.db, this.cfg, new Date(), only, co));
+  }
+
+  /** Studios and networks for the picker: built on the worker too, cached 10 minutes. */
+  async companies(): Promise<CompaniesResponse> {
+    if (this.cfg.DATA_DIR === ':memory:') return companies(this.db, this.cfg);
+    const c = this.companiesCache;
+    if (c && Date.now() - c.at < 10 * 60_000) return c.value;
+    this.companiesInflight ??= this.run('companies', [], {}, () => companies(this.db, this.cfg))
+      .then((value) => { this.companiesCache = { at: Date.now(), value }; return value; })
+      .finally(() => { this.companiesInflight = null; });
+    // A stale list is fine while the new one builds.
+    return c ? c.value : this.companiesInflight;
   }
 
   private refresh(key: string, only: ServiceKey[], co: CompanyPick): Promise<HomeResponse> {
@@ -100,6 +120,7 @@ export class HomeService {
     if (this.cfg.DATA_DIR === ':memory:') return;
     const views: ServiceKey[][] = [[], ...enabledServices(this.cfg.SERVICES).map((s) => [s.key] as ServiceKey[])];
     for (const only of views) await this.refresh(JSON.stringify([only, [], []]), only, {}).catch(() => undefined);
+    await this.companies().catch(() => undefined);
   }
 
   close() { void this.worker?.terminate(); this.worker = null; }

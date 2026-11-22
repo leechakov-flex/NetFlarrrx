@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { App } from '../app.js';
 import type { MiddlewareHandler } from 'hono';
-import { browse, companies, personPage, findTheme, genres, meta, themes, titleDetail, top } from '../catalog/queries.js';
+import { browse, personPage, findTheme, genres, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
@@ -197,7 +197,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     return hit.value ? c.json(personPage(db, cfg, hit.value)) : c.json({ error: 'not found' }, 404);
   });
 
-  api.get('/companies', (c) => c.json(companies(db, cfg)));
+  api.get('/companies', async (c) => c.json(await app.homes.companies()));
 
   api.get('/themes', (c) => c.json(themes(db, cfg)));
 
