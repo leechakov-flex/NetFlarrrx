@@ -150,20 +150,21 @@ const ORDER: Record<NonNullable<BrowseQuery['sort']>, string> = {
   // date, so they follow by their latest release or episode (a fair proxy for
   // "recently added"), then popularity. Future dates (pre-announced) count as today.
   // By day, not the exact time: each service syncs at its own minute, and the one that ran
-  // last would otherwise lead every row. Within a day, the most popular first.
-  added: `a.added_at IS NULL, date(a.added_at) DESC, CASE WHEN a.added_at IS NULL THEN 0 ELSE tk.popularity END DESC, min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) DESC, tk.popularity DESC`,
-  rating: 'tk.vote_average DESC, tk.vote_count DESC',
-  popularity: 'tk.popularity DESC',
-  release: `tk.release_date IS NULL, min(tk.release_date, date('now')) DESC, tk.popularity DESC`,
+  // last would otherwise lead every row. Within a day, by rank_score (popularity weighted by
+  // rating; see migration 16).
+  added: `a.added_at IS NULL, date(a.added_at) DESC, CASE WHEN a.added_at IS NULL THEN 0 ELSE tk.rank_score END DESC, min(COALESCE(tk.last_air_date, tk.release_date, '0000'), date('now')) DESC, tk.rank_score DESC`,
+  rating: 'tk.rating_bayes DESC, tk.vote_count DESC',
+  popularity: 'tk.rank_score DESC',
+  release: `tk.release_date IS NULL, min(tk.release_date, date('now')) DESC, tk.rank_score DESC`,
   title: 'COALESCE(tk.tmdb_title, tk.title) COLLATE NOCASE ASC',
-  match: `COALESCE(${MATCH_SCORE}, 0) DESC, tk.popularity DESC`,
-  soon: `a.soon_date IS NULL, a.soon_date ASC, tk.popularity DESC`,
+  match: `COALESCE(${MATCH_SCORE}, 0) DESC, tk.rank_score DESC`,
+  soon: `a.soon_date IS NULL, a.soon_date ASC, tk.rank_score DESC`,
 };
 
 /** For "Because you have X": TMDB's own ranking for that title. */
 const becauseOrder = (because: string) => {
   const seed = seedParts(because);
-  return { sql: `(SELECT min(rank) FROM library_recs ro WHERE ro.seed_type = ? AND ro.seed_id = ? AND ro.rec_type = tk.tmdb_type AND ro.rec_id = tk.tmdb_id), tk.popularity DESC`, params: [seed.type, seed.id] as (string | number)[] };
+  return { sql: `(SELECT min(rank) FROM library_recs ro WHERE ro.seed_type = ? AND ro.seed_id = ? AND ro.rec_type = tk.tmdb_type AND ro.rec_id = tk.tmdb_id), tk.rank_score DESC`, params: [seed.type, seed.id] as (string | number)[] };
 };
 function orderBy(q: BrowseQuery) {
   if (q.because && (!q.sort || q.sort === 'match')) return becauseOrder(q.because);

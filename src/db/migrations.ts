@@ -411,4 +411,29 @@ CREATE TABLE release_checks (
 );
 `,
   },
+  {
+    version: 16,
+    name: 'rank_score',
+    sql: `
+-- The ranker. rating_bayes is TMDB's score pulled toward 6.5 until a title has
+-- enough votes to trust (a 9.0 from 4 votes is close to 6.5; from 4,000 it stays
+-- 9.0). rank_score is popularity scaled by that rating to the 4th power around
+-- 6.5: an 8.0 counts as about 2.3x as popular, a 5.5 as about half. New titles
+-- with few votes sit near 1x, so they are neither boosted nor buried.
+DROP VIEW title_kinds;
+CREATE VIEW title_kinds AS
+SELECT r.*,
+  COALESCE(r.popularity, 0) * (r.rating_bayes / 6.5) * (r.rating_bayes / 6.5) * (r.rating_bayes / 6.5) * (r.rating_bayes / 6.5) AS rank_score
+FROM (
+  SELECT t.*,
+    CASE t.watchmode_type
+      WHEN 'movie' THEN 'movie' WHEN 'tv_movie' THEN 'movie' WHEN 'short_film' THEN 'movie' WHEN 'tv_special' THEN 'movie'
+      WHEN 'tv_series' THEN 'series' WHEN 'tv_miniseries' THEN 'series'
+      ELSE NULL
+    END AS kind,
+    (COALESCE(t.vote_count, 0) * COALESCE(t.vote_average, 0) + 150 * 6.5) / (COALESCE(t.vote_count, 0) + 150.0) AS rating_bayes
+  FROM titles t
+) r;
+`,
+  },
 ];

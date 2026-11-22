@@ -9,7 +9,7 @@ import { CompanyList } from './CompanyPicker';
 export const SORTS: { value: SortKey; label: string }[] = [
   { value: 'added', label: 'Newest added' },
   { value: 'rating', label: 'Highest rated' },
-  { value: 'popularity', label: 'Most popular' },
+  { value: 'popularity', label: 'Popular and well rated' },
   { value: 'release', label: 'Newest release' },
   { value: 'title', label: 'Title A–Z' },
 ];

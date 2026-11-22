@@ -5,6 +5,11 @@ import { addedLabel, serviceLine, tmdbImage } from '../lib/format';
 import { Icons } from './icons';
 import { StatusBadgeMini } from './ui';
 
+/** TMDB score once enough people have voted to mean something; otherwise nothing. */
+const MIN_VOTES = 20;
+export const ratingLabel = (c: Pick<Card, 'voteAverage' | 'voteCount'>) =>
+  c.voteAverage && (c.voteCount ?? 0) >= MIN_VOTES ? c.voteAverage.toFixed(1) : null;
+
 const toneClass = { service: 'text-ink-muted', digital: 'text-ink-digital', soon: 'text-ink-accent-subtle' } as const;
 
 /**
@@ -23,11 +28,12 @@ export function TitleCard({ card, fill = false, art = 'poster' }: { card: Card; 
   const poster = broken ? null : logoMode ? tmdbImage.textless(card.textlessPosterPath) : tmdbImage.poster(card.posterPath);
   const added = addedLabel(card.addedAt);
   const line = serviceLine(card);
+  const score = ratingLabel(card);
   return (
     <Link
       to={`/title/${card.id}`}
       className={`${fill ? 'w-full' : 'w-[7.5rem] md:w-44'} group block flex-shrink-0 outline-none`}
-      aria-label={[`${card.title}${card.year ? ` (${card.year})` : ''}`, line?.text, card.backOnNetflix ? 'back' : added].filter(Boolean).join(', ')}
+      aria-label={[`${card.title}${card.year ? ` (${card.year})` : ''}`, score && `rated ${score}`, line?.text, card.backOnNetflix ? 'back' : added].filter(Boolean).join(', ')}
     >
       <div className="relative transform-gpu overflow-hidden rounded-xl bg-surface shadow ring-1 ring-line transition duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:ring-line-muted group-focus-visible:ring-2 group-focus-visible:ring-indigo-400"
         style={{ paddingBottom: '150%' }}>
@@ -66,6 +72,14 @@ export function TitleCard({ card, fill = false, art = 'poster' }: { card: Card; 
         </div>
       </div>
       <div className={`mt-1.5 truncate type-caption-default ${line ? toneClass[line.tone] : 'text-transparent'}`}>{line?.text ?? '·'}</div>
+      <div className="flex h-[18px] items-center gap-1 type-caption-default" title={score ? `TMDB ${score} from ${card.voteCount!.toLocaleString()} votes` : undefined}>
+        {score && (
+          <>
+            <Icons.star className="h-3 w-3 flex-shrink-0 text-rating" />
+            <span className="type-caption-strong text-ink-strong">{score}</span>
+          </>
+        )}
+      </div>
     </Link>
   );
 }
@@ -74,7 +88,7 @@ export function TitleCardPlaceholder({ fill = false }: { fill?: boolean }) {
   return (
     <div className={`${fill ? 'w-full' : 'w-[7.5rem] md:w-44'} flex-shrink-0`}>
       <div className="relative animate-pulse rounded-xl bg-raised ring-1 ring-line" style={{ paddingBottom: '150%' }} />
-      <div className="mt-1.5 h-[18px]" />
+      <div className="mt-1.5 h-9" />
     </div>
   );
 }
