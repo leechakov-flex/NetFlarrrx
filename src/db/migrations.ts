@@ -364,4 +364,34 @@ CREATE TABLE jellyfin_items (
 CREATE INDEX jellyfin_items_tmdb ON jellyfin_items (media_type, tmdb_id);
 `,
   },
+  {
+    version: 14,
+    name: 'title_details',
+    sql: `
+-- Cast, where-to-watch and recommendations JSON move out of titles. Kept in titles, every
+-- Discover query had to step over several KB per title to reach the columns after them,
+-- which made Discover take 10+ seconds on a full catalog (and stall everything else).
+CREATE TABLE title_details (
+  title_id     INTEGER PRIMARY KEY REFERENCES titles (id) ON DELETE CASCADE,
+  credits_json TEXT,
+  watch_json   TEXT,
+  recs_json    TEXT
+);
+INSERT INTO title_details (title_id, credits_json, watch_json, recs_json)
+  SELECT id, credits_json, watch_json, recs_json FROM titles
+  WHERE credits_json IS NOT NULL OR watch_json IS NOT NULL OR recs_json IS NOT NULL;
+DROP VIEW title_kinds;
+ALTER TABLE titles DROP COLUMN credits_json;
+ALTER TABLE titles DROP COLUMN watch_json;
+ALTER TABLE titles DROP COLUMN recs_json;
+CREATE VIEW title_kinds AS
+SELECT t.*,
+  CASE t.watchmode_type
+    WHEN 'movie' THEN 'movie' WHEN 'tv_movie' THEN 'movie' WHEN 'short_film' THEN 'movie' WHEN 'tv_special' THEN 'movie'
+    WHEN 'tv_series' THEN 'series' WHEN 'tv_miniseries' THEN 'series'
+    ELSE NULL
+  END AS kind
+FROM titles t;
+`,
+  },
 ];

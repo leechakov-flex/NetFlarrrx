@@ -91,13 +91,18 @@ function saveDetails(db: Db, titleId: number, kind: 'movie' | 'tv', d: TmdbDetai
                tmdb_title = ?, original_language = ?, overview = ?, poster_path = ?, backdrop_path = ?, release_date = ?,
                vote_average = ?, vote_count = ?, popularity = ?, runtime = ?, seasons = ?,
                certification = ?, trailer_key = ?, trailer_name = ?, last_air_date = ?, netflix_original = ?,
-               logo_path = ?, textless_poster_path = ?, credits_json = ?, watch_json = ?, recs_json = ?, digital_date = ?, digital_note = ?
+               logo_path = ?, textless_poster_path = ?, digital_date = ?, digital_note = ?
              WHERE id = ?`,
     [at, d.tmdbTitle, d.originalLanguage, d.overview, d.posterPath, d.backdropPath, d.releaseDate,
       d.voteAverage, d.voteCount, d.popularity, d.runtime, d.seasons,
       d.certification, d.trailer?.key ?? null, d.trailer?.name ?? null, d.lastAirDate, d.netflixOriginal ? 1 : 0,
-      d.logoPath, d.textlessPosterPath, d.credits.length ? JSON.stringify(d.credits) : null, d.watch ? JSON.stringify(d.watch) : null,
-      d.recommendations.length ? JSON.stringify(d.recommendations) : null, d.digitalDate, d.digitalNote, titleId]);
+      d.logoPath, d.textlessPosterPath, d.digitalDate, d.digitalNote, titleId]);
+    // The big JSON (cast, stores, recommendations) lives apart from titles, so Discover's
+    // scans over titles don't have to step over it (it made every row several times slower).
+    run(db, `INSERT INTO title_details (title_id, credits_json, watch_json, recs_json) VALUES (?, ?, ?, ?)
+             ON CONFLICT (title_id) DO UPDATE SET credits_json = excluded.credits_json, watch_json = excluded.watch_json, recs_json = excluded.recs_json`,
+    [titleId, d.credits.length ? JSON.stringify(d.credits) : null, d.watch ? JSON.stringify(d.watch) : null,
+      d.recommendations.length ? JSON.stringify(d.recommendations) : null]);
 
     run(db, 'DELETE FROM title_genres WHERE title_id = ?', [titleId]);
     const g = db.prepare('INSERT INTO genres (id, name) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name');

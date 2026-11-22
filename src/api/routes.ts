@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import type { App } from '../app.js';
 import type { MiddlewareHandler } from 'hono';
-import { browse, companies, personPage, findTheme, genres, home, meta, themes, titleDetail, top } from '../catalog/queries.js';
+import { browse, companies, personPage, findTheme, genres, meta, themes, titleDetail, top } from '../catalog/queries.js';
 import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
@@ -69,9 +69,9 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
       })(),
     });
   });
-  api.get('/home', (c) => {
+  api.get('/home', async (c) => {
     const only = (c.req.query('services') ?? '').split(',').filter((k) => SERVICE_KEYS.has(k)) as ServiceKey[];
-    return c.json(home(db, cfg, new Date(), only, { studios: keyList(c.req.query('studios') ?? ''), networks: keyList(c.req.query('networks') ?? '') }));
+    return c.json(await app.homes.get(only, { studios: keyList(c.req.query('studios') ?? ''), networks: keyList(c.req.query('networks') ?? '') }));
   });
 
   api.get('/titles', (c) => {

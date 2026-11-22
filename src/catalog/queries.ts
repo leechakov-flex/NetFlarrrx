@@ -321,8 +321,9 @@ export function titleDetail(db: Db, cfg: Config, id: number, now = new Date()): 
   }>(db, `
     SELECT ${CARD_COLUMNS}, tk.overview, tk.backdrop_path, tk.release_date, tk.runtime, tk.seasons, tk.certification,
            tk.original_language, tk.trailer_key, tk.trailer_name, a.first_seen_at, tk.tmdb_id, tk.tmdb_type, sm.seasons_json,
-           tk.credits_json, tk.watch_json, tk.recs_json, tk.last_air_date, li.have_season, li.monitored_json
+           td.credits_json, td.watch_json, td.recs_json, tk.last_air_date, li.have_season, li.monitored_json
     ${from.sql}
+    LEFT JOIN title_details td ON td.title_id = tk.id
     LEFT JOIN library_items li ON li.media_type = tk.tmdb_type AND li.tmdb_id = tk.tmdb_id
     WHERE tk.id = ?`, [...from.params, id]);
   if (!r || r.kind === null) return null;

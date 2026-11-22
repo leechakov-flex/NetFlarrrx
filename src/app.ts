@@ -16,6 +16,7 @@ import { Notifier, reconcileAlerts, type Problem } from './ops/alerts.js';
 import { refreshLibrary, libraryCount, type LibraryResult } from './recs/library.js';
 import { ArrClient } from './clients/arr.js';
 import { QbitClient } from './clients/qbittorrent.js';
+import { HomeService } from './catalog/homeService.js';
 import { JellyfinClient } from './clients/jellyfin.js';
 import { syncJellyfin, type JellyfinSync } from './library/jellyfin.js';
 import { downloadsSnapshot, lastDownloads, watchDownloads, type DownloadDeps } from './downloads/downloads.js';
@@ -52,6 +53,8 @@ export interface App {
   notifier: Notifier;
   health(now?: Date): Health;
   close(): void;
+  /** Discover, built off the main thread and cached (see homeService). */
+  homes: HomeService;
 }
 
 export interface Health {
@@ -85,8 +88,9 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   let running = false;
   const safely = (what: string, p: Promise<unknown>) => p.catch((err) => log.error(`${what} failed`, { error: String(err) }));
 
+  const homes = new HomeService(db, cfg);
   const app: App = {
-    cfg, db, startedAt, watchmode, tmdb, seerr,
+    cfg, db, startedAt, watchmode, tmdb, seerr, homes,
 
     async pipeline(trigger, opts = {}) {
       if (running) return { busy: true };
@@ -99,6 +103,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
         const mirror = await mirrorSeerrMedia(db, seerr);
         await safely('library', app.library());
         await safely('alerts', app.checkAlerts());
+        homes.invalidate(); void homes.warm();
         return { sync, services, enrich, mirror };
       } catch (err) {
         log.error('pipeline: unexpected error', { error: (err as Error).stack ?? String(err) });
@@ -108,10 +113,10 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
       }
     },
 
-    enrich: async () => { const r = await enrichTitles(db, cfg, tmdb); resolveUpcomingServices(db, cfg); return r; },
-    mirror: () => mirrorSeerrMedia(db, seerr),
+    enrich: async () => { const r = await enrichTitles(db, cfg, tmdb); resolveUpcomingServices(db, cfg); homes.invalidate(); return r; },
+    mirror: async () => { const r = await mirrorSeerrMedia(db, seerr); homes.invalidate(); return r; },
 
-    library: () => refreshLibrary(db, cfg, tmdb, { radarr, sonarr }),
+    library: async () => { const r = await refreshLibrary(db, cfg, tmdb, { radarr, sonarr }); homes.invalidate(); return r; },
 
     downloads: (now = new Date()) => downloadsSnapshot(dl, now),
     jellyfin,
@@ -215,7 +220,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
       return { ...base, ok: false, status: 'stale', reason: lastApplied ? 'no applied sync in 36 hours' : 'no sync has ever been applied' };
     },
 
-    close() { db.close(); },
+    close() { homes.close(); db.close(); },
   };
   return app;
 }
@@ -223,6 +228,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
 /** On boot: refresh the Seerr mirror, and run the pipeline if no sync ran in the last day. */
 export async function startupTasks(app: App) {
   await app.mirror().catch(() => undefined);
+  void app.homes.warm();   // so the first look at Discover after a restart doesn't wait
   const recent = get<{ id: number }>(app.db,
     `SELECT id FROM sync_runs WHERE status IN ('complete', 'partial', 'held') AND started_at > ? LIMIT 1`,
     [new Date(Date.now() - 24 * 3600_000).toISOString()]);
