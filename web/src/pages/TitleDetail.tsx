@@ -171,7 +171,7 @@ function Person({ p }: { p: Detail['cast'][number] }) {
   return (
     <Link to={to} className="group w-[5.75rem] flex-shrink-0 text-center outline-none">
       <div className="mx-auto flex h-[5.5rem] w-[5.5rem] items-center justify-center overflow-hidden rounded-full bg-raised ring-1 ring-line group-hover:ring-line-strong group-focus-visible:ring-2 group-focus-visible:ring-indigo-400">
-        {photo ? <img src={photo} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover transition group-hover:scale-105" />
+        {photo ? <img src={photo} alt="" loading="lazy" onError={() => setBroken(true)} className="h-full w-full object-cover transition motion-safe:group-hover:scale-105" />
           : <span className="type-heading-section text-ink-secondary">{initials}</span>}
       </div>
       <div className="mt-2 type-caption-strong text-ink-primary" style={{ WebkitLineClamp: 2, display: '-webkit-box', overflow: 'hidden', WebkitBoxOrient: 'vertical' }}>{p.name}</div>

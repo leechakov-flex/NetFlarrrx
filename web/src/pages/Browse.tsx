@@ -4,7 +4,7 @@ import type { BrowseQuery, Kind, SortKey } from '../lib/api';
 import { useBrowse, useGenres, useMeta, useThemes } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
-import { Empty, PageTitle, Spinner, Tag } from '../components/ui';
+import { Empty, PageTitle, Spinner, Tag, LoadError } from '../components/ui';
 import { SearchInput } from '../components/Layout';
 import type { How, ServiceKey } from '../lib/api';
 import { SERVICE_NAMES } from '../lib/format';
@@ -122,7 +122,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
       )}
 
       {res.isError ? (
-        <Empty>Couldn’t load titles. Try again in a moment.</Empty>
+        <LoadError what="titles" onRetry={() => void res.refetch()} />
       ) : res.isPending ? (
         <ul className="cards-vertical">{Array.from({ length: 12 }, (_, i) => <li key={i}><TitleCardPlaceholder fill /></li>)}</ul>
       ) : items.length === 0 ? (

@@ -5,6 +5,8 @@ const defaultTheme = require('tailwindcss/defaultTheme');
 const v = (name) => `var(--${name})`;
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // Hover styles only on devices with a real pointer, so a tap on the iPhone doesn't latch them.
+  future: { hoverOnlyWhenSupported: true },
   content: ['./web/index.html', './web/src/**/*.{ts,tsx}'],
   theme: {
     extend: {

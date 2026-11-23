@@ -5,7 +5,7 @@ const FilmIcon = Icons.film, StarIcon = Icons.star;
 import type { Kind } from '../lib/api';
 import { useTop } from '../lib/api';
 import { runtime, tmdbImage } from '../lib/format';
-import { Empty, PageTitle, Spinner, StatusBadgeMini } from '../components/ui';
+import { Empty, PageTitle, Spinner, StatusBadgeMini, LoadError } from '../components/ui';
 
 export function TopRated() {
   const [kind, setKind] = useState<Kind>('movie');
@@ -35,7 +35,7 @@ export function TopRated() {
       {top.isPending ? (
         <div className="flex justify-center py-16"><Spinner /></div>
       ) : top.isError ? (
-        <Empty>Couldn’t load the ranking.</Empty>
+        <LoadError what="the ranking" onRetry={() => void top.refetch()} />
       ) : top.data.items.length === 0 ? (
         <Empty>No titles have enough votes yet.</Empty>
       ) : (

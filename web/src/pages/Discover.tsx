@@ -4,7 +4,7 @@ import { useHome, useMeta, type CompanyPick, type ServiceKey } from '../lib/api'
 import { CompanyPickerSheet, useCompanyNames } from '../components/CompanyPicker';
 import { Icons } from '../components/icons';
 import { Slider, SliderPlaceholder } from '../components/Slider';
-import { Empty, Spinner } from '../components/ui';
+import { Empty, LoadError, Spinner } from '../components/ui';
 
 const chip = (on: boolean) =>
   `flex flex-shrink-0 items-center gap-1 rounded-full px-3 py-1.5 type-label-default transition ${on ? 'bg-inverse text-ink-inverse' : 'bg-app text-ink-secondary ring-1 ring-inset ring-line-strong hover:bg-raised'}`;
@@ -59,7 +59,7 @@ export function Discover() {
     if (c.networks?.length) p.networks = c.networks.join(',');
     setParams(p, { replace: true });
   };
-  if (home.isError) return <Empty>Couldn’t load titles. Is the sync running?</Empty>;
+  if (home.isError) return <LoadError what="Discover" onRetry={() => void home.refetch()} />;
   return (
     <>
       <FilterChips value={only} onChange={(v) => save(v, co)} co={co} onCo={(c) => save(only, c)} />

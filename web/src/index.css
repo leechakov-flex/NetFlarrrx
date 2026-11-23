@@ -9,6 +9,21 @@
 @layer base {
   html, body { @apply bg-app; }
   body { -webkit-tap-highlight-color: transparent; }
+
+  /* Keyboard focus and in-page jumps land clear of the sticky chrome: the status bar and
+     Discover's filter chips on phones (the tab bar at the bottom), the search bar and
+     chips on desktop. */
+  html { scroll-padding-top: calc(env(safe-area-inset-top) + 64px); scroll-padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
+  @media (min-width: 1024px) { html { scroll-padding-top: 128px; scroll-padding-bottom: 24px; } }
+
+  /* Reduce motion: nothing moves or scales. Color and opacity changes, the loading
+     spinner and the pulse placeholders stay; everything else changes instantly. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      scroll-behavior: auto !important;
+      transition-property: color, background-color, border-color, outline-color, opacity, box-shadow, fill, stroke !important;
+    }
+  }
 }
 
 @layer components {

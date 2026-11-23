@@ -102,6 +102,17 @@ export function PageTitle({ children }: { children: ReactNode }) {
   return <h1 className="mb-4 mt-4 truncate type-heading-page text-ink-primary">{children}</h1>;
 }
 
+/** A page that failed to load: what failed, what to check, and a way to try again. */
+export function LoadError({ what, onRetry }: { what: string; onRetry: () => void }) {
+  return (
+    <div className="mt-24 flex w-full flex-col items-center gap-4 text-center">
+      <p className="type-heading-group text-ink-secondary">Couldn’t load {what}</p>
+      <p className="max-w-sm type-body-default text-ink-tertiary">Check that MonkeyServer is on and reachable from this device, then try again.</p>
+      <Button onClick={onRetry}>Try again</Button>
+    </div>
+  );
+}
+
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="mt-24 w-full text-center text-xl text-gray-400">{children}</div>;
 }

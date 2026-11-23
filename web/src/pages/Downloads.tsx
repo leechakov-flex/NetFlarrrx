@@ -5,7 +5,7 @@ import { ApiError, useDownloads, type DownloadItem, type RequestItem } from '../
 import { ago, bytes, duration, speed } from '../lib/format';
 import { useGuardedPost } from '../lib/guardedPost';
 import { useToast } from '../components/Feedback';
-import { Empty, PageTitle, Spinner } from '../components/ui';
+import { Empty, PageTitle, Spinner, LoadError } from '../components/ui';
 import { Icons } from '../components/icons';
 import { ReleasesSheet } from '../components/ReleasesSheet';
 
@@ -17,7 +17,7 @@ import { ReleasesSheet } from '../components/ReleasesSheet';
 export function Downloads() {
   const q = useDownloads();
   if (q.isPending) return <div className="flex justify-center py-24"><Spinner /></div>;
-  if (q.isError) return <Empty>Couldn’t load downloads.</Empty>;
+  if (q.isError) return <LoadError what="downloads" onRetry={() => void q.refetch()} />;
   const d = q.data;
   const downloading = d.downloading.length;
   return (
@@ -74,10 +74,10 @@ const SectionTitle = ({ children, count }: { children: React.ReactNode; count?: 
   <h2 className="flex h-8 items-baseline gap-2 pb-1 type-heading-section text-ink-secondary">{children}{count ? <span className="type-caption-default text-ink-muted">{count}</span> : null}</h2>
 );
 
-function Poster({ url, titleId }: { url: string | null; titleId: number | null }) {
+function Poster({ url, titleId, title }: { url: string | null; titleId: number | null; title: string }) {
   const img = url ? <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" /> : <Icons.film className="h-6 w-6 text-ink-muted" />;
   const cls = 'flex h-[66px] w-11 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-raised ring-1 ring-line';
-  return titleId ? <Link to={`/title/${titleId}`} className={cls}>{img}</Link> : <div className={cls}>{img}</div>;
+  return titleId ? <Link to={`/title/${titleId}`} className={cls} aria-label={`Open ${title}`}>{img}</Link> : <div className={cls}>{img}</div>;
 }
 
 const SOURCE = { radarr: 'Radarr', sonarr: 'Sonarr' } as const;
@@ -103,7 +103,7 @@ function DownloadRow({ it, attention }: { it: DownloadItem; attention?: boolean 
   const bar = it.state !== 'queued' || it.progress > 0;
   return (
     <div className="flex items-center gap-3 py-3">
-      <Poster url={it.posterUrl} titleId={it.titleId} />
+      <Poster url={it.posterUrl} titleId={it.titleId} title={it.title} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center gap-2">
           <div className="min-w-0 truncate type-label-strong text-ink-primary" title={it.name}>{name}</div>
@@ -178,7 +178,7 @@ function RequestRow({ r }: { r: RequestItem }) {
 
   return (
     <div className="flex items-center gap-3 py-3">
-      <Poster url={r.posterUrl} titleId={r.titleId} />
+      <Poster url={r.posterUrl} titleId={r.titleId} title={r.title} />
       {/* Figma request row: pill, title 8px under it, then the status line 4px below. */}
       <div className="min-w-0 flex-1">
         <span className={`inline-block rounded-[10px] px-2 py-0.5 type-badge-tag ${badgeCls}`}>{badgeLabel}</span>

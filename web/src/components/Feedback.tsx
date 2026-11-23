@@ -1,8 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icons } from './icons';
 const CheckCircleIcon = Icons.checkCircle, ExclamationTriangleIcon = Icons.warning, LockClosedIcon = Icons.lock, XCircleIcon = Icons.xmarkCircle, XMarkIcon = Icons.xmark;
 import { Button } from './ui';
+import { useModal } from '../lib/useModal';
 
 // ---------- Toasts (Seerr's top-right toasts) ----------
 
@@ -31,7 +32,8 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   const push = useCallback((kind: ToastKind, text: string) => {
     const id = next.current++;
     setToasts((t) => [...t.slice(-2), { id, kind, text }]);
-    setTimeout(() => dismiss(id), kind === 'error' ? 8000 : 5000);
+    // Errors stay until dismissed (WCAG 2.2.1); the rest fade after 5 seconds.
+    if (kind !== 'error') setTimeout(() => dismiss(id), 5000);
   }, [dismiss]);
 
   const [prompt, setPrompt] = useState<{ wrong: boolean; resolve: (v: string | null) => void } | null>(null);
@@ -48,7 +50,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           />
         )}
         {createPortal(
-          <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 p-4 sm:items-end" aria-live="polite">
+          <div data-toasts className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 p-4 sm:items-end" aria-live="polite">
             {toasts.map((t) => (
               <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'}
                 className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg bg-gray-800 px-4 py-3 shadow-lg ring-1 ring-gray-700">
@@ -71,15 +73,11 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
 function PasscodeModal({ wrong, onDone }: { wrong: boolean; onDone: (v: string | null) => void }) {
   const [value, setValue] = useState('');
   const input = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    input.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onDone(null); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onDone]);
+  const ref = useRef<HTMLDivElement>(null);
+  useModal(ref, true, () => onDone(null), input);
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/70 p-4" onClick={() => onDone(null)}>
+    <div ref={ref} className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/70 p-4" onClick={() => onDone(null)}>
       <form
         role="dialog" aria-modal="true" aria-labelledby="passcode-title"
         className="w-full max-w-md rounded-xl bg-gray-800 p-6 shadow-xl ring-1 ring-gray-700"

@@ -79,7 +79,7 @@ export async function requestReleases(d: DownloadDeps, requestId: number, opts: 
         throw Object.assign(new Error(`${r.tmdbType === 'movie' ? 'Radarr' : 'Sonarr'} doesn’t have this title, so there’s nothing to search. Retry the request to send it again.`), { status: 409 });
       }
       const releases = await t.client.releases(t.id, t.season);
-      const check = summarize(releases, t.arr, new Date());
+      const check = summarize(releases, t.arr, now);
       saveCheck(d.db, r, check);
       const sorted = [...releases].sort((a, b) => Number(a.rejected) - Number(b.rejected) || (b.customFormatScore ?? 0) - (a.customFormatScore ?? 0) || (b.seeders ?? 0) - (a.seeders ?? 0));
       const value: ReleasesResponse = { requestId, title: r.title, arr: t.arr, season: t.season ?? null, check, releases: sorted.slice(0, 100) };

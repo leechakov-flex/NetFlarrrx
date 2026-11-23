@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useLibrary, type LibraryItem } from '../lib/api';
 import { relativeTime } from '../lib/format';
-import { Empty, PageTitle, Spinner } from '../components/ui';
+import { Empty, PageTitle, Spinner, LoadError } from '../components/ui';
 import { Icons } from '../components/icons';
 import { BackButton } from '../components/Layout';
 
@@ -44,7 +44,7 @@ export function Library() {
   }, [res.hasNextPage, res.isFetchingNextPage, res.fetchNextPage]);
 
   if (res.isPending) return <div className="flex justify-center py-24"><Spinner /></div>;
-  if (res.isError || !first) return <Empty>Couldn’t load your library.</Empty>;
+  if (res.isError || !first) return <LoadError what="your library" onRetry={() => void res.refetch()} />;
   if (!first.configured) {
     return (
       <div className="max-w-xl">

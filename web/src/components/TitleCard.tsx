@@ -35,7 +35,7 @@ export function TitleCard({ card, fill = false, art = 'poster' }: { card: Card; 
       className={`${fill ? 'w-full' : 'w-[7.5rem] md:w-44'} group block flex-shrink-0 outline-none`}
       aria-label={[`${card.title}${card.year ? ` (${card.year})` : ''}`, score && `rated ${score}`, line?.text, card.backOnNetflix ? 'back' : added].filter(Boolean).join(', ')}
     >
-      <div className="relative transform-gpu overflow-hidden rounded-xl bg-surface shadow ring-1 ring-line transition duration-300 group-hover:scale-105 group-hover:shadow-lg group-hover:ring-line-muted group-focus-visible:ring-2 group-focus-visible:ring-indigo-400"
+      <div className="relative transform-gpu overflow-hidden rounded-xl bg-surface shadow ring-1 ring-line transition duration-300 motion-safe:group-hover:scale-105 group-hover:shadow-lg group-hover:ring-line-muted group-focus-visible:ring-2 group-focus-visible:ring-indigo-400"
         style={{ paddingBottom: '150%' }}>
         <div className="absolute inset-0 h-full w-full overflow-hidden">
           {poster ? (
