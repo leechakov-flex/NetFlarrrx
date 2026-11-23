@@ -96,6 +96,10 @@ const schema = z.object({
   JELLYFIN_URL: z.preprocess(clean, z.url().default('http://jellyfin:8096')),
   JELLYFIN_API_KEY: optStr(),
   JELLYFIN_CRON: z.preprocess(clean, z.string().default('*/15 * * * *')),
+  // MDBList (mdblist.com): recommendation lists you pick on the Lists page become Discover rows.
+  MDBLIST_API_KEY: optStr(),
+  MDBLIST_BASE: z.preprocess(clean, z.url().default('https://api.mdblist.com')),
+  MDBLIST_CRON: z.preprocess(clean, z.string().default('37 5 * * *')),
 
   WATCHMODE_MIN_INTERVAL_MS: num(600),
   TMDB_CONCURRENCY: num(8),

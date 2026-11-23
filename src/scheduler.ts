@@ -23,6 +23,9 @@ export function startScheduler(app: App) {
     new Cron(cfg.JELLYFIN_CRON, { timezone: cfg.TZ, protect: true, name: 'jellyfin' }, async () => {
       await app.syncJellyfin().catch(() => undefined);
     }),
+    new Cron(cfg.MDBLIST_CRON, { timezone: cfg.TZ, protect: true, name: 'mdblist' }, async () => {
+      await app.refreshLists().catch(() => undefined);
+    }),
     new Cron(cfg.NOT_FOUND_RETRY_CRON, { timezone: cfg.TZ, protect: true, name: 'not-found-retry' }, async () => {
       await app.retryNotFound().catch(() => undefined);
     }),

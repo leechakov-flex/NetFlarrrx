@@ -9,6 +9,7 @@ import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/
 import { forgetCheck } from '../downloads/releases.js';
 import { inJellyfin, lastJellyfin, libraryPage } from '../library/jellyfin.js';
 import { RemoveError } from '../library/remove.js';
+import { addList, pickedLists, removeList } from '../recs/mdblist.js';
 import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
 import type { How, ServiceKey } from './types.js';
@@ -31,6 +32,7 @@ const BrowseParams = z.object({
   services: z.string().transform((v) => v.split(',').filter((k) => SERVICE_KEYS.has(k)) as ServiceKey[]).optional(),
   how: z.string().transform((v) => v.split(',').filter((k) => k === 'sub' || k === 'digital' || k === 'soon') as How[]).optional(),
   because: z.string().regex(/^(movie|tv):\d{1,9}$/).optional(),
+  list: z.coerce.number().int().min(1).optional(),
   page: z.coerce.number().int().min(1).max(10_000).optional(),
   q: z.string().max(100).optional(),
   hide: z.enum(['have']).optional(),
@@ -65,6 +67,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
         const j = lastJellyfin(db);
         return { configured: Boolean(cfg.JELLYFIN_API_KEY), movies: j?.movies ?? 0, series: j?.series ?? 0 };
       })(),
+      lists: { configured: Boolean(cfg.MDBLIST_API_KEY), picked: pickedLists(db).length },
       downloads: (() => {
         const d = lastDownloads(db);
         return { configured: Boolean(cfg.QBIT_PASSWORD), attention: d?.attention.length ?? 0, downloading: d?.downloading ?? 0 };
@@ -134,6 +137,44 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
       log.warn('library: remove failed', { id, error: (err as Error).message });
       return c.json({ error: 'Couldn’t reach Radarr, Sonarr or Jellyfin, so nothing was deleted. Try again in a moment.' }, 502);
     }
+  });
+
+  // MDBList recommendation lists. Search and the picked lists are open; adding and
+  // removing need the passcode, like every other change.
+  api.get('/lists', (c) => c.json({ configured: Boolean(cfg.MDBLIST_API_KEY), picked: pickedLists(db) }));
+  api.get('/lists/search', async (c) => {
+    if (!app.mdblist) return c.json({ error: 'Add MDBLIST_API_KEY to monkeysee.env first.' }, 409);
+    const q = (c.req.query('q') ?? '').trim().slice(0, 80);
+    try {
+      const found = q ? await app.mdblist.search(q) : await app.mdblist.top();
+      const picked = new Set(pickedLists(db).map((p) => p.id));
+      return c.json({ results: found.slice(0, 40).map((l) => ({ id: l.id, name: l.name, userName: l.userName, items: l.items, likes: l.likes, description: l.description, picked: picked.has(l.id) })) });
+    } catch (err) {
+      log.warn('mdblist: search failed', { error: (err as Error).message });
+      return c.json({ error: (err as { status?: number }).status === 401 || (err as { status?: number }).status === 403 ? 'MDBList didn’t accept the API key. Check MDBLIST_API_KEY.' : 'Couldn’t reach MDBList. Try again in a moment.' }, 502);
+    }
+  });
+  api.post('/lists', requirePasscode, async (c) => {
+    const body = z.object({ id: z.number().int().min(1), name: z.string().max(200).optional(), userName: z.string().max(100).nullish(), items: z.number().int().nullish(), likes: z.number().int().nullish() })
+      .safeParse(await c.req.json().catch(() => null));
+    if (!body.success) return c.json({ error: 'bad request' }, 400);
+    if (!app.mdblist) return c.json({ error: 'Add MDBLIST_API_KEY to monkeysee.env first.' }, 409);
+    try {
+      const l = await addList(db, app.mdblist, body.data);
+      app.homes.invalidate(); void app.homes.warm();
+      return c.json({ ok: true, list: l });
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      if (status === 404) return c.json({ error: (err as Error).message }, 404);
+      return c.json({ error: 'Couldn’t reach MDBList. Try again in a moment.' }, 502);
+    }
+  });
+  api.post('/lists/:id/remove', requirePasscode, (c) => {
+    const id = Number(c.req.param('id'));
+    if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+    removeList(db, id);
+    app.homes.invalidate(); void app.homes.warm();
+    return c.json({ ok: true });
   });
 
   api.get('/downloads', async (c) => c.json(await app.downloads()));

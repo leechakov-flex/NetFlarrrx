@@ -18,6 +18,8 @@ import { ArrClient } from './clients/arr.js';
 import { QbitClient } from './clients/qbittorrent.js';
 import { HomeService } from './catalog/homeService.js';
 import { JellyfinClient } from './clients/jellyfin.js';
+import { MdbListClient } from './clients/mdblist.js';
+import { refreshLists } from './recs/mdblist.js';
 import { syncJellyfin, type JellyfinSync } from './library/jellyfin.js';
 import { resetDownloadsCache } from './downloads/downloads.js';
 import { removeFromLibrary, type RemoveResult } from './library/remove.js';
@@ -26,7 +28,7 @@ import { grabRelease, requestReleases, retryNotFound, type RetryResult } from '.
 import type { ReleasesResponse } from './api/types.js';
 import type { DownloadsResponse } from './api/types.js';
 
-export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn; qbit?: FetchFn; jellyfin?: FetchFn }
+export interface AppFetchers { watchmode?: FetchFn; tmdb?: FetchFn; seerr?: FetchFn; alerts?: FetchFn; radarr?: FetchFn; sonarr?: FetchFn; qbit?: FetchFn; jellyfin?: FetchFn; mdblist?: FetchFn }
 
 export interface App {
   cfg: Config;
@@ -57,6 +59,9 @@ export interface App {
   syncJellyfin(): Promise<JellyfinSync | null>;
   /** Delete a library title's files, stop Radarr/Sonarr watching it, and forget it in Seerr. */
   removeFromLibrary(jellyfinId: string): Promise<RemoveResult>;
+  /** MDBList, when MDBLIST_API_KEY is set: recommendation lists as Discover rows. */
+  mdblist?: MdbListClient;
+  refreshLists(): Promise<{ lists: number; ok: number } | null>;
   /** Work out what needs attention and alert on changes (ntfy or Discord). */
   checkAlerts(now?: Date): Promise<{ open: string[]; sent: string[] }>;
   problems(now?: Date): Problem[];
@@ -92,6 +97,7 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
   const sonarr = cfg.SONARR_API_KEY ? new ArrClient(cfg.SONARR_URL, cfg.SONARR_API_KEY, fetchers.sonarr, 'sonarr') : undefined;
   const qbit = cfg.QBIT_PASSWORD ? new QbitClient(cfg.QBIT_URL, cfg.QBIT_USERNAME ?? 'admin', cfg.QBIT_PASSWORD, fetchers.qbit) : undefined;
   const dl: DownloadDeps = { db, cfg, qbit, radarr, sonarr, seerr, tmdb };
+  const mdblist = cfg.MDBLIST_API_KEY ? new MdbListClient(cfg.MDBLIST_API_KEY, fetchers.mdblist, cfg.MDBLIST_BASE) : undefined;
   const jellyfin = cfg.JELLYFIN_API_KEY ? new JellyfinClient(cfg.JELLYFIN_URL, cfg.JELLYFIN_API_KEY, fetchers.jellyfin) : undefined;
   const startedAt = new Date();
   const notifier = new Notifier(cfg, fetchers.alerts);
@@ -134,6 +140,13 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     retryNotFound: (now = new Date()) => retryNotFound(dl, now),
     jellyfin,
     syncJellyfin: async () => (jellyfin ? syncJellyfin(db, jellyfin) : null),
+    mdblist,
+    async refreshLists() {
+      if (!mdblist) return null;
+      const r = await refreshLists(db, mdblist);
+      homes.invalidate(); void homes.warm();
+      return r;
+    },
     async removeFromLibrary(jellyfinId) {
       const r = await removeFromLibrary({ db, radarr, sonarr, jellyfin, seerr }, jellyfinId);
       resetDownloadsCache(); homes.invalidate();

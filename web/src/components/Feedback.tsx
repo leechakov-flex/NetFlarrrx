@@ -50,7 +50,9 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
           />
         )}
         {createPortal(
-          <div data-toasts className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 p-4 sm:items-end" aria-live="polite">
+          // Toasts sit at the bottom, above the phone tab bar, so they never cover the back
+          // button or the search bar. Newest nearest the edge.
+          <div data-toasts className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+92px)] z-[60] flex flex-col items-center gap-2 px-4 lg:bottom-6 lg:items-end lg:px-8" aria-live="polite">
             {toasts.map((t) => (
               <div key={t.id} role={t.kind === 'error' ? 'alert' : 'status'}
                 className="pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg bg-gray-800 px-4 py-3 shadow-lg ring-1 ring-gray-700">

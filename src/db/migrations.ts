@@ -436,4 +436,33 @@ FROM (
 ) r;
 `,
   },
+  {
+    version: 17,
+    name: 'mdblist_lists',
+    sql: `
+-- Recommendation lists you picked from MDBList. Each becomes a Discover row of its
+-- titles that are on your services. Items refresh daily.
+CREATE TABLE mdblist_lists (
+  list_id    INTEGER PRIMARY KEY,
+  name       TEXT NOT NULL,
+  user_name  TEXT,
+  slug       TEXT,
+  mediatype  TEXT,
+  items      INTEGER,             -- what MDBList says the list holds
+  likes      INTEGER,
+  position   INTEGER NOT NULL,    -- order on Discover
+  added_at   TEXT NOT NULL,
+  synced_at  TEXT,
+  error      TEXT
+);
+CREATE TABLE mdblist_items (
+  list_id   INTEGER NOT NULL REFERENCES mdblist_lists(list_id) ON DELETE CASCADE,
+  tmdb_type TEXT NOT NULL CHECK (tmdb_type IN ('movie', 'tv')),
+  tmdb_id   INTEGER NOT NULL,
+  rank      INTEGER NOT NULL,
+  PRIMARY KEY (list_id, tmdb_type, tmdb_id)
+);
+CREATE INDEX mdblist_items_title ON mdblist_items (tmdb_type, tmdb_id);
+`,
+  },
 ];

@@ -5,7 +5,8 @@ import type {
 } from '../../../src/api/types';
 
 export type { DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, ReleasesResponse, ReleaseItem, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
-export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey } from '../../../src/api/types';
+export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey, ListOption, PickedListInfo, ListsResponse, ListSearchResponse } from '../../../src/api/types';
+import type { ListsResponse as ListsRes, ListSearchResponse as ListSearchRes } from '../../../src/api/types';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public code?: string) { super(message); }
@@ -62,6 +63,7 @@ export function browseParams(q: BrowseQuery, page?: number): string {
   if (q.hideHave) p.set('hide', 'have');
   if (q.theme) p.set('theme', q.theme);
   if (q.because) p.set('because', q.because);
+  if (q.list) p.set('list', String(q.list));
   if (q.services?.length) p.set('services', q.services.join(','));
   if (q.how?.length) p.set('how', q.how.join(','));
   if (q.studios?.length) p.set('studios', q.studios.join(','));
@@ -128,6 +130,13 @@ export const useDownloads = () => useQuery({
 });
 
 export const useCompanies = () => useQuery({ queryKey: ['companies'], queryFn: () => getJson<CompaniesResponse>('/api/companies'), staleTime: 10 * 60_000 });
+
+/** MDBList lists you picked, and lists to pick from (top lists when the search is empty). */
+export const useLists = () => useQuery({ queryKey: ['lists'], queryFn: () => getJson<ListsRes>('/api/lists') });
+export const useListSearch = (q: string, enabled: boolean) => useQuery({
+  queryKey: ['list-search', q], enabled, placeholderData: (prev) => prev, staleTime: 10 * 60_000,
+  queryFn: () => getJson<ListSearchRes>(`/api/lists/search${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+});
 
 /** Library page (Jellyfin), a page at a time. */
 export function useLibrary(q: { type?: 'movie' | 'tv'; q?: string; sort?: 'added' | 'title' | 'year' }) {

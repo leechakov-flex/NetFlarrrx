@@ -283,3 +283,29 @@ export class FakeJellyfin {
     return json(404, {});
   };
 }
+
+/** MDBList: list search, top lists, one list's info and items ({ movies, shows }). */
+export class FakeMdbList {
+  key = 'mdb-key';
+  lists: { id: number; name: string; user_name: string; slug: string; items: number; likes: number; mediatype: string; description?: string }[] = [];
+  listItems = new Map<number, { id: number; rank: number; title: string; mediatype: 'movie' | 'show' }[]>();
+  calls: string[] = [];
+  fetch: FetchFn = async (input) => {
+    const url = new URL(String(input));
+    this.calls.push(url.pathname);
+    if (url.searchParams.get('apikey') !== this.key) return json(403, { error: 'Invalid API key!' });
+    if (url.pathname === '/lists/top') return json(200, [...this.lists].sort((a, b) => b.likes - a.likes));
+    if (url.pathname === '/lists/search') {
+      const q = (url.searchParams.get('query') ?? '').toLowerCase();
+      return json(200, this.lists.filter((l) => l.name.toLowerCase().includes(q)));
+    }
+    const items = url.pathname.match(/^\/lists\/(\d+)\/items$/);
+    if (items) {
+      const all = this.listItems.get(Number(items[1])) ?? [];
+      return json(200, { movies: all.filter((i) => i.mediatype === 'movie'), shows: all.filter((i) => i.mediatype === 'show') });
+    }
+    const one = url.pathname.match(/^\/lists\/(\d+)$/);
+    if (one) return json(200, this.lists.filter((l) => l.id === Number(one[1])));
+    return json(404, {});
+  };
+}

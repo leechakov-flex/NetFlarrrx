@@ -3,7 +3,7 @@
 // FAKE_VARIED=1 makes TMDB answers differ per title (language, ratings, runtime),
 // keeps Watchmode's real titles, and drops image paths so nothing loads remotely.
 import { createServer } from 'node:http';
-import { FakeArrQueue, FakeJellyfin, FakeQbit, FakeSeerr, FakeTmdb, FakeWatchmode } from './fakes.js';
+import { FakeArrQueue, FakeJellyfin, FakeMdbList, FakeQbit, FakeSeerr, FakeTmdb, FakeWatchmode } from './fakes.js';
 import type { FetchFn } from '../clients/http.js';
 
 function serve(port: number, fetchFn: FetchFn) {
@@ -162,4 +162,16 @@ jellyfin.items = new FakeWatchmode().catalog.filter((t) => t.tmdb_id).filter((_,
   DateCreated: new Date(Date.now() - i * 7 * 3600_000).toISOString(), ProviderIds: { Tmdb: String(t.tmdb_id) }, ChildCount: t.tmdb_type === 'tv' ? 1 + (i % 5) : null,
 }));
 serve(base + 7, jellyfin.fetch);
+// MDBList (key mdb-key): two lists of real catalog titles.
+const mdb = new FakeMdbList();
+const cat = new FakeWatchmode().catalog.filter((t) => t.tmdb_id);
+mdb.lists = [
+  { id: 101, name: 'A24 and friends', user_name: 'curator', slug: 'a24', items: 140, likes: 1820, mediatype: 'movie' },
+  { id: 102, name: 'Best series of the 2020s', user_name: 'tvfan', slug: 'tv-2020s', items: 75, likes: 960, mediatype: 'show' },
+  { id: 103, name: 'Oscar Best Picture winners', user_name: 'awards', slug: 'oscars', items: 97, likes: 2400, mediatype: 'movie' },
+];
+mdb.listItems.set(101, cat.filter((_, i) => i % 11 === 0).slice(0, 40).map((t, i) => ({ id: t.tmdb_id!, rank: i + 1, title: t.title, mediatype: t.tmdb_type === 'tv' ? 'show' as const : 'movie' as const })));
+mdb.listItems.set(102, cat.filter((t) => t.tmdb_type === 'tv').filter((_, i) => i % 5 === 0).slice(0, 30).map((t, i) => ({ id: t.tmdb_id!, rank: i + 1, title: t.title, mediatype: 'show' as const })));
+mdb.listItems.set(103, cat.filter((t) => t.tmdb_type === 'movie').filter((_, i) => i % 13 === 0).slice(0, 30).map((t, i) => ({ id: t.tmdb_id!, rank: i + 1, title: t.title, mediatype: 'movie' as const })));
+serve(base + 8, mdb.fetch);
 console.log(`fakes on ${base + 1} (watchmode) ${base + 2} (tmdb) ${base + 3} (seerr) ${base + 4} (qbit) ${base + 5}/${base + 6} (radarr/sonarr queue) ${base + 7} (jellyfin)${varied ? ' [varied]' : ''}`);

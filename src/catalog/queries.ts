@@ -6,6 +6,7 @@ import { NEW_SEASON_CANDIDATES, newSeason, newSeasonSince } from './newSeasons.j
 import { companyCounts, companyWhere } from './companies.js';
 import type { PersonCreditItem, TmdbPerson } from '../clients/tmdb.js';
 import { HOME_REPEAT_DEFAULT, MIN_THINNED_ROW, loadThemes, themeWhere, type ThemeRule } from './themes.js';
+import { listName, pickedLists } from '../recs/mdblist.js';
 import { becauseSeeds, libraryReport, libraryCount, MATCH_SCORE, NOT_MINE, RECOMMENDED, REC_FLOOR, REC_RECENT } from '../recs/library.js';
 import type {
   BrowseQuery, BrowseResponse, Genre, HomeResponse, HomeRow, Kind, MetaResponse, SeerrState, ServiceKey, ThemeSummary, TitleCard, TitleDetail, TopResponse, PersonResponse,
@@ -126,6 +127,10 @@ function filters(cfg: Config, q: BrowseQuery, now: Date) {
       'tk.vote_average >= ?', 'tk.vote_count >= ?', REC_RECENT);
     params.push(seed.type, seed.id, REC_FLOOR.minRating, REC_FLOOR.minVotes);
   }
+  if (q.list) {
+    where.push('EXISTS (SELECT 1 FROM mdblist_items ml WHERE ml.list_id = ? AND ml.tmdb_type = tk.tmdb_type AND ml.tmdb_id = tk.tmdb_id)');
+    params.push(q.list);
+  }
   if (q.added) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - q.added * DAY).toISOString()); }
   if (q.minRating) { where.push('tk.vote_average >= ?'); params.push(q.minRating); }
   if (q.maxRating !== undefined && q.maxRating < 10) { where.push('tk.vote_average <= ?'); params.push(q.maxRating); }
@@ -168,6 +173,8 @@ const becauseOrder = (because: string) => {
 };
 function orderBy(q: BrowseQuery) {
   if (q.because && (!q.sort || q.sort === 'match')) return becauseOrder(q.because);
+  // A list keeps its curator's order.
+  if (q.list && (!q.sort || q.sort === 'match')) return { sql: '(SELECT min(rank) FROM mdblist_items mo WHERE mo.list_id = ? AND mo.tmdb_type = tk.tmdb_type AND mo.tmdb_id = tk.tmdb_id), tk.rank_score DESC', params: [q.list] as (string | number)[] };
   return { sql: ORDER[q.sort ?? 'added'], params: [] as (string | number)[] };
 }
 const seedTitle = (db: Db, because: string) => {
@@ -186,7 +193,8 @@ export function browse(db: Db, cfg: Config, q: BrowseQuery, now = new Date()): B
     `SELECT ${CARD_COLUMNS} ${f.from} WHERE ${f.sql} ORDER BY ${o.sql}, tk.id LIMIT ? OFFSET ?`,
     [...f.params, ...o.params, PAGE_SIZE, (page - 1) * PAGE_SIZE]);
   const meta = theme ? { slug: theme.slug, title: theme.title, sort: theme.sort }
-    : q.because ? { slug: 'because', title: `Because you have ${seedTitle(db, q.because) ?? 'this'}`, sort: 'match' as const } : null;
+    : q.because ? { slug: 'because', title: `Because you have ${seedTitle(db, q.because) ?? 'this'}`, sort: 'match' as const }
+    : q.list ? { slug: `list-${q.list}`, title: listName(db, q.list) ?? 'List', sort: 'match' as const } : null;
   return { total, page, pageSize: PAGE_SIZE, items: rows.map(cardFor(cfg)), ...(meta ? { theme: meta } : {}) };
 }
 
@@ -213,6 +221,8 @@ function row(db: Db, cfg: Config, now: Date, slug: string, title: string, q: Bro
 }
 
 export interface CompanyPick { studios?: string[]; networks?: string[] }
+/** A list row needs at least this many titles on your services to show. */
+const MIN_LIST_ROW = 3;
 const linkSuffix = (only: ServiceKey[], co: CompanyPick = {}) => `${only.length ? `&services=${only.join(',')}` : ''}${co.studios?.length ? `&studios=${co.studios.join(',')}` : ''}${co.networks?.length ? `&networks=${co.networks.join(',')}` : ''}`;
 
 export function trackingSince(db: Db, cfg: Config): string | null {
@@ -268,6 +278,14 @@ function buildHome(db: Db, cfg: Config, now: Date, only: ServiceKey[], co: Compa
     built[i] = r.row;
   }
   const rows = built.filter((r): r is HomeRow => r !== undefined);
+  // Your MDBList lists, after "Recommended for you" (or third): their titles on your services
+  // that are new to you, in the list's own order. They don't take titles from other rows.
+  const listRows = pickedLists(db).flatMap((l) => {
+    const r = row(db, cfg, now, `list-${l.id}`, l.name, { list: l.id, sort: 'match', hideHave: true, ...narrow }, `/browse?list=${l.id}&hide=have${linkSuffix(only, co)}`).row;
+    return r.items.length >= MIN_LIST_ROW ? [r] : [];
+  });
+  const forYou = rows.findIndex((r) => r.slug === 'for-you');
+  rows.splice(forYou >= 0 ? forYou + 1 : Math.min(2, rows.length), 0, ...listRows);
   // Shows you follow in Sonarr that have a new season out (Figma screen 9). Second, after "Just released".
   const seasonsRow = co.studios?.length || co.networks?.length ? null : newSeasonsRow(db, cfg, now, only);
   if (seasonsRow) rows.splice(Math.min(1, rows.length), 0, seasonsRow);

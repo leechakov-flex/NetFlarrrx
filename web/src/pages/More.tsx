@@ -28,6 +28,16 @@ export function More() {
           </span>
           <ChevronRightIcon className="h-5 w-5 flex-shrink-0 text-ink-muted" />
         </Link>
+        <Link to="/lists" className="flex items-center gap-4 rounded-xl border border-line-strong bg-surface px-4 py-3.5 transition hover:bg-raised">
+          <Icons.sparkles className="h-6 w-6 flex-shrink-0 text-white" />
+          <span className="min-w-0 flex-1">
+            <span className="block type-label-strong text-white">Recommendation lists</span>
+            <span className="block truncate type-body-small text-ink-tertiary">
+              {m?.lists?.configured ? (m.lists.picked ? `${m.lists.picked} on Discover, from MDBList` : 'Pick lists from MDBList for Discover') : 'Rows on Discover from MDBList lists'}
+            </span>
+          </span>
+          <ChevronRightIcon className="h-5 w-5 flex-shrink-0 text-ink-muted" />
+        </Link>
       </div>
       {themes.data && themes.data.length > 0 && (
         <section className="mb-8 max-w-xl">

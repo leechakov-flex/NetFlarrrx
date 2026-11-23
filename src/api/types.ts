@@ -59,6 +59,7 @@ export interface BrowseQuery {
   hideHave?: boolean;              // drop titles already available, partial, processing or requested in Seerr
   theme?: string;                  // thematic row slug
   because?: string;                // "movie:123": titles TMDB recommends for that library title
+  list?: number;                   // an MDBList list you picked: its titles, in its order
   services?: ServiceKey[];         // only these services (default: all tracked)
   how?: How[];                     // subscription, rent or buy, coming soon (default: subscription)
   studios?: string[];              // movie studio group keys ("a24", "20th-century")
@@ -124,6 +125,7 @@ export interface MetaResponse {
   passcodeRequired: boolean;       // requests need APP_PASSCODE
   downloads?: { configured: boolean; attention: number; downloading: number };
   library?: { configured: boolean; movies: number; series: number };
+  lists?: { configured: boolean; picked: number };
   services: ServiceInfo[];         // tracked services, in display order
   ops?: {
     lastBackupAt: string | null;   // null with backups on = none yet; undefined section = backups off
@@ -261,3 +263,9 @@ export interface ReleasesResponse {
   check: ReleaseCheck;
   releases: ReleaseItem[];         // ones it would take first, then rejected, most seeders first
 }
+
+/** MDBList lists: the ones you picked (Discover rows) and search results to pick from. */
+export interface ListOption { id: number; name: string; userName: string | null; items: number | null; likes: number | null; description: string | null; picked: boolean }
+export interface PickedListInfo { id: number; name: string; userName: string | null; items: number | null; inCatalog: number; syncedAt: string | null; error: string | null }
+export interface ListsResponse { configured: boolean; picked: PickedListInfo[] }
+export interface ListSearchResponse { results: ListOption[] }

@@ -12,9 +12,10 @@ import { useCompanyNames } from '../components/CompanyPicker';
 
 const HOW_LABEL: Record<How, string> = { sub: 'Subscription', digital: 'Rent or buy', soon: 'Coming soon' };
 
-const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: string; because?: string } => ({
+const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: string; because?: string; list?: number } => ({
   theme: p.get('theme') || undefined,
   because: p.get('because') || undefined,
+  list: Number(p.get('list')) || undefined,
   genres: p.get('genres')?.split(',').map(Number).filter((n) => n > 0) || undefined,
   added: ([7, 30, 90] as const).find((n) => String(n) === p.get('added')) ?? undefined,
   minRating: Number(p.get('minRating')) || undefined,
@@ -39,7 +40,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   const genres = useGenres(kind);
   const meta = useMeta();
   const themes = useThemes();
-  const theme = f.theme || f.because ? (res.data?.pages[0]?.theme ?? themes.data?.find((t) => t.slug === f.theme)) : undefined;
+  const theme = f.theme || f.because || f.list ? (res.data?.pages[0]?.theme ?? themes.data?.find((t) => t.slug === f.theme)) : undefined;
   const defaultSort: SortKey = theme?.sort ?? 'added';
   const sort = f.sort ?? defaultSort;
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -50,6 +51,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
     if (q) p.set('q', q);
     if (f.theme) p.set('theme', f.theme);
     if (f.because) p.set('because', f.because);
+    if (f.list) p.set('list', String(f.list));
     if (merged.sort && merged.sort !== defaultSort) p.set('sort', merged.sort);
     if (merged.added) p.set('added', String(merged.added));
     if (merged.genres?.length) p.set('genres', merged.genres.join(','));
@@ -102,7 +104,7 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
           a back button on phones, 12px above the title, as on Library and Person. */}
       {collection && <BackButton className="-mb-1 mt-4 lg:hidden" />}
       <div className="flex flex-col justify-between lg:flex-row lg:items-end">
-        <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme || f.because ? '\u00a0' : title}</PageTitle>
+        <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme || f.because || f.list ? '\u00a0' : title}</PageTitle>
         {search && <div className="mb-4 lg:hidden"><SearchInput placeholder="Movies, series, stand-up…" autoFocus /></div>}
         {(!search || q) && (
           <div className="lg:mb-4">
