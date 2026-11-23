@@ -128,6 +128,11 @@ export class SeerrClient {
     return body.results.flatMap((r) => { const x = RequestRow.safeParse(r); return x.success ? [x.data] : []; });
   }
 
+  /** Forgets a title (and its requests), so it shows as not requested and can be requested again. Never retried. */
+  async deleteMedia(mediaId: number) {
+    return requestJson<unknown>(this.fetchFn, 'seerr', this.url(`/api/v1/media/${mediaId}`), { method: 'DELETE', headers: this.headers(), retries: 0 });
+  }
+
   /** Cancels (deletes) a request. Never retried. */
   async deleteRequest(id: number) {
     return requestJson<unknown>(this.fetchFn, 'seerr', this.url(`/api/v1/request/${id}`), { method: 'DELETE', headers: this.headers(), retries: 0 });

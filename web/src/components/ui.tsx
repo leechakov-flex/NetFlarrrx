@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { ReactNode, type ComponentPropsWithRef } from 'react';
 import { Icons } from './icons';
 const BellIcon = Icons.bell, CheckIcon = Icons.check, ClockIcon = Icons.clock, MinusSmallIcon = Icons.minus;
 import type { SeerrState } from '../lib/api';
@@ -27,10 +27,11 @@ const buttonTypes = {
   default: 'text-ink-secondary bg-app border-line-strong hover:text-ink-primary hover:bg-raised',
   ghost: 'text-ink-primary bg-transparent border-line-strong hover:border-line-muted',
   success: 'text-ink-primary border-green-500 bg-success/80 hover:bg-success',
+  danger: 'text-white border-transparent bg-danger-strong hover:brightness-110',
   warning: 'text-ink-primary border-yellow-500 bg-yellow-500/80 hover:bg-yellow-500 active:bg-yellow-700',
 };
 export function Button({ buttonType = 'default', size = 'md', className = '', children, ...rest }:
-  ButtonHTMLAttributes<HTMLButtonElement> & { buttonType?: keyof typeof buttonTypes; size?: 'md' | 'lg' }) {
+  ComponentPropsWithRef<'button'> & { buttonType?: keyof typeof buttonTypes; size?: 'md' | 'lg' }) {
   const sizes = { md: 'px-4 py-2.5', lg: 'px-6 py-3' };
   return (
     <button

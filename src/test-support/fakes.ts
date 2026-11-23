@@ -170,6 +170,8 @@ export class FakeSeerr {
         mediaInfo: m ? { status: m.status, seasons: m.seasons ?? [], requests: reqs } : null,
       });
     }
+    const media = url.pathname.match(/^\/api\/v1\/media\/(\d+)$/);
+    if (media && init?.method === 'DELETE') { this.actions.push(`DELETE media ${media[1]}`); this.media = this.media.filter((m) => m.id !== Number(media[1])); return new Response(null, { status: 204 }); }
     if (url.pathname === '/api/v1/request' && (init?.method ?? 'GET') === 'GET') {
       return json(200, { pageInfo: { pages: 1, results: this.requestList.length }, results: this.requestList.slice(0, Number(url.searchParams.get('take') ?? 20)) });
     }
@@ -245,12 +247,15 @@ export class FakeArrQueue {
   grabbed: unknown[] = [];
   commands: unknown[] = [];
   releaseQueries: string[] = [];
+  deleted: string[] = [];
   fetch: FetchFn = async (input, init) => {
     const url = new URL(String(input));
     if (url.pathname === '/api/v3/queue') return json(200, { page: 1, totalRecords: this.records.length, records: this.records });
     if (url.pathname === '/api/v3/release' && init?.method === 'POST') { this.grabbed.push(JSON.parse(String(init.body))); return json(200, {}); }
     if (url.pathname === '/api/v3/release') { this.releaseQueries.push(url.search); return json(200, this.releaseList); }
     if (url.pathname === '/api/v3/command') { this.commands.push(JSON.parse(String(init?.body))); return json(201, { id: 1 }); }
+    const del = url.pathname.match(/^\/api\/v3\/(movie|series)\/(\d+)$/);
+    if (del && init?.method === 'DELETE') { this.deleted.push(url.pathname + url.search); this.library = this.library.filter((x) => x.id !== Number(del[2])); return new Response(null, { status: 200 }); }
     const tmdb = url.searchParams.get('tmdbId');
     if (tmdb) return json(200, this.library.filter((x) => x.tmdbId === Number(tmdb)));
     return json(200, this.library);
@@ -261,6 +266,8 @@ export class FakeArrQueue {
 export class FakeJellyfin {
   items: Record<string, unknown>[] = [];
   key = 'jf-key';
+  deleted: string[] = [];
+  refreshes = 0;
   fetch: FetchFn = async (input, init) => {
     const url = new URL(String(input));
     const auth = Object.entries((init?.headers ?? {}) as Record<string, string>).find(([k]) => k.toLowerCase() === 'authorization')?.[1];
@@ -269,6 +276,9 @@ export class FakeJellyfin {
       const start = Number(url.searchParams.get('StartIndex') ?? 0), limit = Number(url.searchParams.get('Limit') ?? 100);
       return json(200, { Items: this.items.slice(start, start + limit), TotalRecordCount: this.items.length });
     }
+    if (url.pathname === '/Library/Refresh') { this.refreshes++; return new Response(null, { status: 204 }); }
+    const item = url.pathname.match(/^\/Items\/([a-f0-9]{32})$/);
+    if (item && init?.method === 'DELETE') { this.deleted.push(item[1]!); this.items = this.items.filter((x) => x.Id !== item[1]); return new Response(null, { status: 204 }); }
     if (/^\/Items\/[a-f0-9]{32}\/Images\/Primary$/.test(url.pathname)) return new Response(new Uint8Array([0xff, 0xd8, 0xff]), { status: 200, headers: { 'content-type': 'image/jpeg' } });
     return json(404, {});
   };

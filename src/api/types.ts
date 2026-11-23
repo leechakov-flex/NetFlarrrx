@@ -216,6 +216,7 @@ export interface LibraryItem {
   titleId: number | null;          // MonkeySee title, when it's on one of your services
   posterUrl: string | null;
   seasons: number | null;
+  managed: boolean;                // Radarr/Sonarr has it (removing goes through them); otherwise Jellyfin deletes it
 }
 export interface LibraryResponse {
   configured: boolean;

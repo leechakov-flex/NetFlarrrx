@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import type { BrowseQuery, Kind, SortKey } from '../lib/api';
 import { useBrowse, useGenres, useMeta, useThemes } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
 import { Empty, PageTitle, Spinner, Tag, LoadError } from '../components/ui';
-import { SearchInput } from '../components/Layout';
+import { BackButton, SearchInput } from '../components/Layout';
 import type { How, ServiceKey } from '../lib/api';
 import { SERVICE_NAMES } from '../lib/format';
 import { useCompanyNames } from '../components/CompanyPicker';
@@ -29,6 +29,7 @@ const parseFilters = (p: URLSearchParams): Filters & { sort?: SortKey; theme?: s
 });
 
 export function Browse({ kind, title, search = false }: { kind?: Kind; title: string; search?: boolean }) {
+  const collection = useLocation().pathname === '/browse';
   const [params, setParams] = useSearchParams();
   const q = search ? params.get('q') ?? '' : undefined;
   const f = useMemo(() => parseFilters(params), [params]);
@@ -97,6 +98,9 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
 
   return (
     <>
+      {/* Collections (Just released, a studio, "Because you have…") are a level down from Discover:
+          a back button on phones, 12px above the title, as on Library and Person. */}
+      {collection && <BackButton className="-mb-1 mt-4 lg:hidden" />}
       <div className="flex flex-col justify-between lg:flex-row lg:items-end">
         <PageTitle>{search ? (q ? `Results for “${q}”` : 'Search') : theme ? theme.title : f.theme || f.because ? '\u00a0' : title}</PageTitle>
         {search && <div className="mb-4 lg:hidden"><SearchInput placeholder="Movies, series, stand-up…" autoFocus /></div>}

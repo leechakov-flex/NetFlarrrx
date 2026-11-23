@@ -35,6 +35,7 @@
   --glass-tint: #818cf8;
   --glass-shadow: #00000059;
   --bg-danger: #ef4444;
+  --bg-danger-strong: #dc2626;  /* destructive buttons: white label at 4.8:1 */
   --bg-unreleased: #0ea5e9e5;
   --bg-not-found: #f97316;
   --bg-progress: #6366f18c;

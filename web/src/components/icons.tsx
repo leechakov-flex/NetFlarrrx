@@ -28,6 +28,7 @@ import Rosette from 'framework7-icons/react/esm/Rosette.js';
 import Search from 'framework7-icons/react/esm/Search.js';
 import Sparkles from 'framework7-icons/react/esm/Sparkles.js';
 import StarFill from 'framework7-icons/react/esm/StarFill.js';
+import Trash from 'framework7-icons/react/esm/Trash.js';
 import Tv from 'framework7-icons/react/esm/Tv.js';
 import Xmark from 'framework7-icons/react/esm/Xmark.js';
 import XmarkCircleFill from 'framework7-icons/react/esm/XmarkCircleFill.js';
@@ -41,6 +42,6 @@ export const Icons = {
   sort: icon(ArrowUpArrowDown), filter: icon(LineHorizontal3Decrease), check: icon(Checkmark), checkCircle: icon(CheckmarkCircleFill),
   clock: icon(Clock), bell: icon(Bell), minus: icon(Minus), xmark: icon(Xmark), xmarkCircle: icon(XmarkCircleFill),
   download: icon(ArrowDownToLine), ellipsis: icon(Ellipsis), star: icon(StarFill), trailer: icon(PlayRectangle), plus: icon(Plus),
-  warning: icon(ExclamationmarkTriangle), lock: icon(Lock),
+  warning: icon(ExclamationmarkTriangle), lock: icon(Lock), trash: icon(Trash),
   library: icon(RectangleStack), retry: icon(ArrowClockwise), arrowDown: icon(ArrowDown), arrowUp: icon(ArrowUp),
 };

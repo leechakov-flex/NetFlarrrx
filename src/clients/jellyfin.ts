@@ -2,8 +2,9 @@ import { z } from 'zod';
 import { HttpError, requestJson, type FetchFn } from './http.js';
 
 /**
- * Read-only Jellyfin API: every movie and series in your libraries, with their
- * TMDB IDs, and their poster images. Nothing in Jellyfin is changed.
+ * Jellyfin API: every movie and series in your libraries, with their TMDB IDs, and
+ * their poster images. The only changes it makes are a library rescan and, when you
+ * remove something Radarr/Sonarr don't know about, deleting that item.
  */
 const Item = z.object({
   Id: z.string(),
@@ -47,6 +48,16 @@ export class JellyfinClient {
       if (body.Items.length < 500) break;
     }
     return out;
+  }
+
+  /** Delete an item and its files. Only for things Radarr/Sonarr don't manage. */
+  async deleteItem(id: string): Promise<void> {
+    await requestJson<unknown>(this.fetchFn, 'jellyfin', this.url(`/Items/${encodeURIComponent(id)}`), { method: 'DELETE', headers: this.headers, timeoutMs: 60_000, retries: 0 });
+  }
+
+  /** Rescan the libraries, so removed files disappear from Jellyfin promptly. */
+  async refresh(): Promise<void> {
+    await requestJson<unknown>(this.fetchFn, 'jellyfin', this.url('/Library/Refresh'), { method: 'POST', headers: this.headers, timeoutMs: 30_000, retries: 0 });
   }
 
   /** A poster image, for MonkeySee to pass on (Jellyfin isn't reachable from your phone by its Docker name). */

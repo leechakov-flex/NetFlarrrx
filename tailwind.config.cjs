@@ -14,7 +14,7 @@ module.exports = {
       screens: { '3xl': '1920px' },
       colors: {
         app: v('bg-app'), surface: v('bg-surface'), panel: v('bg-panel'), raised: v('bg-raised'), inverse: v('bg-inverse'),
-        danger: v('bg-danger'), unreleased: v('bg-unreleased'), 'not-found': v('bg-not-found'), warning: v('bg-warning'), success: v('bg-success'), 'accent-subtle': v('bg-accent-subtle'),
+        danger: v('bg-danger'), 'danger-strong': v('bg-danger-strong'), unreleased: v('bg-unreleased'), 'not-found': v('bg-not-found'), warning: v('bg-warning'), success: v('bg-success'), 'accent-subtle': v('bg-accent-subtle'),
         accent: { DEFAULT: v('bg-accent'), strong: v('bg-accent-strong') },
         ink: {
           primary: v('text-primary'), strong: v('text-strong'), secondary: v('text-secondary'), tertiary: v('text-tertiary'),

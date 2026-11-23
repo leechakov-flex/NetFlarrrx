@@ -188,6 +188,16 @@ export class ArrClient {
       { method: 'POST', body, headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 30_000, retries: 1 });
   }
 
+  /**
+   * Remove a title from Radarr/Sonarr and delete its files from disk. It stops being
+   * watched for new releases. No import exclusion, so it can be requested again later.
+   */
+  async remove(arrId: number): Promise<void> {
+    const path = this.name === 'radarr' ? `/api/v3/movie/${arrId}?deleteFiles=true&addImportExclusion=false`
+      : `/api/v3/series/${arrId}?deleteFiles=true&addImportListExclusion=false`;
+    await requestJson<unknown>(this.fetchFn, this.name, this.url(path), { method: 'DELETE', headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 120_000, retries: 0 });
+  }
+
   /** Series with at least one episode on disk. */
   async series(): Promise<ArrItem[]> {
     const raw = await requestJson<unknown[]>(this.fetchFn, this.name, this.url('/api/v3/series'), { headers: { 'X-Api-Key': this.apiKey }, timeoutMs: 60_000 });

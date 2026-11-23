@@ -19,6 +19,8 @@ import { QbitClient } from './clients/qbittorrent.js';
 import { HomeService } from './catalog/homeService.js';
 import { JellyfinClient } from './clients/jellyfin.js';
 import { syncJellyfin, type JellyfinSync } from './library/jellyfin.js';
+import { resetDownloadsCache } from './downloads/downloads.js';
+import { removeFromLibrary, type RemoveResult } from './library/remove.js';
 import { downloadsSnapshot, lastDownloads, watchDownloads, type DownloadDeps } from './downloads/downloads.js';
 import { grabRelease, requestReleases, retryNotFound, type RetryResult } from './downloads/releases.js';
 import type { ReleasesResponse } from './api/types.js';
@@ -53,6 +55,8 @@ export interface App {
   /** Jellyfin, when JELLYFIN_API_KEY is set: the Library page. */
   jellyfin?: JellyfinClient;
   syncJellyfin(): Promise<JellyfinSync | null>;
+  /** Delete a library title's files, stop Radarr/Sonarr watching it, and forget it in Seerr. */
+  removeFromLibrary(jellyfinId: string): Promise<RemoveResult>;
   /** Work out what needs attention and alert on changes (ntfy or Discord). */
   checkAlerts(now?: Date): Promise<{ open: string[]; sent: string[] }>;
   problems(now?: Date): Problem[];
@@ -130,6 +134,11 @@ export function createApp(cfg: Config, fetchers: AppFetchers = {}): App {
     retryNotFound: (now = new Date()) => retryNotFound(dl, now),
     jellyfin,
     syncJellyfin: async () => (jellyfin ? syncJellyfin(db, jellyfin) : null),
+    async removeFromLibrary(jellyfinId) {
+      const r = await removeFromLibrary({ db, radarr, sonarr, jellyfin, seerr }, jellyfinId);
+      resetDownloadsCache(); homes.invalidate();
+      return r;
+    },
     async watchDownloads(now = new Date()) {
       await watchDownloads(dl, now);
       await safely('alerts', app.checkAlerts(now));

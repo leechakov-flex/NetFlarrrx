@@ -41,14 +41,15 @@ export function libraryPage(db: Db, cfg: Config, q: { type?: 'movie' | 'tv'; q?:
   const page = Math.max(1, Math.floor(q.page ?? 1));
   const total = get<{ n: number }>(db, `SELECT count(*) n FROM jellyfin_items j WHERE ${where.join(' AND ')}`, params)!.n;
   const rows = all<{ jellyfin_id: string; media_type: 'movie' | 'tv'; tmdb_id: number | null; name: string; year: number | null; added_at: string | null;
-    has_poster: number; seasons: number | null; title_id: number | null; poster_path: string | null }>(db, `
+    has_poster: number; seasons: number | null; title_id: number | null; poster_path: string | null; managed: number }>(db, `
     SELECT j.*, (SELECT t.id FROM titles t WHERE t.tmdb_type = j.media_type AND t.tmdb_id = j.tmdb_id ORDER BY t.watchmode_id > 0 DESC LIMIT 1) AS title_id,
-           (SELECT t.poster_path FROM titles t WHERE t.tmdb_type = j.media_type AND t.tmdb_id = j.tmdb_id AND t.poster_path IS NOT NULL LIMIT 1) AS poster_path
+           (SELECT t.poster_path FROM titles t WHERE t.tmdb_type = j.media_type AND t.tmdb_id = j.tmdb_id AND t.poster_path IS NOT NULL LIMIT 1) AS poster_path,
+           EXISTS (SELECT 1 FROM arr_titles a WHERE a.media_type = j.media_type AND a.tmdb_id = j.tmdb_id) AS managed
     FROM jellyfin_items j WHERE ${where.join(' AND ')} ORDER BY ${order} LIMIT ? OFFSET ?`, [...params, PAGE, (page - 1) * PAGE]);
   const counts = all<{ media_type: string; n: number }>(db, 'SELECT media_type, count(*) n FROM jellyfin_items GROUP BY media_type');
   const s = lastJellyfin(db);
   const items: LibraryItem[] = rows.map((r) => ({
-    id: r.jellyfin_id, type: r.media_type, title: r.name, year: r.year, addedAt: r.added_at, tmdbId: r.tmdb_id, titleId: r.title_id, seasons: r.seasons,
+    id: r.jellyfin_id, type: r.media_type, title: r.name, year: r.year, addedAt: r.added_at, tmdbId: r.tmdb_id, titleId: r.title_id, seasons: r.seasons, managed: !!r.managed,
     // Jellyfin's own poster (passed through MonkeySee), or TMDB's if Jellyfin has none.
     posterUrl: r.has_poster ? `/api/library/${encodeURIComponent(r.jellyfin_id)}/poster` : r.poster_path ? `https://image.tmdb.org/t/p/w342${r.poster_path}` : null,
   }));

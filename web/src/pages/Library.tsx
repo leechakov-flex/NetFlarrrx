@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { useLibrary, type LibraryItem } from '../lib/api';
+import { useQueryClient } from '@tanstack/react-query';
+import { ApiError, useLibrary, type LibraryItem } from '../lib/api';
+import { useGuardedPost } from '../lib/guardedPost';
+import { useToast } from '../components/Feedback';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { relativeTime } from '../lib/format';
 import { Empty, PageTitle, Spinner, LoadError } from '../components/ui';
 import { Icons } from '../components/icons';
@@ -106,6 +110,27 @@ export function Library() {
 
 function LibraryCard({ it }: { it: LibraryItem }) {
   const [broken, setBroken] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const post = useGuardedPost();
+  const toast = useToast();
+  const qc = useQueryClient();
+  const movie = it.type === 'movie';
+  const remove = async () => {
+    setBusy(true);
+    try {
+      const r = await post<{ ok: true; via: string }>(`/api/library/${it.id}/remove`);
+      if (!r) return;                      // passcode prompt cancelled
+      setConfirm(false);
+      toast('success', `Deleted ${it.title}.`);
+      await qc.invalidateQueries({ queryKey: ['library'] });
+      void qc.invalidateQueries({ queryKey: ['home'] });
+    } catch (err) {
+      toast('error', err instanceof ApiError ? err.message : `Couldn’t delete ${it.title}. Nothing was changed.`);
+    } finally {
+      setBusy(false);
+    }
+  };
   const body = (
     <>
       <div className="relative overflow-hidden rounded-xl bg-surface ring-1 ring-line" style={{ paddingBottom: '150%' }}>
@@ -118,6 +143,25 @@ function LibraryCard({ it }: { it: LibraryItem }) {
       <div className="truncate type-body-xsmall text-ink-muted">{[it.year, it.seasons ? `${it.seasons} season${it.seasons === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ')}</div>
     </>
   );
-  // Titles on one of your services open their page; the rest just show.
-  return it.titleId ? <Link to={`/title/${it.titleId}`} className="block">{body}</Link> : <div>{body}</div>;
+  // Titles on one of your services open their page; the rest just show. The remove
+  // button sits over the poster's top-right corner, outside the link.
+  return (
+    <div className="relative">
+      {it.titleId ? <Link to={`/title/${it.titleId}`} className="block">{body}</Link> : <div>{body}</div>}
+      <button type="button" aria-label={`Delete ${it.title}`} onClick={() => setConfirm(true)}
+        className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-ink-secondary ring-1 ring-white/15 backdrop-blur hover:text-white">
+        <Icons.trash className="h-4 w-4" />
+      </button>
+      <ConfirmDialog open={confirm} busy={busy} onConfirm={() => void remove()} onClose={() => setConfirm(false)}
+        title={`Delete “${it.title}”?`} confirmLabel={movie ? 'Delete movie' : 'Delete series'}>
+        <p>{!it.managed
+          ? `Deletes the ${movie ? 'movie’s files' : 'series’ episodes'} from your drive through Jellyfin. ${movie ? 'Radarr' : 'Sonarr'} isn’t managing it.`
+          : movie
+          ? 'Deletes the movie’s files from your drive and removes it from Radarr, so it won’t download again.'
+          : 'Deletes every episode from your drive and removes the series from Sonarr, so new episodes won’t download.'}</p>
+        <p>This can’t be undone. You can request it again later.</p>
+        <p className="type-body-small text-ink-tertiary">The original download keeps seeding in qBittorrent until you remove it there.</p>
+      </ConfirmDialog>
+    </div>
+  );
 }

@@ -8,6 +8,7 @@ import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
 import { forgetCheck } from '../downloads/releases.js';
 import { inJellyfin, lastJellyfin, libraryPage } from '../library/jellyfin.js';
+import { RemoveError } from '../library/remove.js';
 import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
 import type { How, ServiceKey } from './types.js';
@@ -117,6 +118,21 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
       return new Response(res.body, { headers: { 'Content-Type': res.headers.get('content-type') ?? 'image/jpeg', 'Cache-Control': 'private, max-age=86400' } });
     } catch {
       return c.body(null, 404);
+    }
+  });
+
+  // Remove from library: deletes the files (through Radarr/Sonarr, which stop watching it),
+  // and forgets it in Seerr. Passcode-protected; the page confirms first.
+  api.post('/library/:id/remove', requirePasscode, async (c) => {
+    const id = c.req.param('id');
+    if (!/^[a-f0-9]{32}$/i.test(id)) return c.json({ error: 'bad id' }, 400);
+    try {
+      return c.json({ ok: true, ...(await app.removeFromLibrary(id)) });
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      if (err instanceof RemoveError) return c.json({ error: err.message }, status as 404);
+      log.warn('library: remove failed', { id, error: (err as Error).message });
+      return c.json({ error: 'Couldn’t reach Radarr, Sonarr or Jellyfin, so nothing was deleted. Try again in a moment.' }, 502);
     }
   });
 
