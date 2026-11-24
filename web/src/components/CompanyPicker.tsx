@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useCompanies, type CompanyOption, type CompanyPick } from '../lib/api';
 import { Icons } from './icons';
-import { Button, Spinner } from './ui';
+import { Button, Spinner, SearchField } from './ui';
 import { SlideOver } from './SlideOver';
 
 /** Name for a studio or network key, from the companies list (falls back to the key). */
@@ -47,11 +47,7 @@ export function CompanyList({ value, onChange, only }: { value: CompanyPick; onC
           ))}
         </div>
       )}
-      <label className="flex items-center gap-2 rounded-lg bg-surface px-3 py-2 ring-1 ring-line-strong focus-within:ring-indigo-400">
-        <Icons.search className="h-4 w-4 text-ink-muted" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tab === 'studios' ? 'A24, 20th Century, Neon…' : 'NBC, FX, HBO…'}
-          className="min-w-0 flex-1 bg-transparent type-body-default text-white placeholder:text-ink-muted focus:outline-none" aria-label={`Search ${tab}`} />
-      </label>
+      <SearchField value={q} onChange={setQ} placeholder={tab === 'studios' ? 'A24, 20th Century, Neon…' : 'NBC, FX, HBO…'} label={`Search ${tab}`} />
       {c.isPending ? <div className="flex justify-center py-8"><Spinner className="h-6 w-6" /></div> : (
         <ul className="mt-2 divide-y divide-line">
           {shown.map((x) => {

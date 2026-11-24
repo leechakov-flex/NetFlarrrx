@@ -15,7 +15,7 @@ export function SlideOver({ open, onClose, title, subText, children, footer, acc
       <section className="absolute inset-y-0 right-0 flex max-w-full outline-none" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
         <div className="relative h-full w-screen max-w-md p-2 sm:p-3" onClick={(e) => e.stopPropagation()}>
           <div className="flex h-full flex-col rounded-lg bg-app shadow-xl ring-1 ring-line">
-            <header className="space-y-0.5 border-b border-line p-4">
+            <header className="space-y-0.5 border-b border-line p-4 pt-[calc(env(safe-area-inset-top)+16px)]">
               <div className="flex items-center justify-between space-x-3">
                 <h2 className={`type-heading-page ${accentTitle ? 'text-ink-accent' : 'text-ink-primary'}`}>{title}</h2>
                 <button type="button" aria-label="Close" onClick={onClose} className="h-7 text-ink-secondary transition hover:text-ink-primary">
@@ -25,7 +25,7 @@ export function SlideOver({ open, onClose, title, subText, children, footer, acc
               {subText && <p className="type-body-default text-ink-muted">{subText}</p>}
             </header>
             <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-5">{children}</div>
-            {footer && <footer className="border-t border-line p-4">{footer}</footer>}
+            {footer && <footer className="border-t border-line p-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">{footer}</footer>}
           </div>
         </div>
       </section>

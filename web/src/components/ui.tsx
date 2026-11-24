@@ -117,3 +117,24 @@ export function LoadError({ what, onRetry }: { what: string; onRetry: () => void
 export function Empty({ children }: { children: ReactNode }) {
   return <div className="mt-24 w-full text-center text-xl text-gray-400">{children}</div>;
 }
+
+/**
+ * Figma "SearchInput" for searching within a page (Library, Lists, studio picker): the same
+ * 40px pill as the global search bar, 20px icon 14px in, clear button when there's text.
+ */
+export function SearchField({ value, onChange, placeholder, label, className = '', autoFocus }: {
+  value: string; onChange: (v: string) => void; placeholder: string; label: string; className?: string; autoFocus?: boolean;
+}) {
+  return (
+    <div role="search" className={`relative flex w-full items-center ${className}`}>
+      <Icons.search className="pointer-events-none absolute left-[14px] h-5 w-5 text-ink-tertiary" />
+      <input type="search" autoComplete="off" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} aria-label={label} autoFocus={autoFocus}
+        className="block h-10 w-full rounded-full border border-line-strong bg-app pl-[42px] pr-10 type-body-default text-ink-primary placeholder:text-ink-tertiary hover:border-line-muted focus:border-line-muted focus:outline-none focus:ring-0 [&::-webkit-search-cancel-button]:hidden" />
+      {value && (
+        <button type="button" aria-label="Clear search" onClick={() => onChange('')} className="absolute right-2 flex h-7 w-7 items-center justify-center text-ink-tertiary transition hover:text-white">
+          <Icons.xmarkCircle className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  );
+}

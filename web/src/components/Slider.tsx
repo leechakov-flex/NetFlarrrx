@@ -1,22 +1,24 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { recallScroll, rememberScroll } from '../lib/scrollMemory';
 import { Icons } from './icons';
 import type { HomeRow } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from './TitleCard';
 
-/** Seerr MediaSlider: header (linked title + chevron) and a horizontally scrolling card row. */
-export function Slider({ row }: { row: HomeRow }) {
-  // Keep this row's horizontal position for this visit, so Back from a title lands where you were.
-  const { key: entry } = useLocation();
+/**
+ * A horizontally scrolling row with a header. On desktop the header ends with back/forward
+ * arrows (Figma "SliderArrow"): shown only when the row overflows, each greyed out at its end.
+ * Used by every carousel: Discover rows, and Cast & Crew and Related on a title page.
+ */
+export function Carousel({ title, aside, label, memoryKey, gap = 'gap-3 md:gap-4', snap = true, children }: {
+  title: ReactNode; aside?: ReactNode; label: string; memoryKey?: string; gap?: string; snap?: boolean; children: ReactNode;
+}) {
   const strip = useRef<HTMLDivElement>(null);
-  const memoryKey = `${entry}:row:${row.slug}`;
   useLayoutEffect(() => {
     const el = strip.current;
-    const saved = recallScroll(memoryKey);
+    const saved = memoryKey ? recallScroll(memoryKey) : null;
     if (el && saved) el.scrollLeft = saved;
   }, [memoryKey]);
-  // Desktop arrows: shown only when the row overflows, each greyed out at its end.
   const [ends, setEnds] = useState({ start: true, end: true });
   const measure = useCallback(() => {
     const el = strip.current;
@@ -28,8 +30,9 @@ export function Slider({ row }: { row: HomeRow }) {
     if (!el) return;
     const ro = new ResizeObserver(measure);
     ro.observe(el);
+    for (const c of Array.from(el.children)) ro.observe(c);
     return () => ro.disconnect();
-  }, [measure, row.items.length]);
+  }, [measure, children]);
   const page = (dir: -1 | 1) => {
     const el = strip.current;
     if (!el) return;
@@ -39,38 +42,53 @@ export function Slider({ row }: { row: HomeRow }) {
   const frame = useRef(0);
   const onScroll = () => {
     cancelAnimationFrame(frame.current);
-    frame.current = requestAnimationFrame(() => { if (strip.current) rememberScroll(memoryKey, strip.current.scrollLeft); measure(); });
+    frame.current = requestAnimationFrame(() => { if (strip.current && memoryKey) rememberScroll(memoryKey, strip.current.scrollLeft); measure(); });
   };
   return (
     <section>
       <div className="slider-header">
-        {row.link ? (
-          <Link to={row.link} className="slider-title pr-4">
-            <span className="truncate">{row.title}</span>
-            <Icons.chevronRight className="h-6 w-6 flex-shrink-0 text-ink-muted" />
-          </Link>
-        ) : (
-          <div className="slider-title"><span className="truncate">{row.title}</span></div>
-        )}
-        {row.total > 0 && (row.slug.startsWith('new') || row.slug === 'for-you') && (
-          <span className="ml-auto flex-shrink-0 type-label-default text-ink-muted">{row.total.toLocaleString()} {row.total === 1 ? 'title' : 'titles'}</span>
-        )}
+        {title}
+        {aside}
         {!(ends.start && ends.end) && (
           <div className="ml-auto hidden flex-shrink-0 items-center gap-2 pl-4 lg:flex [span+&]:ml-0">
-            <SliderArrow dir={-1} disabled={ends.start} label={`Scroll ${row.title} back`} onClick={() => page(-1)} />
-            <SliderArrow dir={1} disabled={ends.end} label={`Scroll ${row.title} forward`} onClick={() => page(1)} />
+            <SliderArrow dir={-1} disabled={ends.start} label={`Scroll ${label} back`} onClick={() => page(-1)} />
+            <SliderArrow dir={1} disabled={ends.end} label={`Scroll ${label} forward`} onClick={() => page(1)} />
           </div>
         )}
       </div>
-      <div ref={strip} onScroll={onScroll} className="scrollbar-none -mx-4 lg:-mx-8 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 lg:px-8 pb-1 pt-1 md:gap-4 lg:scroll-px-8">
-        {row.items.map((card) => (
-          <div key={card.id} className="snap-start">
-            <TitleCard card={card} art={row.art} />
-          </div>
-        ))}
-        {row.link && row.total > row.items.length && <ViewAllCard to={row.link} more={row.total - row.items.length} />}
+      <div ref={strip} onScroll={onScroll} className={`scrollbar-none -mx-4 lg:-mx-8 flex overflow-x-auto px-4 pb-1 pt-1 lg:px-8 ${gap} ${snap ? 'snap-x snap-mandatory scroll-px-4 lg:scroll-px-8' : ''}`}>
+        {children}
       </div>
     </section>
+  );
+}
+
+/** Seerr MediaSlider: a Discover row. Keeps its horizontal position for this visit, so Back from a title lands where you were. */
+export function Slider({ row }: { row: HomeRow }) {
+  const { key: entry } = useLocation();
+  return (
+    <Carousel
+      label={row.title}
+      memoryKey={`${entry}:row:${row.slug}`}
+      title={row.link ? (
+        <Link to={row.link} className="slider-title pr-4">
+          <span className="truncate">{row.title}</span>
+          <Icons.chevronRight className="h-6 w-6 flex-shrink-0 text-ink-muted" />
+        </Link>
+      ) : (
+        <div className="slider-title"><span className="truncate">{row.title}</span></div>
+      )}
+      aside={row.total > 0 && (row.slug.startsWith('new') || row.slug === 'for-you') ? (
+        <span className="ml-auto flex-shrink-0 type-label-default text-ink-muted">{row.total.toLocaleString()} {row.total === 1 ? 'title' : 'titles'}</span>
+      ) : null}
+    >
+      {row.items.map((card) => (
+        <div key={card.id} className="snap-start">
+          <TitleCard card={card} art={row.art} />
+        </div>
+      ))}
+      {row.link && row.total > row.items.length && <ViewAllCard to={row.link} more={row.total - row.items.length} />}
+    </Carousel>
   );
 }
 

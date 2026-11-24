@@ -16,6 +16,10 @@
   html { scroll-padding-top: calc(env(safe-area-inset-top) + 64px); scroll-padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
   @media (min-width: 1024px) { html { scroll-padding-top: 128px; scroll-padding-bottom: 24px; } }
 
+  /* iOS zooms the page when a field with text under 16px gets focus. On phones every
+     field uses 16px; from tablet width up they use their designed size. */
+  @media (max-width: 639px) { input, select, textarea { font-size: 16px !important; } }
+
   /* Reduce motion: nothing moves or scales. Color and opacity changes, the loading
      spinner and the pulse placeholders stay; everything else changes instantly. */
   @media (prefers-reduced-motion: reduce) {
@@ -51,9 +55,10 @@
   .media-overview h2 { @apply text-xl font-bold text-gray-300 sm:text-2xl; }
   .media-overview p { @apply text-sm leading-relaxed text-gray-100 sm:text-base; }
   .media-overview-right { @apply mt-4 w-full lg:mt-0 lg:w-80; }
-  /* Figma media-facts / MediaFact: rows with a bottom rule, Label/Bold label and Body/Default value. */
-  .media-facts { @apply rounded-lg bg-app type-label-bold text-ink-tertiary; }
-  .media-fact { @apply flex justify-between border-b border-line px-4 py-2 last:border-b-0; }
+  /* Figma media-facts / MediaFact: plain rows, 8px above and below, no side padding or rules;
+     Label/Bold label and Body/Default value. */
+  .media-facts { @apply type-label-bold text-ink-tertiary; }
+  .media-fact { @apply flex justify-between py-2; }
   .media-fact-value { @apply ml-2 text-right type-body-default text-ink-muted; }
 
   .scrollbar-none { scrollbar-width: none; }

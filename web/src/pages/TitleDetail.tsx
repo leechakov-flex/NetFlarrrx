@@ -6,6 +6,7 @@ import { Badge, Button, Empty, Spinner } from '../components/ui';
 import { TrailerModal } from '../components/TrailerModal';
 import { RequestButton } from '../components/RequestButton';
 import { TitleCard } from '../components/TitleCard';
+import { Carousel } from '../components/Slider';
 import { Icons } from '../components/icons';
 import { useMediaQuery } from '../components/Layout';
 
@@ -72,12 +73,11 @@ export function TitleDetail() {
           <WhereToWatch d={d} />
           {d.cast.length > 0 && <CastRow people={d.cast} />}
           {d.related.length > 0 && (
-            <section className="mt-6">
-              <h2 className="slider-title mb-4 h-7">Related</h2>
-              <div className="scrollbar-none -mx-4 lg:-mx-8 flex snap-x gap-3 overflow-x-auto px-4 lg:px-8 pb-1 pt-1 md:gap-4">
+            <div>
+              <Carousel label="Related" title={<h2 className="slider-title">Related</h2>}>
                 {d.related.map((c) => <div key={c.id} className="snap-start"><TitleCard card={c} /></div>)}
-              </div>
-            </section>
+              </Carousel>
+            </div>
           )}
         </div>
         <Facts d={d} />
@@ -137,9 +137,9 @@ function WhereToWatch({ d }: { d: Detail }) {
   return (
     <section className="mt-6">
       <h2 className="type-heading-group text-ink-primary">Where to watch</h2>
-      <div className="mt-3 overflow-hidden rounded-lg border border-line">
+      <div className="mt-3">
         {rows.map((r, i) => (
-          <div key={i} className={`flex items-center gap-3 px-3 py-3 ${i ? 'border-t border-line' : ''}`}>
+          <div key={i} className="flex items-center gap-3 py-3">
             <span className="w-[72px] flex-shrink-0">
               <span className={`inline-block max-w-full truncate rounded-full px-2 type-badge-tag leading-5 ${tagClass[r.tone]}`}>{r.tag}</span>
             </span>
@@ -154,12 +154,11 @@ function WhereToWatch({ d }: { d: Detail }) {
 /** Figma "PersonCard": headshot (TMDB profile photo) or initials, name, role. */
 function CastRow({ people }: { people: Detail['cast'] }) {
   return (
-    <section className="mt-6">
-      <h2 className="slider-title mb-4 h-7">Cast &amp; Crew</h2>
-      <div className="scrollbar-none -mx-4 lg:-mx-8 flex gap-3 overflow-x-auto px-4 lg:px-8 pb-1">
+    <div>
+      <Carousel label="Cast and crew" title={<h2 className="slider-title">Cast &amp; Crew</h2>} snap={false}>
         {people.map((p, i) => <Person key={`${p.name}-${i}`} p={p} />)}
-      </div>
-    </section>
+      </Carousel>
+    </div>
   );
 }
 
@@ -187,7 +186,7 @@ function Facts({ d }: { d: Detail }) {
     <div className="mt-6 lg:mt-0">
       <div className="media-facts">
         {d.voteAverage !== null && d.voteCount ? (
-          <div className="flex items-center gap-1.5 border-b border-line py-2">
+          <div className="flex items-center gap-1.5 py-2">
             <Icons.star className="h-4 w-4 text-rating" />
             <span className="type-label-strong text-ink-tertiary">{d.voteAverage.toFixed(1)} TMDB</span>
             <span className="type-body-default text-ink-muted">· {d.voteCount.toLocaleString()} votes</span>

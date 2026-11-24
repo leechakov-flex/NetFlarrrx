@@ -6,7 +6,7 @@ import { useGuardedPost } from '../lib/guardedPost';
 import { useToast } from '../components/Feedback';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { relativeTime } from '../lib/format';
-import { Empty, PageTitle, Spinner, LoadError } from '../components/ui';
+import { Empty, PageTitle, Spinner, LoadError, SearchField } from '../components/ui';
 import { Icons } from '../components/icons';
 import { BackButton } from '../components/Layout';
 
@@ -74,12 +74,7 @@ export function Library() {
         {counts.movie.toLocaleString()} movies · {counts.tv.toLocaleString()} series in Jellyfin{first.syncedAt ? ` · checked ${relativeTime(first.syncedAt)}` : ''}
         {first.error && <span className="text-yellow-200"> · last check failed: {first.error}</span>}
       </p>
-      <label className="flex max-w-xl items-center gap-2 rounded-full bg-surface px-4 py-2.5 ring-1 ring-line-strong focus-within:ring-indigo-400">
-        <Icons.search className="h-[18px] w-[18px] text-ink-muted" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Do I have…" aria-label="Search your library"
-          className="min-w-0 flex-1 bg-transparent type-body-default text-ink-primary placeholder:text-ink-muted focus:outline-none" />
-        {q && <button type="button" aria-label="Clear" onClick={() => setQ('')}><Icons.xmarkCircle className="h-5 w-5 text-ink-muted" /></button>}
-      </label>
+      <SearchField value={q} onChange={setQ} placeholder="Do I have…" label="Search your library" className="max-w-xl" />
       <div className="flex flex-wrap items-center gap-2">
         {([['all', 'All'], ['movie', 'Movies'], ['tv', 'Series']] as [Type, string][]).map(([k, label]) => (
           <button key={k} type="button" className={chip(type === k)} aria-pressed={type === k} onClick={() => set({ type: k === 'all' ? null : k })}>{label}</button>

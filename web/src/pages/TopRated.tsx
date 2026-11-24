@@ -53,7 +53,7 @@ export function TopRated() {
                     <span className="line-clamp-2 block type-title-item text-ink-primary group-hover:underline">{t.title}</span>
                     <span className="mt-1 block type-body-small text-ink-tertiary">{[t.year, runtime(t.runtime)].filter(Boolean).join(' · ')}</span>
                     <span className="mt-1 flex items-center gap-1 type-body-small">
-                      <StarIcon className="h-4 w-4 text-rating" />
+                      <StarIcon className="h-3.5 w-3.5 text-rating" />
                       <span className="type-caption-strong text-ink-strong">{t.voteAverage?.toFixed(1)}</span>
                       <span className="text-ink-muted">· {t.voteCount?.toLocaleString()} votes</span>
                     </span>

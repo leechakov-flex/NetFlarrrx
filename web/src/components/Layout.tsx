@@ -15,9 +15,9 @@ const nav = [
 /** Desktop sidebar only, after the four main tabs. On phones these live on the More tab. */
 const sidebarExtra = [
   { to: '/collections', label: 'Collections', icon: Icons.collections, match: (p: string) => p.startsWith('/collections') },
-  { to: '/lists', label: 'Lists', icon: Icons.lists, match: (p: string) => p.startsWith('/lists') },
   { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') },
   { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') },
+  { to: '/lists', label: 'Lists', icon: Icons.lists, match: (p: string) => p.startsWith('/lists') },
 ];
 
 export function useMediaQuery(query: string) {
@@ -113,7 +113,7 @@ function Sidebar() {
         <Link to="/catalog" aria-label="Catalog: sync status and data sources" className={`rounded-md border px-3 py-2.5 transition hover:border-line-strong ${pathname.startsWith('/catalog') ? 'border-line-strong bg-black' : 'border-line'}`}>
           <div className="type-caption-strong text-ink-secondary">Last sync: {relativeTime(meta.data.lastSyncAt) ?? 'not yet'}</div>
           <div className="mt-0.5 type-body-xsmall text-ink-muted">
-            {meta.data.eligible.toLocaleString()} titles{meta.data.trackingSince ? ` · tracking since ${new Date(meta.data.trackingSince).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
+            {meta.data.eligible.toLocaleString()} titles
           </div>
         </Link>
       )}
@@ -153,9 +153,9 @@ function MobileMenu() {
           })}
         </div>
         <NavLink to="/search" aria-label="Search" aria-current={onSearch ? 'page' : undefined}
-          className="glass flex h-[60px] w-[60px] flex-shrink-0 items-center justify-center rounded-full">
-          <span className={`flex h-[52px] w-[52px] items-center justify-center rounded-full ${onSearch ? 'bg-glass-active text-glass-tint' : 'text-ink-secondary'}`}>
-            <Icons.search className="h-6 w-6" />
+          className="glass flex h-[65px] w-[65px] flex-shrink-0 items-center justify-center rounded-full">
+          <span className={`flex h-[57px] w-[57px] items-center justify-center rounded-full ${onSearch ? 'bg-glass-active text-glass-tint' : 'text-ink-secondary'}`}>
+            <Icons.search className="h-[26px] w-[26px]" />
           </span>
         </NavLink>
       </div>
@@ -170,11 +170,14 @@ export { SearchInput };
  * Floats over the title page hero; sits in the top bar of Library and Person (phones only:
  * desktop has a chevron beside the search box).
  */
+/** In-page back buttons stay pinned below the status bar while the page scrolls (phones). */
+const STICKY = 'sticky top-[calc(env(safe-area-inset-top)+12px)] z-30 self-start';
+
 export function BackButton({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
   const navigate = useNavigate();
   return (
     <button type="button" aria-label="Back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))} style={style}
-      className={`flex h-[50px] w-[50px] flex-shrink-0 items-center justify-center rounded-full border border-white/40 bg-black/20 text-ink-primary backdrop-blur-md ${className}`}>
+      className={`flex h-[50px] w-[50px] flex-shrink-0 items-center justify-center rounded-full border border-white/40 bg-black/20 text-ink-primary backdrop-blur-md ${className.includes('fixed') ? '' : STICKY} ${className}`}>
       <Icons.chevronLeft className="h-7 w-7" />
     </button>
   );

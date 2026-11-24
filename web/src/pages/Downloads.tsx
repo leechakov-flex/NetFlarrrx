@@ -6,6 +6,7 @@ import { ago, bytes, duration, speed } from '../lib/format';
 import { useGuardedPost } from '../lib/guardedPost';
 import { useToast } from '../components/Feedback';
 import { Empty, PageTitle, Spinner, LoadError } from '../components/ui';
+import { BackButton } from '../components/Layout';
 import { Icons } from '../components/icons';
 import { ReleasesSheet } from '../components/ReleasesSheet';
 
@@ -22,6 +23,7 @@ export function Downloads() {
   const downloading = d.downloading.length;
   return (
     <div className="max-w-2xl">
+      <BackButton className="mt-4 lg:hidden" />
       <PageTitle>Downloads</PageTitle>
       {d.qbit.configured ? (
         <div className="mt-3 flex flex-wrap gap-2">

@@ -36,22 +36,21 @@ export function ratingLabel(min = 0, max = 10) {
 /** Seerr's Discover header: sort select with an icon box, plus a Filters button showing the active count. */
 export function SortFilterBar({ sort, onSort, filterCount, onOpenFilters, withMatch = false }:
   { sort: SortKey; onSort: (s: SortKey) => void; filterCount: number; onOpenFilters: () => void; withMatch?: boolean }) {
-  // Figma SortFilterBar: sort select with an icon box (42px), then a borderless Filters button with the count.
+  // Figma SortFilterBar: the sort select, then a borderless Filters button with the count.
   return (
     <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:gap-4">
-      <div className="flex flex-grow sm:flex-grow-0">
-        <span className="inline-flex cursor-default items-center rounded-l-md border border-r-0 border-line-muted bg-surface px-3 text-ink-primary">
-          <Icons.sort className="h-6 w-6" />
-        </span>
+      {/* Figma SortFilterBar: one 42px select (label, chevron at the right), no icon box. */}
+      <div className="relative flex flex-grow items-center sm:w-56 sm:flex-grow-0">
         <select
           aria-label="Sort"
           value={sort}
           onChange={(e) => onSort(e.target.value as SortKey)}
-          className="h-[42px] w-full rounded-r-md border border-line-muted bg-app pl-2.5 pr-8 type-body-default text-ink-primary focus:border-indigo-500 focus:outline-none sm:w-56"
+          className="h-[42px] w-full appearance-none rounded-md border border-line-muted bg-app pl-2.5 pr-9 type-body-default text-ink-primary focus:border-indigo-500 focus:outline-none"
         >
           {withMatch && <option value="match">Best match for you</option>}
           {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
+        <Icons.chevronDown className="pointer-events-none absolute right-2.5 h-5 w-5 text-ink-secondary" />
       </div>
       <button type="button" onClick={onOpenFilters} className="inline-flex items-center gap-2 self-start py-2.5 type-label-default text-ink-secondary transition hover:text-ink-primary">
         <Icons.filter className="h-5 w-5" />

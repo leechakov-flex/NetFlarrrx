@@ -6,7 +6,7 @@ import { useGuardedPost } from '../lib/guardedPost';
 import { relativeTime } from '../lib/format';
 import { useToast } from '../components/Feedback';
 import { BackButton } from '../components/Layout';
-import { Button, LoadError, Spinner } from '../components/ui';
+import { Button, LoadError, Spinner, SearchField } from '../components/ui';
 import { Icons } from '../components/icons';
 
 /**
@@ -86,12 +86,7 @@ export function Lists() {
             )}
 
           <h2 className="mt-6 type-heading-section text-ink-primary">Find lists</h2>
-          <label className="flex items-center gap-2 rounded-full bg-surface px-4 py-2.5 ring-1 ring-line-strong focus-within:ring-indigo-400">
-            <Icons.search className="h-[18px] w-[18px] text-ink-muted" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="A24, Oscar winners, cozy mysteries…" aria-label="Search MDBList"
-              className="min-w-0 flex-1 bg-transparent type-body-default text-ink-primary placeholder:text-ink-muted focus:outline-none" />
-            {q && <button type="button" aria-label="Clear search" onClick={() => setQ('')}><Icons.xmarkCircle className="h-5 w-5 text-ink-muted" /></button>}
-          </label>
+          <SearchField value={q} onChange={setQ} placeholder="A24, Oscar winners, cozy mysteries…" label="Search MDBList" />
           <p className="type-caption-default text-ink-muted">{query ? `Lists matching “${query}”` : 'Most-liked lists on MDBList'}</p>
           {search.isError ? (
             <p className="type-body-default text-ink-on-warning">{search.error instanceof ApiError ? search.error.message : 'Couldn’t reach MDBList. Try again in a moment.'}</p>
