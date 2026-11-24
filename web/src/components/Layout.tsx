@@ -81,7 +81,7 @@ function Sidebar() {
         <Link to="/" className="block type-display-logo"><span className="text-overseerr">MonkeySee</span></Link>
       </div>
       <nav className="flex-1 space-y-1">
-        {[...nav, { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') }, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }].map((item) => {
+        {[...nav, { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') }, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') || p.startsWith('/lists') }].map((item) => {
           const on = item.match(pathname);
           const Icon = item.icon;
           return (
