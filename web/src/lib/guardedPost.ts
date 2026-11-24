@@ -1,15 +1,18 @@
 import { useCallback } from 'react';
 import { ApiError, postJson, savedPasscode, useMeta } from './api';
 import { useAskPasscode } from '../components/Feedback';
+import { haptic } from './haptics';
 
 /**
  * POST that asks for the passcode when the server needs one (once, then kept on
  * this device), and asks again if the saved one is wrong. Resolves null if you cancel.
+ * Every one of these is a change you tapped to make, so it starts with a haptic tap.
  */
 export function useGuardedPost() {
   const meta = useMeta();
   const askPasscode = useAskPasscode();
   return useCallback(async <T,>(path: string, body: unknown = {}): Promise<T | null> => {
+    haptic();   // first, while still inside the tap
     const needs = meta.data?.passcodeRequired;
     let code = needs ? savedPasscode.get() : null;
     if (needs && !code) {

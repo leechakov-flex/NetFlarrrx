@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { duration } from '../lib/format';
 import { Icons } from './icons';
 const ArrowDownTrayIcon = Icons.plus, BellIcon = Icons.bell, CheckIcon = Icons.check, ClockIcon = Icons.clock;
+import { haptic } from '../lib/haptics';
 import { ApiError, postJson, savedPasscode, useMeta, useSeasons, type RequestResult, type SeasonInfo, type TitleDetail } from '../lib/api';
 import { Button, Spinner, statusBadge } from './ui';
 import { SlideOver } from './SlideOver';
@@ -33,6 +34,7 @@ export function RequestButton({ d }: { d: TitleDetail }) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   async function send(seasons?: number[]) {
+    haptic();   // first, while still inside the tap
     setBusy(true);
     try {
       let code = meta.data?.passcodeRequired ? savedPasscode.get() : null;

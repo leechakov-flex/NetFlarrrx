@@ -20,7 +20,7 @@ export function useModal(node: RefObject<HTMLElement | null>, open: boolean, onC
     stack.push(entry);
     // Inert everything beside this overlay that isn't already; remember what we changed.
     const changed = [...document.body.children].filter((el): el is HTMLElement =>
-      el instanceof HTMLElement && el !== root && !el.inert && !el.hasAttribute('data-toasts'));
+      el instanceof HTMLElement && el !== root && !el.inert && !el.hasAttribute('data-toasts') && !el.hasAttribute('data-keep-active'));
     changed.forEach((el) => { el.inert = true; });
     (focusFirst?.current ?? root.querySelector<HTMLElement>('[data-autofocus]') ?? root.querySelector<HTMLElement>('[role="dialog"]') ?? root).focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && stack[stack.length - 1] === entry) { e.stopPropagation(); entry.close(); } };
