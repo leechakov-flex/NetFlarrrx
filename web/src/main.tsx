@@ -13,6 +13,8 @@ import { Downloads } from './pages/Downloads';
 import { Library } from './pages/Library';
 import { Person } from './pages/Person';
 import { Lists } from './pages/Lists';
+import { Collections } from './pages/Collections';
+import { Catalog } from './pages/Catalog';
 import { Empty } from './components/ui';
 import { FeedbackProvider } from './components/Feedback';
 
@@ -45,6 +47,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/library" element={<Library />} />
             <Route path="/person" element={<Person />} />
             <Route path="/lists" element={<Lists />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/catalog" element={<Catalog />} />
             <Route path="*" element={<Empty>Page not found.</Empty>} />
           </Routes>
         </Layout>

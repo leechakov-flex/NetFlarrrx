@@ -12,6 +12,14 @@ const nav = [
   { to: '/top', label: 'Top rated', icon: Icons.rosette, match: (p: string) => p.startsWith('/top') },
 ];
 
+/** Desktop sidebar only, after the four main tabs. On phones these live on the More tab. */
+const sidebarExtra = [
+  { to: '/collections', label: 'Collections', icon: Icons.collections, match: (p: string) => p.startsWith('/collections') },
+  { to: '/lists', label: 'Lists', icon: Icons.lists, match: (p: string) => p.startsWith('/lists') },
+  { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') },
+  { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') },
+];
+
 export function useMediaQuery(query: string) {
   const get = () => typeof window !== 'undefined' && window.matchMedia(query).matches;
   const [match, setMatch] = useState(get);
@@ -81,7 +89,7 @@ function Sidebar() {
         <Link to="/" className="block type-display-logo"><span className="text-overseerr">MonkeySee</span></Link>
       </div>
       <nav className="flex-1 space-y-1">
-        {[...nav, { to: '/library', label: 'Library', icon: Icons.library, match: (p: string) => p.startsWith('/library') }, { to: '/downloads', label: 'Downloads', icon: Icons.download, match: (p: string) => p.startsWith('/downloads') }, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') || p.startsWith('/lists') }].map((item) => {
+        {[...nav, ...sidebarExtra].map((item) => {
           const on = item.match(pathname);
           const Icon = item.icon;
           return (
@@ -102,7 +110,7 @@ function Sidebar() {
         })}
       </nav>
       {meta.data && (
-        <Link to="/more" className="rounded-md border border-line px-3 py-2.5 transition hover:border-line-strong">
+        <Link to="/catalog" aria-label="Catalog: sync status and data sources" className={`rounded-md border px-3 py-2.5 transition hover:border-line-strong ${pathname.startsWith('/catalog') ? 'border-line-strong bg-black' : 'border-line'}`}>
           <div className="type-caption-strong text-ink-secondary">Last sync: {relativeTime(meta.data.lastSyncAt) ?? 'not yet'}</div>
           <div className="mt-0.5 type-body-xsmall text-ink-muted">
             {meta.data.eligible.toLocaleString()} titles{meta.data.trackingSince ? ` · tracking since ${new Date(meta.data.trackingSince).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}` : ''}
@@ -120,7 +128,7 @@ function Sidebar() {
  */
 function MobileMenu() {
   const { pathname } = useLocation();
-  const items = [...nav, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => p.startsWith('/more') || p.startsWith('/downloads') || p.startsWith('/library') }];
+  const items = [...nav, { to: '/more', label: 'More', icon: Icons.ellipsis, match: (p: string) => ['/more', '/downloads', '/library', '/lists', '/collections', '/catalog'].some((x) => p.startsWith(x)) }];
   const attention = useMeta().data?.downloads?.attention ?? 0;
   const onSearch = pathname.startsWith('/search');
   return (
@@ -177,7 +185,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const isDetail = pathname.startsWith('/title/');
   // Deeper pages get a back button (Figma "Back button"): the title page, Library and Person.
-  const hasBack = isDetail || pathname.startsWith('/person') || pathname.startsWith('/library');
+  const hasBack = isDetail || pathname.startsWith('/person') || pathname.startsWith('/library');   // Lists, Collections and Catalog put their own above the title
   const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate('/'));
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
