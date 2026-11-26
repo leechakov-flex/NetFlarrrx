@@ -73,6 +73,11 @@ export async function requestTitle(db: Db, cfg: Config, seerr: SeerrClient, id: 
   const t = titleTmdb(db, cfg, id);
   if (!t) throw new RequestError(404, 'not_found', 'MonkeySee doesn’t know that title.');
   if (!t.tmdb_id || !t.tmdb_type) throw new RequestError(400, 'no_tmdb', 'This title has no TMDB match, so Seerr can’t request it.');
+  return requestMedia(db, seerr, { title: t.title, tmdb_type: t.tmdb_type, tmdb_id: t.tmdb_id }, seasons, now);
+}
+
+/** Requests anything TMDB knows by its TMDB ID, in the catalog or not (search's "Not on your services yet"). */
+export async function requestMedia(db: Db, seerr: SeerrClient, t: { title: string; tmdb_type: 'movie' | 'tv'; tmdb_id: number }, seasons?: number[], now = new Date()): Promise<RequestResult> {
 
   let requestSeasons: number[] | undefined;
   if (t.tmdb_type === 'tv') {

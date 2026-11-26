@@ -70,12 +70,18 @@ export class FakeTmdb {
   recs = new Map<string, number[]>();
   /** TVDB -> TMDB series IDs for /find. */
   find = new Map<number, number>();
+  /** /search/multi results (TMDB's raw shape), matched by a case-insensitive substring of the title. */
+  searchable: Record<string, unknown>[] = [];
   private movie = fixture<Record<string, unknown>>('tmdb/movie-detail.json');
   private tv = fixture<Record<string, unknown>>('tmdb/tv-detail.json');
 
   fetch: FetchFn = async (input) => {
     this.calls += 1;
     const url = new URL(String(input));
+    if (url.pathname.endsWith('/search/multi')) {
+      const q = (url.searchParams.get('query') ?? '').toLowerCase();
+      return json(200, { page: 1, results: this.searchable.filter((r) => String(r.title ?? r.name ?? '').toLowerCase().includes(q)) });
+    }
     const find = url.pathname.match(/\/find\/(\d+)$/);
     if (find) {
       const id = this.find.get(Number(find[1]));

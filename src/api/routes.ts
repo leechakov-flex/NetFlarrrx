@@ -3,13 +3,14 @@ import { z } from 'zod';
 import type { App } from '../app.js';
 import type { Context, MiddlewareHandler } from 'hono';
 import { browse, personPage, findTheme, genres, meta, themes, titleDetail, top } from '../catalog/queries.js';
-import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
+import { RequestError, requestTitle, titleSeasons, requestMedia } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
 import { forgetCheck } from '../downloads/releases.js';
 import { inJellyfin, lastJellyfin, libraryPage } from '../library/jellyfin.js';
 import { RemoveError } from '../library/remove.js';
 import { addList, pickedLists, removeList } from '../recs/mdblist.js';
+import { searchTmdb } from '../search/tmdbSearch.js';
 import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
 import type { How, ServiceKey } from './types.js';
@@ -250,6 +251,38 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
         if (err.code === 'already_requested' || err.code === 'nothing_left') void app.mirror().catch(() => undefined);
         return c.json({ error: err.message, code: err.code }, err.status);
       }
+      throw err;
+    }
+  });
+
+  // Search beyond the catalog (TMDB, as Seerr does): titles not on your services yet.
+  api.get('/search/tmdb', async (c) => {
+    const q = (c.req.query('q') ?? '').trim().slice(0, 100);
+    if (q.length < 2) return c.json({ results: [] });
+    try {
+      return c.json({ results: await searchTmdb(db, app.tmdb, q) });
+    } catch (err) {
+      log.warn('search: TMDB failed', { error: (err as Error).message });
+      return c.json({ error: 'Couldn’t reach TMDB. Try again in a moment.' }, 502);
+    }
+  });
+
+  // Request something that isn't in the catalog, by TMDB ID. Series get every open season.
+  api.post('/tmdb/:type/:id/request', requirePasscode, async (c) => {
+    const type = c.req.param('type');
+    const id = Number(c.req.param('id'));
+    if ((type !== 'movie' && type !== 'tv') || !Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+    try {
+      const basic = await app.tmdb.basic(type, id);
+      if (!basic) return c.json({ error: 'TMDB doesn’t have that title.', code: 'not_found' }, 404);
+      // The page sends the title it showed, for when TMDB's details come back without one.
+      const shown = z.object({ title: z.string().min(1).max(200) }).safeParse(await c.req.json().catch(() => ({})));
+      const title = basic.title.startsWith('#') && shown.success ? shown.data.title : basic.title;
+      const result = await requestMedia(db, app.seerr, { title, tmdb_type: type, tmdb_id: id });
+      void app.mirror().catch(() => undefined);
+      return c.json(result, 201);
+    } catch (err) {
+      if (err instanceof RequestError) return c.json({ error: err.message, code: err.code }, err.status);
       throw err;
     }
   });

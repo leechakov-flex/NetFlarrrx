@@ -269,3 +269,10 @@ export interface ListOption { id: number; name: string; userName: string | null;
 export interface PickedListInfo { id: number; name: string; userName: string | null; items: number | null; inCatalog: number; syncedAt: string | null; error: string | null }
 export interface ListsResponse { configured: boolean; picked: PickedListInfo[] }
 export interface ListSearchResponse { results: ListOption[] }
+
+/** A TMDB search result outside the catalog (not on your services yet). */
+export interface TmdbResult {
+  tmdbId: number; type: 'movie' | 'tv'; title: string; year: number | null; date: string | null;
+  posterPath: string | null; overview: string | null; voteAverage: number | null; voteCount: number; popularity: number;
+  state: 'requested' | 'partial' | 'available' | null;
+}

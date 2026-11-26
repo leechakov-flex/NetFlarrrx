@@ -5,7 +5,7 @@ import type {
 } from '../../../src/api/types';
 
 export type { DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, ReleasesResponse, ReleaseItem, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
-export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey, ListOption, PickedListInfo, ListsResponse, ListSearchResponse } from '../../../src/api/types';
+export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey, ListOption, PickedListInfo, ListsResponse, ListSearchResponse, TmdbResult } from '../../../src/api/types';
 import type { ListsResponse as ListsRes, ListSearchResponse as ListSearchRes } from '../../../src/api/types';
 
 export class ApiError extends Error {

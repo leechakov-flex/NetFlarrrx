@@ -21,6 +21,12 @@ function serve(port: number, fetchFn: FetchFn) {
 
 const varied = process.env.FAKE_VARIED === '1';
 const tmdb = new FakeTmdb();
+// Search beyond the catalog: a film not out yet, one in theaters, a series.
+tmdb.searchable = [
+  { id: 1290001, media_type: 'movie', title: 'Dreamquil', release_date: '2027-02-19', poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg', popularity: 31.4, vote_count: 0 },
+  { id: 1290002, media_type: 'movie', title: 'The Dream Quarry', release_date: '2026-11-07', poster_path: '/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg', popularity: 18.9, vote_average: 7.1, vote_count: 212 },
+  { id: 1290003, media_type: 'tv', name: 'Dreamland Diaries', first_air_date: '2025-04-02', poster_path: '/d5NXSklXo0qyIYkgV94XAgMIckC.jpg', popularity: 9.2, vote_average: 6.8, vote_count: 64 },
+];
 // TMDB's own Netflix list for the cross-check: most of Watchmode's titles, plus a few extras.
 {
   const all = new FakeWatchmode().catalog.filter((t) => t.tmdb_id && t.tmdb_type);

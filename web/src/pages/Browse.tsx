@@ -6,6 +6,7 @@ import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
 import { Empty, PageTitle, Spinner, Tag, LoadError } from '../components/ui';
 import { BackButton, SearchInput } from '../components/Layout';
+import { TmdbResults } from '../components/TmdbResults';
 import type { How, ServiceKey } from '../lib/api';
 import { SERVICE_NAMES } from '../lib/format';
 import { useCompanyNames } from '../components/CompanyPicker';
@@ -132,12 +133,15 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
       ) : res.isPending ? (
         <ul className="cards-vertical">{Array.from({ length: 12 }, (_, i) => <li key={i}><TitleCardPlaceholder fill /></li>)}</ul>
       ) : items.length === 0 ? (
-        <Empty>{search ? 'No titles match that search.' : 'No titles match these filters.'}</Empty>
+        search && q ? <p className="type-body-default text-ink-tertiary">Nothing on your services matches “{q}”.</p>
+          : <Empty>{search ? 'No titles match that search.' : 'No titles match these filters.'}</Empty>
       ) : (
         <ul className="cards-vertical">
           {items.map((card) => <li key={card.id}><TitleCard card={card} fill /></li>)}
         </ul>
       )}
+      {/* Search also asks TMDB, like Seerr, for titles not on your services yet. */}
+      {search && q && !res.isPending && !res.hasNextPage && <TmdbResults q={q} />}
       <div ref={sentinel} className="flex justify-center py-8">{res.isFetchingNextPage && <Spinner />}</div>
 
       <FiltersPanel

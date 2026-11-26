@@ -166,6 +166,8 @@ const DiscoverPage = z.object({
   }).passthrough()),
 });
 
+export interface TmdbSearchHit { type: 'movie' | 'tv'; id: number; title: string; date: string | null; posterPath: string | null; overview: string | null; popularity: number; voteAverage: number | null; voteCount: number; language: string | null }
+
 export class TmdbClient {
   constructor(private base: string, private token: string, private fetchFn: FetchFn = fetch) {}
 
@@ -181,6 +183,23 @@ export class TmdbClient {
       if (err instanceof HttpError && err.isNotFound) return null;
       throw err;
     }
+  }
+
+  /** TMDB's own search across movies and series, like Seerr's: everything TMDB lists, released or not. */
+  async search(query: string): Promise<TmdbSearchHit[]> {
+    const q = new URLSearchParams({ query, include_adult: 'false', language: 'en-US', page: '1' });
+    const d = z.object({ results: z.array(z.object({
+      id: z.number().int(), media_type: z.string(), title: z.string().optional(), name: z.string().optional(),
+      release_date: z.string().nullable().optional(), first_air_date: z.string().nullable().optional(), poster_path: z.string().nullable().optional(),
+      overview: z.string().nullable().optional(), popularity: z.number().optional(), vote_average: z.number().optional(), vote_count: z.number().optional(),
+      original_language: z.string().optional(),
+    }).passthrough()).default([]) }).parse(
+      await requestJson<unknown>(this.fetchFn, 'tmdb', `${this.base.replace(/\/$/, '')}/search/multi?${q}`, { headers: { Authorization: `Bearer ${this.token}` }, retries: 1 }));
+    return d.results.filter((r) => r.media_type === 'movie' || r.media_type === 'tv').map((r) => ({
+      type: r.media_type as 'movie' | 'tv', id: r.id, title: r.title ?? r.name ?? `#${r.id}`,
+      date: (r.release_date || r.first_air_date) || null, posterPath: r.poster_path ?? null, overview: r.overview ?? null,
+      popularity: r.popularity ?? 0, voteAverage: r.vote_average ?? null, voteCount: r.vote_count ?? 0, language: r.original_language ?? null,
+    }));
   }
 
   /** TMDB series ID for a TVDB ID (Sonarr v3 lists only TVDB IDs). */
