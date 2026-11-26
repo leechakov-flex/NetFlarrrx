@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import type { BrowseQuery, Kind, SortKey } from '../lib/api';
-import { useBrowse, useGenres, useMeta, useThemes } from '../lib/api';
+import { useBrowse, useGenres, useMeta, useThemes, useTmdbSearch } from '../lib/api';
 import { TitleCard, TitleCardPlaceholder } from '../components/TitleCard';
 import { FiltersPanel, SortFilterBar, activeFilterCount, type Filters } from '../components/Filters';
 import { Empty, PageTitle, Spinner, Tag, LoadError } from '../components/ui';
 import { BackButton, SearchInput } from '../components/Layout';
-import { TmdbResults } from '../components/TmdbResults';
 import type { How, ServiceKey } from '../lib/api';
 import { SERVICE_NAMES } from '../lib/format';
 import { useCompanyNames } from '../components/CompanyPicker';
@@ -80,7 +79,13 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
   }, [res.hasNextPage, res.isFetchingNextPage, res.fetchNextPage]);
 
   const items = res.data?.pages.flatMap((p) => p.items) ?? [];
-  const total = res.data?.pages[0]?.total;
+  // Search also asks TMDB (as Seerr does) and blends its other matches in as ordinary cards.
+  // Ones whose title starts with what you typed go first; the rest follow your catalog's results.
+  const extra = useTmdbSearch(q ?? '', Boolean(search && q));
+  const more = search && q && !res.hasNextPage ? extra.data?.items ?? [] : [];
+  const starts = (t: string) => t.toLowerCase().startsWith((q ?? '').trim().toLowerCase());
+  const shown = [...more.filter((c) => starts(c.title)), ...items, ...more.filter((c) => !starts(c.title))];
+  const total = res.data?.pages[0]?.total === undefined ? undefined : res.data.pages[0].total + more.length;
   const noun = kind === 'movie' ? 'movies' : kind === 'series' ? 'series' : 'titles';
   const companyName = useCompanyNames();
   const genreName = (id: number) => genres.data?.find((g) => g.id === id)?.name ?? 'Genre';
@@ -132,16 +137,14 @@ export function Browse({ kind, title, search = false }: { kind?: Kind; title: st
         <LoadError what="titles" onRetry={() => void res.refetch()} />
       ) : res.isPending ? (
         <ul className="cards-vertical">{Array.from({ length: 12 }, (_, i) => <li key={i}><TitleCardPlaceholder fill /></li>)}</ul>
-      ) : items.length === 0 ? (
-        search && q ? <p className="type-body-default text-ink-tertiary">Nothing on your services matches “{q}”.</p>
+      ) : shown.length === 0 ? (
+        extra.isPending && search && q ? <ul className="cards-vertical">{Array.from({ length: 6 }, (_, i) => <li key={i}><TitleCardPlaceholder fill /></li>)}</ul>
           : <Empty>{search ? 'No titles match that search.' : 'No titles match these filters.'}</Empty>
       ) : (
         <ul className="cards-vertical">
-          {items.map((card) => <li key={card.id}><TitleCard card={card} fill /></li>)}
+          {shown.map((card) => <li key={card.id}><TitleCard card={card} fill /></li>)}
         </ul>
       )}
-      {/* Search also asks TMDB, like Seerr, for titles not on your services yet. */}
-      {search && q && !res.isPending && !res.hasNextPage && <TmdbResults q={q} />}
       <div ref={sentinel} className="flex justify-center py-8">{res.isFetchingNextPage && <Spinner />}</div>
 
       <FiltersPanel

@@ -22,7 +22,7 @@ export interface TitleCard {
   seerr: SeerrState;
   services: ServiceKey[];          // subscription services it's on, in scope
   digital: boolean;                // new to rent or buy
-  soon: { date: string; service: ServiceKey | null } | null;   // not out yet; service null = rent or buy
+  soon: { date: string; service: ServiceKey | null; release?: boolean } | null;   // not out yet; service null = rent or buy; release = its release date (search results from TMDB)
   logoPath: string | null;         // English title logo
   textlessPosterPath: string | null;
 }
@@ -101,7 +101,7 @@ export interface TitleDetail extends TitleCard {
   watch: {
     services: ServiceInfo[];       // subscription services it's on now
     stores: string[];              // where it can be rented or bought (JustWatch via TMDB)
-    soon: { date: string; service: ServiceKey | null } | null;
+    soon: { date: string; service: ServiceKey | null; release?: boolean } | null;
   };
   tmdbId: number | null;
   tmdbType: 'movie' | 'tv' | null;
@@ -269,10 +269,3 @@ export interface ListOption { id: number; name: string; userName: string | null;
 export interface PickedListInfo { id: number; name: string; userName: string | null; items: number | null; inCatalog: number; syncedAt: string | null; error: string | null }
 export interface ListsResponse { configured: boolean; picked: PickedListInfo[] }
 export interface ListSearchResponse { results: ListOption[] }
-
-/** A TMDB search result outside the catalog (not on your services yet). */
-export interface TmdbResult {
-  tmdbId: number; type: 'movie' | 'tv'; title: string; year: number | null; date: string | null;
-  posterPath: string | null; overview: string | null; voteAverage: number | null; voteCount: number; popularity: number;
-  state: 'requested' | 'partial' | 'available' | null;
-}

@@ -120,7 +120,9 @@ function NewSeasonBanner({ d }: { d: Detail }) {
 function WhereToWatch({ d }: { d: Detail }) {
   const rows: { tag: string; tone: 'service' | 'digital' | 'soon'; text: string }[] = [];
   for (const s of d.watch.services) rows.push({ tag: s.name, tone: 'service', text: 'Included with your subscription' });
-  if (d.watch.soon) {
+  if (d.watch.soon?.release) {
+    rows.push({ tag: shortDate(d.watch.soon.date) ?? d.watch.soon.date, tone: 'soon', text: `Comes out ${longDate(d.watch.soon.date) ?? shortDate(d.watch.soon.date)}.` });
+  } else if (d.watch.soon) {
     const where = d.watch.soon.service ? SERVICE_NAMES[d.watch.soon.service] : null;
     rows.push({ tag: `${shortDate(d.watch.soon.date)} · ${where ?? 'Rent or buy'}`, tone: 'soon',
       text: where ? `Streams on ${where} from ${shortDate(d.watch.soon.date)}. It moves to Just released that day.` : `Out to rent or buy from ${shortDate(d.watch.soon.date)}.` });

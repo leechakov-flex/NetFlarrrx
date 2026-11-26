@@ -3,14 +3,14 @@ import { z } from 'zod';
 import type { App } from '../app.js';
 import type { Context, MiddlewareHandler } from 'hono';
 import { browse, personPage, findTheme, genres, meta, themes, titleDetail, top } from '../catalog/queries.js';
-import { RequestError, requestTitle, titleSeasons, requestMedia } from '../seerr/requests.js';
+import { RequestError, requestTitle, titleSeasons } from '../seerr/requests.js';
 import { log } from '../log.js';
 import { lastDownloads, resetDownloadsCache, titleDownload } from '../downloads/downloads.js';
 import { forgetCheck } from '../downloads/releases.js';
 import { inJellyfin, lastJellyfin, libraryPage } from '../library/jellyfin.js';
 import { RemoveError } from '../library/remove.js';
 import { addList, pickedLists, removeList } from '../recs/mdblist.js';
-import { searchTmdb } from '../search/tmdbSearch.js';
+import { searchTmdb, tmdbTitleDetail } from '../search/tmdbSearch.js';
 import { HttpError } from '../clients/http.js';
 import { SERVICES } from '../services.js';
 import type { How, ServiceKey } from './types.js';
@@ -90,7 +90,17 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   api.get('/titles/:id', async (c) => {
     const id = Number(c.req.param('id'));
-    if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+    if (!Number.isInteger(id) || id === 0) return c.json({ error: 'bad id' }, 400);
+    // Negative IDs are search results from TMDB, outside the catalog.
+    if (id < 0) {
+      try {
+        const d = await tmdbTitleDetail(db, app.tmdb, id);
+        return d ? c.json(d) : c.json({ error: 'not found' }, 404);
+      } catch (err) {
+        log.warn('title: TMDB failed', { id, error: (err as Error).message });
+        return c.json({ error: 'Couldn’t reach TMDB. Try again in a moment.' }, 502);
+      }
+    }
     const t = titleDetail(db, cfg, id);
     if (!t) return c.json({ error: 'not found' }, 404);
     t.inLibrary = inJellyfin(db, t.tmdbType, t.tmdbId);
@@ -226,7 +236,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
   // Per-season state for the season picker. Live from Seerr, so always current.
   api.get('/titles/:id/seasons', async (c) => {
     const id = Number(c.req.param('id'));
-    if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+    if (!Number.isInteger(id) || id === 0) return c.json({ error: 'bad id' }, 400);
     try {
       const s = await titleSeasons(db, cfg, app.seerr, id);
       return s ? c.json(s) : c.json({ error: 'not a series in the catalog' }, 404);
@@ -238,7 +248,7 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
 
   api.post('/titles/:id/request', requirePasscode, async (c) => {
     const id = Number(c.req.param('id'));
-    if (!Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
+    if (!Number.isInteger(id) || id === 0) return c.json({ error: 'bad id' }, 400);
     const raw = await c.req.json().catch(() => ({}));
     const body = RequestBody.safeParse(raw ?? {});
     if (!body.success) return c.json({ error: 'bad request body', code: 'bad_body' }, 400);
@@ -255,35 +265,15 @@ export function apiRoutes(app: App, requirePasscode: MiddlewareHandler) {
     }
   });
 
-  // Search beyond the catalog (TMDB, as Seerr does): titles not on your services yet.
+  // Search beyond the catalog (TMDB, as Seerr does). Cards with negative IDs; the page blends them in.
   api.get('/search/tmdb', async (c) => {
     const q = (c.req.query('q') ?? '').trim().slice(0, 100);
-    if (q.length < 2) return c.json({ results: [] });
+    if (q.length < 2) return c.json({ items: [] });
     try {
-      return c.json({ results: await searchTmdb(db, app.tmdb, q) });
+      return c.json({ items: await searchTmdb(db, app.tmdb, q) });
     } catch (err) {
       log.warn('search: TMDB failed', { error: (err as Error).message });
       return c.json({ error: 'Couldn’t reach TMDB. Try again in a moment.' }, 502);
-    }
-  });
-
-  // Request something that isn't in the catalog, by TMDB ID. Series get every open season.
-  api.post('/tmdb/:type/:id/request', requirePasscode, async (c) => {
-    const type = c.req.param('type');
-    const id = Number(c.req.param('id'));
-    if ((type !== 'movie' && type !== 'tv') || !Number.isInteger(id) || id < 1) return c.json({ error: 'bad id' }, 400);
-    try {
-      const basic = await app.tmdb.basic(type, id);
-      if (!basic) return c.json({ error: 'TMDB doesn’t have that title.', code: 'not_found' }, 404);
-      // The page sends the title it showed, for when TMDB's details come back without one.
-      const shown = z.object({ title: z.string().min(1).max(200) }).safeParse(await c.req.json().catch(() => ({})));
-      const title = basic.title.startsWith('#') && shown.success ? shown.data.title : basic.title;
-      const result = await requestMedia(db, app.seerr, { title, tmdb_type: type, tmdb_id: id });
-      void app.mirror().catch(() => undefined);
-      return c.json(result, 201);
-    } catch (err) {
-      if (err instanceof RequestError) return c.json({ error: err.message, code: err.code }, err.status);
-      throw err;
     }
   });
 

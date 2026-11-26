@@ -3,6 +3,7 @@ import { get, run, type Db } from '../db/db.js';
 import { HttpError } from '../clients/http.js';
 import { MEDIA_STATUS, REQUEST_STATUS, type SeerrClient, type SeerrPublicSettings, type SeerrTvDetail } from '../clients/seerr.js';
 import type { RequestResult, SeasonInfo, SeasonState, SeasonsResponse } from '../api/types.js';
+import { fromTmdbCardId, tmdbTitleName } from '../search/tmdbSearch.js';
 import { log } from '../log.js';
 
 // Seerr's public settings rarely change; cache them for ten minutes.
@@ -48,6 +49,8 @@ export function seasonStates(tv: SeerrTvDetail, settings: SeerrPublicSettings): 
 // Any title MonkeySee knows about can be requested: on any service, rent or buy, coming soon,
 // or only shown as Related. (This used to require a Netflix row, from before multi-service.)
 function titleTmdb(db: Db, _cfg: Config, id: number) {
+  const ref = fromTmdbCardId(id);     // a search result from TMDB, outside the catalog
+  if (ref) return { tmdb_id: ref.tmdbId, tmdb_type: ref.type, title: tmdbTitleName(id) ?? 'this title' };
   return get<{ tmdb_id: number | null; tmdb_type: 'movie' | 'tv' | null; title: string }>(db, `
     SELECT tk.tmdb_id, tk.tmdb_type, COALESCE(tk.tmdb_title, tk.title) AS title
     FROM title_kinds tk WHERE tk.id = ? AND tk.kind IS NOT NULL`, [id]);

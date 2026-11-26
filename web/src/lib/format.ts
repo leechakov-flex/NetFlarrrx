@@ -64,8 +64,9 @@ export const SERVICE_NAMES = {
 export type ServiceKey = keyof typeof SERVICE_NAMES;
 
 /** The line under a poster: which service, rent or buy, or when it's coming. */
-export function serviceLine(c: { services: ServiceKey[]; digital: boolean; soon: { date: string; service: ServiceKey | null } | null }):
+export function serviceLine(c: { services: ServiceKey[]; digital: boolean; soon: { date: string; service: ServiceKey | null; release?: boolean } | null }):
   { text: string; tone: 'service' | 'digital' | 'soon' } | null {
+  if (c.soon?.release) return { text: shortDate(c.soon.date) ?? c.soon.date, tone: 'soon' };
   if (c.soon) return { text: `${shortDate(c.soon.date)} · ${c.soon.service ? SERVICE_NAMES[c.soon.service] : 'Rent or buy'}`, tone: 'soon' };
   if (c.services.length) return { text: SERVICE_NAMES[c.services[0]!] + (c.services.length > 1 ? ` +${c.services.length - 1}` : ''), tone: 'service' };
   if (c.digital) return { text: 'Rent or buy', tone: 'digital' };

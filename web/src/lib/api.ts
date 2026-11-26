@@ -5,8 +5,8 @@ import type {
 } from '../../../src/api/types';
 
 export type { DownloadsResponse, DownloadItem, RequestItem, CompaniesResponse, CompanyOption, LibraryResponse, LibraryItem, PersonResponse, ReleasesResponse, ReleaseItem, BrowseQuery, BrowseResponse, Genre, HomeResponse, Kind, MetaResponse, RequestResult, SeasonInfo, SeasonsResponse, ThemeSummary, TitleDetail, TopResponse };
-export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey, ListOption, PickedListInfo, ListsResponse, ListSearchResponse, TmdbResult } from '../../../src/api/types';
-import type { ListsResponse as ListsRes, ListSearchResponse as ListSearchRes } from '../../../src/api/types';
+export type { TitleCard, HomeRow, SeerrState, SortKey, How, ServiceKey, ListOption, PickedListInfo, ListsResponse, ListSearchResponse } from '../../../src/api/types';
+import type { ListsResponse as ListsRes, ListSearchResponse as ListSearchRes, TitleCard as Card } from '../../../src/api/types';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public code?: string) { super(message); }
@@ -95,7 +95,7 @@ export const useGenres = (kind?: Kind) =>
   useQuery({ queryKey: ['genres', kind ?? 'all'], queryFn: () => getJson<Genre[]>(`/api/genres${kind ? `?kind=${kind}` : ''}`), staleTime: 10 * 60_000 });
 export const useTop = (kind: Kind) => useQuery({ queryKey: ['top', kind], queryFn: () => getJson<TopResponse>(`/api/top?kind=${kind}`) });
 export const useTitle = (id: number) =>
-  useQuery({ queryKey: ['title', id], queryFn: () => getJson<TitleDetail>(`/api/titles/${id}`), enabled: Number.isInteger(id) && id > 0,
+  useQuery({ queryKey: ['title', id], queryFn: () => getJson<TitleDetail>(`/api/titles/${id}`), enabled: Number.isInteger(id) && id !== 0,   // negative: a search result from TMDB
     // While it's downloading, the Request button's progress updates every few seconds.
     refetchInterval: (q) => (q.state.data?.download ? 5_000 : false) });
 
@@ -136,6 +136,12 @@ export const useLists = () => useQuery({ queryKey: ['lists'], queryFn: () => get
 export const useListSearch = (q: string, enabled: boolean) => useQuery({
   queryKey: ['list-search', q], enabled, placeholderData: (prev) => prev, staleTime: 10 * 60_000,
   queryFn: () => getJson<ListSearchRes>(`/api/lists/search${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+});
+
+/** Search, beyond the catalog: TMDB's matches (as Seerr searches), as ordinary cards. */
+export const useTmdbSearch = (q: string, enabled: boolean) => useQuery({
+  queryKey: ['tmdb-search', q.trim().toLowerCase()], enabled: enabled && q.trim().length >= 2, staleTime: 5 * 60_000,
+  queryFn: () => getJson<{ items: Card[] }>(`/api/search/tmdb?q=${encodeURIComponent(q.trim())}`),
 });
 
 /** Library page (Jellyfin), a page at a time. */
