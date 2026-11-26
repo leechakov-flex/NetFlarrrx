@@ -36,7 +36,9 @@ export const ThemeRule = z.object({
   runtime: range.optional(),        // minutes; applies to movies only
   seasons: range.optional(),        // season count; applies to series only
   released: z.object({ withinDays: z.number().int().positive() }).strict().optional(),  // first release (movie) or premiere (series)
-  aired: z.object({ withinDays: z.number().int().positive() }).strict().optional(),     // movie release, or a series' latest episode
+  // movie release, or a series' latest episode: within the last N days, and/or longer ago than N days
+  aired: z.object({ withinDays: z.number().int().positive().optional(), olderThanDays: z.number().int().positive().optional() }).strict()
+    .refine((a) => a.withinDays || a.olderThanDays, 'aired needs withinDays or olderThanDays').optional(),
   originals: z.boolean().optional(),  // true = Netflix originals only (TMDB network or studio), false = none
   addedWithin: z.number().int().positive().optional(),  // days since it arrived on a service in scope (needs tracking history)
   sort: z.enum(['added', 'rating', 'popularity', 'release', 'title', 'match', 'soon']).default('added'),
@@ -72,17 +74,19 @@ export const STANDUP =["stand-up comedy", "stand-up special", "stand up comedy",
  * tracking history builds; "for you" needs titles available in Seerr).
  */
 export const DEFAULT_THEMES: ThemeRule[] = ThemeFile.parse([
-  // Just released (new on your services)
-  { slug: 'new-week', title: 'Just released', addedWithin: 7 },
+  // Just released: new on your services AND actually new (out, or a new episode, in the last 6 months).
+  // Older films and shows a service just picked up go to "Just added" further down.
+  { slug: 'new-week', title: 'Just released', addedWithin: 7, aired: { withinDays: 180 } },
   { slug: 'new-digital', title: 'Available from theaters', kind: 'movie', how: ['digital'], addedWithin: 45, sort: 'added' },
   { slug: 'coming-soon', title: 'Coming soon', how: ['soon'], sort: 'soon' },
-  { slug: 'new-month', title: 'New this month', addedWithin: 30 },
+  { slug: 'new-month', title: 'New this month', addedWithin: 30, aired: { withinDays: 365 } },
   { slug: 'new-movies', title: 'New movies', kind: 'movie', released: { withinDays: 120 }, sort: 'release',
     exclude: { types: ['tv_special'] } },
   // Sonarr follows new episodes of shows you have; this row is for shows that are new.
   { slug: 'new-episodes', title: 'New series', kind: 'series', released: { withinDays: 120 }, sort: 'release' },
   { slug: 'new-originals', title: 'New Netflix originals', services: ['netflix'], originals: true, aired: { withinDays: 180 } },
   { slug: 'for-you', title: 'Recommended for you', special: 'for-you', sort: 'match' },
+  { slug: 'just-added', title: 'Just added', addedWithin: 14, aired: { olderThanDays: 180 }, sort: 'added' },
 
   // Comedy, up top
   { slug: 'standup', title: 'Stand-up specials', kind: 'movie',
@@ -236,9 +240,13 @@ export function themeWhere(t: ThemeRule, now = new Date()): { sql: string; param
   scoped('movie', 'tk.runtime', t.runtime);
   scoped('series', 'tk.seasons', t.seasons);
   if (t.released) { where.push('tk.release_date >= ? AND tk.release_date <= ?'); params.push(daysAgo(now, t.released.withinDays), today(now)); }
-  if (t.aired) {
+  if (t.aired?.withinDays) {
     where.push(`COALESCE(tk.last_air_date, tk.release_date) >= ? AND COALESCE(tk.last_air_date, tk.release_date) <= ?`);
     params.push(daysAgo(now, t.aired.withinDays), today(now));
+  }
+  if (t.aired?.olderThanDays) {                    // no date at all counts as old
+    where.push(`COALESCE(tk.last_air_date, tk.release_date, '0000') < ?`);
+    params.push(daysAgo(now, t.aired.olderThanDays));
   }
   if (t.originals !== undefined) where.push(t.originals ? 'tk.netflix_original = 1' : 'tk.netflix_original = 0');
   if (t.addedWithin) { where.push('a.added_at >= ?'); params.push(new Date(now.getTime() - t.addedWithin * 86_400_000).toISOString()); }

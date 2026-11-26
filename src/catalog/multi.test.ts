@@ -32,7 +32,7 @@ beforeAll(async () => {
     'watch/providers': { results: { US: { flatrate: [{ provider_id: 8, provider_name: 'Netflix' }], rent: [{ provider_id: 2, provider_name: 'Apple TV' }], buy: [{ provider_id: 2, provider_name: 'Apple TV' }, { provider_id: 10, provider_name: 'Amazon Video' }] } } },
     recommendations: { results: [{ id: 810001, media_type: 'movie' }, { id: 999999, media_type: 'movie' }] },
   });
-  for (const id of [810001, 810002]) tmdb.overrides.set(`movie:${id}`, { original_language: 'en', ...usRelease('2026-11-10') });
+  for (const id of [810001, 810002]) tmdb.overrides.set(`movie:${id}`, { original_language: 'en', release_date: new Date(Date.now() - 50 * 86_400_000).toISOString().slice(0, 10), ...usRelease('2026-11-10') });
   tmdb.overrides.set('movie:810003', { original_language: 'en', ...usRelease(future(4), 'Netflix') });
   tmdb.overrides.set('movie:810004', { original_language: 'en', ...usRelease(future(6), '') });
   app = createApp(testConfig({ SERVICES: 'netflix,prime', TRACK_DIGITAL: 'true', TRACK_UPCOMING: 'true', LANGUAGE_RULE: 'all' }),

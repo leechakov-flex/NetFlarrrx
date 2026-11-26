@@ -52,6 +52,9 @@ describe('read API', () => {
   });
 
   it('/api/home returns the fixed rows, newest first, then theme rows', async () => {
+    // The recorded catalog is older films; make this month's arrivals recent releases, as most are.
+    const old = all<{ id: number; release_date: string | null }>(app.db, 'SELECT id, release_date FROM titles');
+    run(app.db, `UPDATE titles SET release_date = date('now', '-60 days'), last_air_date = NULL WHERE id IN (SELECT title_id FROM availability WHERE added_at >= datetime('now', '-30 days'))`);
     const { body } = await j<HomeResponse>('/api/home');
     expect(body.showTrackingNotice).toBe(true);
     expect(body.rows.map((r) => r.slug).slice(0, 2)).toEqual(['new-week', 'new-month']);
@@ -65,6 +68,16 @@ describe('read API', () => {
     expect([...dates].sort().reverse()).toEqual(dates);
     expect(body.rows[1]!.total).toBe(19);
     expect(body.rows.find((r) => r.slug === 'acclaimed')!.items.every((i) => i.voteAverage! >= 7.5 && i.voteCount! >= 1000)).toBe(true);
+    for (const t of old) run(app.db, 'UPDATE titles SET release_date = ? WHERE id = ?', [t.release_date, t.id]);
+  });
+
+  it('an old film a service just picked up is "Just added", not "Just released"', async () => {
+    const { body } = await j<HomeResponse>('/api/home');
+    const added = body.rows.find((r) => r.slug === 'just-added');
+    expect(added?.title).toBe('Just added');
+    const week = body.rows.find((r) => r.slug === 'new-week');
+    const ids = new Set(added!.items.map((i) => i.id));
+    expect(week?.items.some((i) => ids.has(i.id)) ?? false).toBe(false);
   });
 
   it('home drops empty new rows during the baseline period', async () => {
